@@ -1,9 +1,9 @@
+#include <DxLib.h>
+
 #include"FPS.h"
 
-#include "../../pch.h"
-
-#include"../../Application/Application.h"
-#include"../../Scene/SceneManager/SceneManager.h"
+#include "../../Application/Application.h"
+#include "../../Manager/Scene/SceneManager.h"
 
 
 FPS::FPS()

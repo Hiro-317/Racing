@@ -92,12 +92,12 @@ public:
 				}
 				// 更新
 				SetRotationPlayingEffekseer3DEffect(playHandle, temp.x, temp.y, temp.z);
-				Net::GetIns().Send(MsgDataEffectFollow((int)info.name, pos, temp));
+				//Net::GetIns().Send(MsgDataEffectFollow((int)info.name, pos, temp));
 			}
 			else {
 				// 角度の追従しないなら初期値を入れる
 				SetRotationPlayingEffekseer3DEffect(playHandle, info.trans.angle.x, info.trans.angle.y, info.trans.angle.z);
-				Net::GetIns().Send(MsgDataEffectFollow((int)info.name, pos, info.trans.angle));
+				//Net::GetIns().Send(MsgDataEffectFollow((int)info.name, pos, info.trans.angle));
 			}
 		}
 	}

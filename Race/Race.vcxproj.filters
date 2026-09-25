@@ -23,11 +23,13 @@
     <ClCompile Include="Src\Manager\Input\InputTextManager.cpp" />
     <ClCompile Include="Src\Manager\Input\KeyManager.cpp" />
     <ClCompile Include="Src\Manager\Loading\Loading.cpp" />
-    <ClCompile Include="Src\Manager\Ranking\Ranking.cpp" />
     <ClCompile Include="Src\Manager\Sound\SoundManager.cpp" />
     <ClCompile Include="Src\Object\Common\AnimationController\AnimationController.cpp" />
     <ClCompile Include="Src\Object\Common\DataLoad\ParameterLoad.cpp" />
     <ClCompile Include="Src\main.cpp" />
+    <ClCompile Include="Src\Manager\Scene\SceneBase.cpp" />
+    <ClCompile Include="Src\Manager\Scene\SceneManager.cpp" />
+    <ClCompile Include="Src\Object\ActorBase.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Src\Application\Application.h" />
@@ -60,7 +62,6 @@
     <ClInclude Include="Src\Manager\Input\InputTextManager.h" />
     <ClInclude Include="Src\Manager\Input\KeyManager.h" />
     <ClInclude Include="Src\Manager\Loading\Loading.h" />
-    <ClInclude Include="Src\Manager\Ranking\Ranking.h" />
     <ClInclude Include="Src\Manager\Sound\SoundManager.h" />
     <ClInclude Include="Src\Object\Common\AnimationController\AnimationController.h" />
     <ClInclude Include="Src\Object\Common\Collider\BoxCollider.h" />
@@ -77,5 +78,8 @@
     <ClInclude Include="Src\Object\Common\DebugObject\DebugObjectBase.h" />
     <ClInclude Include="Src\Object\Common\DebugObject\SphereDebugObject.h" />
     <ClInclude Include="Src\Object\Common\Transform.h" />
+    <ClInclude Include="Src\Manager\Scene\SceneBase.h" />
+    <ClInclude Include="Src\Manager\Scene\SceneManager.h" />
+    <ClInclude Include="Src\Object\ActorBase.h" />
   </ItemGroup>
 </Project>

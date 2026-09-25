@@ -9,7 +9,7 @@
 
 #include "ColliderTagDefine.h"
 
-#include "../../Character/CharacterStatsDefine.h"
+//#include "../../Character/CharacterStatsDefine.h"
 
 class ColliderBase
 {
@@ -45,8 +45,7 @@ public:
 		pushWeight(0),
 		tag(type),
 		shape(SHAPE::NON),
-		OnCollision(nullptr),
-		skillStats(nullptr)
+		OnCollision(nullptr)
 	{
 	}
 	virtual ~ColliderBase() = default;
@@ -64,8 +63,6 @@ public:
 	// 接地判定通知用関数セット
 	void SetOnGroundedFunc(std::function<void(void)>OnGroundedFunc) { OnGrounded = std::move(OnGroundedFunc); }
 
-	// スキル情報セット
-	void SetSkillStats(const SkillStats* ptr) { skillStats = ptr; }
 #pragma endregion
 
 #pragma region 各ゲット関数
@@ -112,8 +109,6 @@ public:
 	// 自分が占有している範囲(チャンク分けに使用)
 	virtual AABB GetAABB(void) const = 0;
 
-	// スキル情報参照
-	const SkillStats& GetSkillStats(void)const { return *skillStats; }
 #pragma endregion
 
 #pragma region 各セット関数
@@ -168,9 +163,6 @@ private:
 
 	// 接地したときに呼び出す関数をポインタで受け取って保持
 	std::function<void(void)>OnGrounded;
-
-	// 必要に応じてスキル情報をポインタで受け取って保持
-	const SkillStats* skillStats;
 
 protected:
 	void SetShape(SHAPE s) { shape = s; }

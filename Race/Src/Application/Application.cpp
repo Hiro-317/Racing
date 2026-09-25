@@ -9,8 +9,8 @@
 #include "../Manager/Sound/SoundManager.h"
 #include "../Manager/Font/FontManager.h"
 #include "../Manager/Effect/EffectManager.h"
-#include "../Manager/Ranking/Ranking.h"
-#include "../Manager/SceneManager.h"
+//#include "../Manager/Ranking/Ranking.h"
+#include "../Manager/Scene/SceneManager.h"
 
 Application* Application::ins = nullptr;
 
@@ -86,7 +86,7 @@ void Application::Init(void)
 	EffectManager::CreateIns();
 
 	// ランキング管理クラス生成 / 読み込み
-	Ranking::CreateIns();
+	//Ranking::CreateIns();
 
 	// シーン管理初期化 / 初期化処理
 	SceneManager::CreateIns();
@@ -142,7 +142,7 @@ void Application::Release(void)
 	SceneManager::DeleteIns();
 
 	// ランキング管理クラス保存・削除
-	Ranking::DeleteIns();
+	//Ranking::DeleteIns();
 
 	// エフェクト管理クラス解放・削除
 	EffectManager::DeleteIns();
