@@ -27,9 +27,12 @@
     <ClCompile Include="Src\Object\Common\AnimationController\AnimationController.cpp" />
     <ClCompile Include="Src\Object\Common\DataLoad\ParameterLoad.cpp" />
     <ClCompile Include="Src\main.cpp" />
-    <ClCompile Include="Src\Manager\Scene\SceneBase.cpp" />
+    <ClCompile Include="Src\Scenes\SceneBase.cpp" />
     <ClCompile Include="Src\Manager\Scene\SceneManager.cpp" />
     <ClCompile Include="Src\Object\ActorBase.cpp" />
+    <ClCompile Include="Src\Scenes\GameScene\GameScene.cpp" />
+    <ClCompile Include="Src\Manager\Scene\Fade\Default\DefaultFadeScene.cpp" />
+    <ClCompile Include="Src\Manager\Scene\Fade\FadeSceneBase.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Src\Application\Application.h" />
@@ -78,8 +81,13 @@
     <ClInclude Include="Src\Object\Common\DebugObject\DebugObjectBase.h" />
     <ClInclude Include="Src\Object\Common\DebugObject\SphereDebugObject.h" />
     <ClInclude Include="Src\Object\Common\Transform.h" />
-    <ClInclude Include="Src\Manager\Scene\SceneBase.h" />
+    <ClInclude Include="Src\Scenes\SceneBase.h" />
     <ClInclude Include="Src\Manager\Scene\SceneManager.h" />
     <ClInclude Include="Src\Object\ActorBase.h" />
+    <ClInclude Include="Src\Scenes\GameScene\GameScene.h" />
+    <ClInclude Include="Src\Manager\Scene\Fade\Default\DefaultFadeScene.h" />
+    <ClInclude Include="Src\Manager\Scene\Fade\FadeDefine.h" />
+    <ClInclude Include="Src\Manager\Scene\Fade\FadeSceneBase.h" />
+    <ClInclude Include="Src\Scenes\ObjectUseDefine.h" />
   </ItemGroup>
 </Project>

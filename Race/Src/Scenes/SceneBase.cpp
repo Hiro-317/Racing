@@ -7,14 +7,15 @@
 #include "SceneBase.h"
 
 
-#include "../../Application/Application.h"
+#include "../Application/Application.h"
 
-#include "../../Common/Vector2.h"
+#include "../Common/Vector2.h"
 
-#include "..//Camera/CameraBase.h"
-#include "../Collision/CollisionManager.h"
-#include "../Effect/EffectManager.h"
-#include "../../Object/ActorBase.h"
+#include "../Manager/Camera/CameraBase.h"
+#include "../Manager/Collision/CollisionManager.h"
+#include "../Manager/Effect/EffectManager.h"
+
+#include "../Object/ActorBase.h"
 
 int SceneBase::hitStop = 0;
 

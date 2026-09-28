@@ -8,13 +8,13 @@
 
 #include <vector>
 
-//#include "../Common/Fade/FadeDefine.h"
+#include "Fade/FadeDefine.h"
 
 //#include "../../Manager/Net/SenderID_Define.h"
 
 class SceneBase;
 
-//class FadeSceneBase;
+class FadeSceneBase;
 
 class SceneManager
 {
@@ -71,9 +71,9 @@ public:
 	void ChangeScene(SCENE_ID scene);
 
 	// 末尾のシーンをフェード付きで入れ替える
-	//void ChangeSceneFade(std::unique_ptr<SceneBase> scene, FADE_TYPE fadeType = FADE_TYPE::DEFAULT, unsigned short FADE_TIME = 30, unsigned int FADE_OUT_COLOR = 0x000000, unsigned int FADE_IN_COLOR = 0x000000);
+	void ChangeSceneFade(std::unique_ptr<SceneBase> scene, FADE_TYPE fadeType = FADE_TYPE::DEFAULT, unsigned short FADE_TIME = 30, unsigned int FADE_OUT_COLOR = 0x000000, unsigned int FADE_IN_COLOR = 0x000000);
 	// 末尾のシーンをフェード付きで入れ替える
-	//void ChangeSceneFade(SCENE_ID scene, FADE_TYPE fadeType = FADE_TYPE::DEFAULT, unsigned short FADE_TIME = 30, unsigned int FADE_OUT_COLOR = 0x000000, unsigned int FADE_IN_COLOR = 0x000000);
+	void ChangeSceneFade(SCENE_ID scene, FADE_TYPE fadeType = FADE_TYPE::DEFAULT, unsigned short FADE_TIME = 30, unsigned int FADE_OUT_COLOR = 0x000000, unsigned int FADE_IN_COLOR = 0x000000);
 
 	// 現在のシーンを残したまま、新しいシーンを末尾へ積む
 	void PushScene(std::unique_ptr<SceneBase> scene);
@@ -87,13 +87,13 @@ public:
 	void JumpScene(SCENE_ID scene);
 
 	// 現在のスタックをフェード付きですべて破棄して、指定シーンだけにする
-	//void JumpSceneFade(std::unique_ptr<SceneBase> scene, FADE_TYPE fadeType = FADE_TYPE::DEFAULT, unsigned short FADE_TIME = 30, unsigned int FADE_OUT_COLOR = 0x000000, unsigned int FADE_IN_COLOR = 0x000000);
+	void JumpSceneFade(std::unique_ptr<SceneBase> scene, FADE_TYPE fadeType = FADE_TYPE::DEFAULT, unsigned short FADE_TIME = 30, unsigned int FADE_OUT_COLOR = 0x000000, unsigned int FADE_IN_COLOR = 0x000000);
 	// 現在のスタックをフェード付きですべて破棄して、指定シーンだけにする
-	//void JumpSceneFade(SCENE_ID scene, FADE_TYPE fadeType = FADE_TYPE::DEFAULT, unsigned short FADE_TIME = 30, unsigned int FADE_OUT_COLOR = 0x000000, unsigned int FADE_IN_COLOR = 0x000000);
+	void JumpSceneFade(SCENE_ID scene, FADE_TYPE fadeType = FADE_TYPE::DEFAULT, unsigned short FADE_TIME = 30, unsigned int FADE_OUT_COLOR = 0x000000, unsigned int FADE_IN_COLOR = 0x000000);
 
 	// 遷移、ロード、フェードのいずれかが進行中か
 	bool IsTransition(void)const {
-		//return !requests.empty() || loadingScene != nullptr || fade != nullptr || isWaitFadeOut;
+		return !requests.empty() || loadingScene != nullptr || fade != nullptr || isWaitFadeOut;
 	}
 
 #pragma endregion
@@ -163,7 +163,7 @@ private:
 		std::size_t popNum = 1;
 
 		// フェード付き遷移で使用する設定
-		//FADE_TYPE fadeType = FADE_TYPE::DEFAULT;
+		FADE_TYPE fadeType = FADE_TYPE::DEFAULT;
 		unsigned short fadeTime = 30;
 		unsigned int fadeOutColor = 0x000000;
 		unsigned int fadeInColor = 0x000000;
@@ -182,7 +182,7 @@ private:
 	std::unique_ptr<SceneBase> CreateScene(SCENE_ID scene)const;
 
 	// FADE_TYPEから対応するフェードシーンを生成
-	//std::unique_ptr<FadeSceneBase> CreateFadeScene(FADE_TYPE fadeType, unsigned short FADE_TIME, unsigned int FADE_OUT_COLOR, unsigned int FADE_IN_COLOR)const;
+	std::unique_ptr<FadeSceneBase> CreateFadeScene(FADE_TYPE fadeType, unsigned short FADE_TIME, unsigned int FADE_OUT_COLOR, unsigned int FADE_IN_COLOR)const;
 
 	// 遷移要求を登録
 	void AddRequest(SceneRequest request);
@@ -228,7 +228,7 @@ private:
 
 	// 現在使用中のフェードシーン。
 	// 通常のシーンスタックとは別に最前面で更新・描画する。
-	//std::unique_ptr<FadeSceneBase> fade;
+	std::unique_ptr<FadeSceneBase> fade;
 
 	// フェードアウト完了後に読み込むシーン
 	std::unique_ptr<SceneBase> fadeScene;

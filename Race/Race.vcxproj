@@ -42,12 +42,15 @@
     <ClCompile Include="Src\Manager\Input\InputTextManager.cpp" />
     <ClCompile Include="Src\Manager\Input\KeyManager.cpp" />
     <ClCompile Include="Src\Manager\Loading\Loading.cpp" />
-    <ClCompile Include="Src\Manager\Scene\SceneBase.cpp" />
+    <ClCompile Include="Src\Manager\Scene\Fade\Default\DefaultFadeScene.cpp" />
+    <ClCompile Include="Src\Manager\Scene\Fade\FadeSceneBase.cpp" />
+    <ClCompile Include="Src\Scenes\SceneBase.cpp" />
     <ClCompile Include="Src\Manager\Scene\SceneManager.cpp" />
     <ClCompile Include="Src\Manager\Sound\SoundManager.cpp" />
     <ClCompile Include="Src\Object\ActorBase.cpp" />
     <ClCompile Include="Src\Object\Common\AnimationController\AnimationController.cpp" />
     <ClCompile Include="Src\Object\Common\DataLoad\ParameterLoad.cpp" />
+    <ClCompile Include="Src\Scenes\GameScene\GameScene.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Src\Application\Application.h" />
@@ -80,7 +83,11 @@
     <ClInclude Include="Src\Manager\Input\InputTextManager.h" />
     <ClInclude Include="Src\Manager\Input\KeyManager.h" />
     <ClInclude Include="Src\Manager\Loading\Loading.h" />
-    <ClInclude Include="Src\Manager\Scene\SceneBase.h" />
+    <ClInclude Include="Src\Manager\Scene\Fade\Default\DefaultFadeScene.h" />
+    <ClInclude Include="Src\Manager\Scene\Fade\FadeDefine.h" />
+    <ClInclude Include="Src\Manager\Scene\Fade\FadeSceneBase.h" />
+    <ClInclude Include="Src\Scenes\ObjectUseDefine.h" />
+    <ClInclude Include="Src\Scenes\SceneBase.h" />
     <ClInclude Include="Src\Manager\Scene\SceneManager.h" />
     <ClInclude Include="Src\Manager\Sound\SoundManager.h" />
     <ClInclude Include="Src\Object\ActorBase.h" />
@@ -99,6 +106,7 @@
     <ClInclude Include="Src\Object\Common\DebugObject\DebugObjectBase.h" />
     <ClInclude Include="Src\Object\Common\DebugObject\SphereDebugObject.h" />
     <ClInclude Include="Src\Object\Common\Transform.h" />
+    <ClInclude Include="Src\Scenes\GameScene\GameScene.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

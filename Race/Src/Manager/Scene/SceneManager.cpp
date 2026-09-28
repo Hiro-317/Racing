@@ -9,7 +9,7 @@
 
 #include "../../Manager/Camera/CurrentCamera.h"
 
-#include "SceneBase.h"
+#include "../../Scenes/SceneBase.h"
 
 //#include "../Title/TitleScene.h"
 //#include "../Lobby/LobbyScene.h"
@@ -19,7 +19,7 @@
 //#include "../Clear/ClearScene.h"
 //#include"../GameOver/GameOver.h"
 
-//#include "../Common/Fade/Default/DefaultFadeScene.h"
+#include "Fade/Default/DefaultFadeScene.h"
 
 SceneManager* SceneManager::ins = nullptr;
 
@@ -32,7 +32,7 @@ SceneManager::SceneManager(void) :
 	loadingScene(nullptr),
 	loadCommit(LOAD_COMMIT::None),
 
-	//fade(nullptr),
+	fade(nullptr),
 	fadeScene(nullptr),
 
 	isWaitFadeOut(false),
@@ -78,10 +78,10 @@ void SceneManager::Release(void)
 	}
 	scenes.clear();
 
-	//if (fade != nullptr) {
-	//	//fade->Release();
-	//	//fade.reset();
-	//}
+	if (fade != nullptr) {
+		fade->Release();
+		fade.reset();
+	}
 
 	// SceneManagerで生成したライトをまとめて削除
 	DeleteLightHandleAll();
@@ -98,20 +98,20 @@ void SceneManager::Release(void)
 void SceneManager::Update(void)
 {
 	// フェードシーンは通常シーンとは別枠で最前面に更新する
-	//if (fade != nullptr) {
+	if (fade != nullptr) {
 
-	//	fade->Update();
+		fade->Update();
 
-	//	if (isWaitFadeOut && fade->IsFadeOutEnd()) {
-	//		isWaitFadeOut = false;
-	//		StartLoad(std::move(fadeScene), fadeCommit);
-	//	}
+		if (isWaitFadeOut && fade->IsFadeOutEnd()) {
+			isWaitFadeOut = false;
+			StartLoad(std::move(fadeScene), fadeCommit);
+		}
 
-	//	if (fade->IsEnd()) {
-	//		fade->Release();
-	//		fade.reset();
-	//	}
-	//}
+		if (fade->IsEnd()) {
+			fade->Release();
+			fade.reset();
+		}
+	}
 
 	if (loadingScene != nullptr) { UpdateLoading(); return; }
 
@@ -163,57 +163,57 @@ void SceneManager::ChangeScene(SCENE_ID scene)
 	ChangeScene(CreateScene(scene));
 }
 
-//void SceneManager::ChangeSceneFade(std::unique_ptr<SceneBase> scene, FADE_TYPE fadeType, unsigned short FADE_TIME, unsigned int FADE_OUT_COLOR, unsigned int FADE_IN_COLOR)
-//{
-//	// 一時変数にシーン遷移要求を作成し、必要な情報を設定する～～～～～～～～～～～
-//
-//	SceneRequest request;
-//
-//	// シーンの切り替え要求種類
-//	request.type = REQUEST_TYPE::ChangeFade;
-//
-//	// 遷移先のシーン
-//	request.scene = std::move(scene);
-//
-//	// フェードの種類
-//	request.fadeType = fadeType;
-//
-//	// フェード1フレーム未満は無効とし、最低1フレームのフェード時間を保証する
-//	request.fadeTime = (std::max)(static_cast<unsigned short>(1), FADE_TIME);
-//
-//	// フェードアウトの色
-//	request.fadeOutColor = FADE_OUT_COLOR;
-//	// フェードインの色
-//	request.fadeInColor = FADE_IN_COLOR;
-//
-//	// ～～～～～～～～～～～一時変数にシーン遷移要求を作成し、必要な情報を設定する
-//
-//	// 作成したシーン遷移要求をキューに追加する
-//	AddRequest(std::move(request));
-//}
-//
-//void SceneManager::ChangeSceneFade(SCENE_ID scene, FADE_TYPE fadeType, unsigned short FADE_TIME, unsigned int FADE_OUT_COLOR, unsigned int FADE_IN_COLOR)
-//{
-//	ChangeSceneFade(CreateScene(scene), fadeType, FADE_TIME, FADE_OUT_COLOR, FADE_IN_COLOR);
-//}
-//
-//void SceneManager::PushScene(std::unique_ptr<SceneBase> scene)
-//{
-//	// 一時変数にシーン遷移要求を作成し、必要な情報を設定する～～～～～～～～～～～
-//
-//	SceneRequest request;
-//
-//	// シーンの切り替え要求種類
-//	request.type = REQUEST_TYPE::Push;
-//
-//	// 遷移先のシーン
-//	request.scene = std::move(scene);
-//
-//	// ～～～～～～～～～～～一時変数にシーン遷移要求を作成し、必要な情報を設定する
-//
-//	// 作成したシーン遷移要求をキューに追加する
-//	AddRequest(std::move(request));
-//}
+void SceneManager::ChangeSceneFade(std::unique_ptr<SceneBase> scene, FADE_TYPE fadeType, unsigned short FADE_TIME, unsigned int FADE_OUT_COLOR, unsigned int FADE_IN_COLOR)
+{
+	// 一時変数にシーン遷移要求を作成し、必要な情報を設定する～～～～～～～～～～～
+
+	SceneRequest request;
+
+	// シーンの切り替え要求種類
+	request.type = REQUEST_TYPE::ChangeFade;
+
+	// 遷移先のシーン
+	request.scene = std::move(scene);
+
+	// フェードの種類
+	request.fadeType = fadeType;
+
+	// フェード1フレーム未満は無効とし、最低1フレームのフェード時間を保証する
+	request.fadeTime = (std::max)(static_cast<unsigned short>(1), FADE_TIME);
+
+	// フェードアウトの色
+	request.fadeOutColor = FADE_OUT_COLOR;
+	// フェードインの色
+	request.fadeInColor = FADE_IN_COLOR;
+
+	// ～～～～～～～～～～～一時変数にシーン遷移要求を作成し、必要な情報を設定する
+
+	// 作成したシーン遷移要求をキューに追加する
+	AddRequest(std::move(request));
+}
+
+void SceneManager::ChangeSceneFade(SCENE_ID scene, FADE_TYPE fadeType, unsigned short FADE_TIME, unsigned int FADE_OUT_COLOR, unsigned int FADE_IN_COLOR)
+{
+	ChangeSceneFade(CreateScene(scene), fadeType, FADE_TIME, FADE_OUT_COLOR, FADE_IN_COLOR);
+}
+
+void SceneManager::PushScene(std::unique_ptr<SceneBase> scene)
+{
+	// 一時変数にシーン遷移要求を作成し、必要な情報を設定する～～～～～～～～～～～
+
+	SceneRequest request;
+
+	// シーンの切り替え要求種類
+	request.type = REQUEST_TYPE::Push;
+
+	// 遷移先のシーン
+	request.scene = std::move(scene);
+
+	// ～～～～～～～～～～～一時変数にシーン遷移要求を作成し、必要な情報を設定する
+
+	// 作成したシーン遷移要求をキューに追加する
+	AddRequest(std::move(request));
+}
 
 void SceneManager::PopScene(std::size_t popNum)
 {
@@ -256,39 +256,39 @@ void SceneManager::JumpScene(SCENE_ID scene)
 	JumpScene(CreateScene(scene));
 }
 
-//void SceneManager::JumpSceneFade(std::unique_ptr<SceneBase> scene, FADE_TYPE fadeType, unsigned short FADE_TIME, unsigned int FADE_OUT_COLOR, unsigned int FADE_IN_COLOR)
-//{
-//	// 一時変数にシーン遷移要求を作成し、必要な情報を設定する～～～～～～～～～～～
-//
-//	SceneRequest request;
-//
-//	// シーンの切り替え要求種類
-//	request.type = REQUEST_TYPE::JumpFade;
-//
-//	// 遷移先のシーン
-//	request.scene = std::move(scene);
-//
-//	// フェードの種類
-//	request.fadeType = fadeType;
-//
-//	// フェード1フレーム未満は無効とし、最低1フレームのフェード時間を保証する
-//	request.fadeTime = (std::max)(static_cast<unsigned short>(1), FADE_TIME);
-//
-//	// フェードアウトの色
-//	request.fadeOutColor = FADE_OUT_COLOR;
-//	// フェードインの色
-//	request.fadeInColor = FADE_IN_COLOR;
-//
-//	// ～～～～～～～～～～～一時変数にシーン遷移要求を作成し、必要な情報を設定する
-//
-//	// 作成したシーン遷移要求をキューに追加する
-//	AddRequest(std::move(request));
-//}
-//
-//void SceneManager::JumpSceneFade(SCENE_ID scene, FADE_TYPE fadeType, unsigned short FADE_TIME, unsigned int FADE_OUT_COLOR, unsigned int FADE_IN_COLOR)
-//{
-//	JumpSceneFade(CreateScene(scene), fadeType, FADE_TIME, FADE_IN_COLOR, FADE_OUT_COLOR);
-//}
+void SceneManager::JumpSceneFade(std::unique_ptr<SceneBase> scene, FADE_TYPE fadeType, unsigned short FADE_TIME, unsigned int FADE_OUT_COLOR, unsigned int FADE_IN_COLOR)
+{
+	// 一時変数にシーン遷移要求を作成し、必要な情報を設定する～～～～～～～～～～～
+
+	SceneRequest request;
+
+	// シーンの切り替え要求種類
+	request.type = REQUEST_TYPE::JumpFade;
+
+	// 遷移先のシーン
+	request.scene = std::move(scene);
+
+	// フェードの種類
+	request.fadeType = fadeType;
+
+	// フェード1フレーム未満は無効とし、最低1フレームのフェード時間を保証する
+	request.fadeTime = (std::max)(static_cast<unsigned short>(1), FADE_TIME);
+
+	// フェードアウトの色
+	request.fadeOutColor = FADE_OUT_COLOR;
+	// フェードインの色
+	request.fadeInColor = FADE_IN_COLOR;
+
+	// ～～～～～～～～～～～一時変数にシーン遷移要求を作成し、必要な情報を設定する
+
+	// 作成したシーン遷移要求をキューに追加する
+	AddRequest(std::move(request));
+}
+
+void SceneManager::JumpSceneFade(SCENE_ID scene, FADE_TYPE fadeType, unsigned short FADE_TIME, unsigned int FADE_OUT_COLOR, unsigned int FADE_IN_COLOR)
+{
+	JumpSceneFade(CreateScene(scene), fadeType, FADE_TIME, FADE_IN_COLOR, FADE_OUT_COLOR);
+}
 
 #pragma endregion
 
@@ -352,10 +352,10 @@ void SceneManager::ApplyRequest(SceneRequest request)
 		isWaitFadeOut = true;
 
 		// フェードシーンを生成し、ロードと初期化を行う。フェードシーンは通常のシーンとは別枠で最前面に更新する
-		//fade = CreateFadeScene(request.fadeType, request.fadeTime, request.fadeOutColor, request.fadeInColor);
+		fade = CreateFadeScene(request.fadeType, request.fadeTime, request.fadeOutColor, request.fadeInColor);
 
 		// フェードシーンが生成できた場合のみロードと初期化を行う。nullptrの場合はフェードなしで遷移する
-		//if (fade != nullptr) { fade->Load(); fade->Init(); }
+		if (fade != nullptr) { fade->Load(); fade->Init(); }
 
 		break;
 	}
@@ -372,10 +372,10 @@ void SceneManager::ApplyRequest(SceneRequest request)
 		isWaitFadeOut = true;
 
 		// フェードシーンを生成し、ロードと初期化を行う。フェードシーンは通常のシーンとは別枠で最前面に更新する
-		//fade = CreateFadeScene(request.fadeType, request.fadeTime, request.fadeOutColor, request.fadeInColor);
+		fade = CreateFadeScene(request.fadeType, request.fadeTime, request.fadeOutColor, request.fadeInColor);
 
 		// フェードシーンが生成できた場合のみロードと初期化を行う。nullptrの場合はフェードなしで遷移する
-		//if (fade != nullptr) { fade->Load(); fade->Init(); }
+		if (fade != nullptr) { fade->Load(); fade->Init(); }
 
 		break;
 	}
@@ -444,9 +444,9 @@ void SceneManager::CommitLoadedScene(void)
 	CommitScene(std::move(loadingScene), loadCommit);
 
 	// フェード遷移の場合、シーンの入れ替えと初期化がすべて終わってから明るくする
-	/*if (loadCommit == LOAD_COMMIT::ChangeFade || loadCommit == LOAD_COMMIT::JumpFade) {
+	if (loadCommit == LOAD_COMMIT::ChangeFade || loadCommit == LOAD_COMMIT::JumpFade) {
 		if (fade != nullptr) { fade->StartFadeIn(); }
-	}*/
+	}
 
 	// 読み込み完了後の反映方法を未設定に戻す
 	loadCommit = LOAD_COMMIT::None;
@@ -531,7 +531,7 @@ std::size_t SceneManager::GetFirstDrawIndex(void)const
 
 std::unique_ptr<SceneBase> SceneManager::CreateScene(SCENE_ID scene)const
 {
-	//switch (scene) {
+	switch (scene) {
 
 	//case SCENE_ID::Title: { return std::make_unique<TitleScene>(); }
 
@@ -547,20 +547,19 @@ std::unique_ptr<SceneBase> SceneManager::CreateScene(SCENE_ID scene)const
 
 	//case SCENE_ID::GameOver: { return std::make_unique<GameOver>(); }
 
-	//default: { return nullptr; }
-	//}
-	return nullptr;
+	default: { return nullptr; }
+	}
 }
 
-//std::unique_ptr<FadeSceneBase> SceneManager::CreateFadeScene(FADE_TYPE fadeType, unsigned short FADE_TIME, unsigned int FADE_OUT_COLOR,	unsigned int FADE_IN_COLOR)const
-//{
-//	switch (fadeType)	{
-//
-//	case FADE_TYPE::DEFAULT: { return std::make_unique<DefaultFadeScene>(FADE_TIME, FADE_OUT_COLOR, FADE_IN_COLOR); }
-//
-//	default: { return std::make_unique<DefaultFadeScene>(FADE_TIME, FADE_OUT_COLOR, FADE_IN_COLOR); }
-//	}
-//}
+std::unique_ptr<FadeSceneBase> SceneManager::CreateFadeScene(FADE_TYPE fadeType, unsigned short FADE_TIME, unsigned int FADE_OUT_COLOR,	unsigned int FADE_IN_COLOR)const
+{
+	switch (fadeType)	{
+
+	case FADE_TYPE::DEFAULT: { return std::make_unique<DefaultFadeScene>(FADE_TIME, FADE_OUT_COLOR, FADE_IN_COLOR); }
+
+	default: { return std::make_unique<DefaultFadeScene>(FADE_TIME, FADE_OUT_COLOR, FADE_IN_COLOR); }
+	}
+}
 
 void SceneManager::SetCurrentCamera(void) const
 {

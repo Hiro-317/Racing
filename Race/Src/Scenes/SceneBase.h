@@ -6,6 +6,8 @@
 #include <utility>
 #include <vector>
 
+#include "ObjectUseDefine.h"
+
 class CollisionManager;
 class CameraBase;
 class ActorBase;
