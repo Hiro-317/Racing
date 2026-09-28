@@ -35,6 +35,7 @@
     <ClCompile Include="Src\Manager\Camera\FollowYaw\FollowYawCamera.cpp" />
     <ClCompile Include="Src\Manager\Camera\Free\FreeCamera.cpp" />
     <ClCompile Include="Src\Manager\Camera\MultifuncCamera\MultifuncCamera.cpp" />
+    <ClCompile Include="Src\Manager\Car\CarManager.cpp" />
     <ClCompile Include="Src\Manager\Collision\CollisionManager.cpp" />
     <ClCompile Include="Src\Manager\Effect\EffectManager.cpp" />
     <ClCompile Include="Src\Manager\Font\FontManager.cpp" />
@@ -44,13 +45,13 @@
     <ClCompile Include="Src\Manager\Loading\Loading.cpp" />
     <ClCompile Include="Src\Manager\Scene\Fade\Default\DefaultFadeScene.cpp" />
     <ClCompile Include="Src\Manager\Scene\Fade\FadeSceneBase.cpp" />
+    <ClCompile Include="Src\Object\Car\CarBase.cpp" />
     <ClCompile Include="Src\Scenes\SceneBase.cpp" />
     <ClCompile Include="Src\Manager\Scene\SceneManager.cpp" />
     <ClCompile Include="Src\Manager\Sound\SoundManager.cpp" />
     <ClCompile Include="Src\Object\ActorBase.cpp" />
     <ClCompile Include="Src\Object\Common\AnimationController\AnimationController.cpp" />
     <ClCompile Include="Src\Object\Common\DataLoad\ParameterLoad.cpp" />
-    <ClCompile Include="Src\Scenes\GameScene\GameScene.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Src\Application\Application.h" />
@@ -73,6 +74,7 @@
     <ClInclude Include="Src\Manager\Camera\FollowYaw\FollowYawCamera.h" />
     <ClInclude Include="Src\Manager\Camera\Free\FreeCamera.h" />
     <ClInclude Include="Src\Manager\Camera\MultifuncCamera\MultifuncCamera.h" />
+    <ClInclude Include="Src\Manager\Car\CarManager.h" />
     <ClInclude Include="Src\Manager\Collision\ChunkStDefine.h" />
     <ClInclude Include="Src\Manager\Collision\CollisionManager.h" />
     <ClInclude Include="Src\Manager\Effect\EffectBase.h" />
@@ -86,6 +88,7 @@
     <ClInclude Include="Src\Manager\Scene\Fade\Default\DefaultFadeScene.h" />
     <ClInclude Include="Src\Manager\Scene\Fade\FadeDefine.h" />
     <ClInclude Include="Src\Manager\Scene\Fade\FadeSceneBase.h" />
+    <ClInclude Include="Src\Object\Car\CarBase.h" />
     <ClInclude Include="Src\Scenes\ObjectUseDefine.h" />
     <ClInclude Include="Src\Scenes\SceneBase.h" />
     <ClInclude Include="Src\Manager\Scene\SceneManager.h" />
@@ -106,7 +109,6 @@
     <ClInclude Include="Src\Object\Common\DebugObject\DebugObjectBase.h" />
     <ClInclude Include="Src\Object\Common\DebugObject\SphereDebugObject.h" />
     <ClInclude Include="Src\Object\Common\Transform.h" />
-    <ClInclude Include="Src\Scenes\GameScene\GameScene.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

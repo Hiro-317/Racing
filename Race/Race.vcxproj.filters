@@ -30,9 +30,10 @@
     <ClCompile Include="Src\Scenes\SceneBase.cpp" />
     <ClCompile Include="Src\Manager\Scene\SceneManager.cpp" />
     <ClCompile Include="Src\Object\ActorBase.cpp" />
-    <ClCompile Include="Src\Scenes\GameScene\GameScene.cpp" />
     <ClCompile Include="Src\Manager\Scene\Fade\Default\DefaultFadeScene.cpp" />
     <ClCompile Include="Src\Manager\Scene\Fade\FadeSceneBase.cpp" />
+    <ClCompile Include="Src\Object\Car\CarBase.cpp" />
+    <ClCompile Include="Src\Manager\Car\CarManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Src\Application\Application.h" />
@@ -84,10 +85,11 @@
     <ClInclude Include="Src\Scenes\SceneBase.h" />
     <ClInclude Include="Src\Manager\Scene\SceneManager.h" />
     <ClInclude Include="Src\Object\ActorBase.h" />
-    <ClInclude Include="Src\Scenes\GameScene\GameScene.h" />
     <ClInclude Include="Src\Manager\Scene\Fade\Default\DefaultFadeScene.h" />
     <ClInclude Include="Src\Manager\Scene\Fade\FadeDefine.h" />
     <ClInclude Include="Src\Manager\Scene\Fade\FadeSceneBase.h" />
     <ClInclude Include="Src\Scenes\ObjectUseDefine.h" />
+    <ClInclude Include="Src\Object\Car\CarBase.h" />
+    <ClInclude Include="Src\Manager\Car\CarManager.h" />
   </ItemGroup>
 </Project>
