@@ -2,7 +2,7 @@
 
 #include "../../../Application/Application.h"
 
-#include "../../Input/KeyManager.h"
+#include "../../../Manager/Input/InputManager.h"
 
 DisplayAutoCamera::DisplayAutoCamera(const Vector3& fixedLookAtPos, const Vector3& lookAtDiff, float ROT_POWER, const Vector3& angle, float fov) :
 	CameraBase(Vector3(), Vector3(), fov),

@@ -2,7 +2,7 @@
 
 #include "../../Application/Application.h"
 
-#include "../Input/KeyManager.h"
+#include "../../Manager/Input/InputManager.h"
 
 #include "CameraEvent/CameraEventBase.h"
 

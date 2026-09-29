@@ -4,7 +4,7 @@
 
 #include "../../../Application/Application.h"
 
-#include "../../Input/KeyManager.h"
+#include "../../../Manager/Input/InputManager.h"
 
 FollowAutoCamera::FollowAutoCamera(
 	const Vector3* targetPos,

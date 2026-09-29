@@ -2,7 +2,7 @@
 
 #include <algorithm>
 
-#include "../../Input/KeyManager.h"
+#include "../../../Manager/Input/InputManager.h"
 
 #pragma region コンストラクタ
 
@@ -209,8 +209,6 @@ void MultifuncCamera::SubRelease(void)
 	}
 	default: { break; }
 	}
-
-	Key::GetIns().SetMouseFixed(false);
 }
 
 #pragma endregion
@@ -243,7 +241,7 @@ void MultifuncCamera::ChangeModeFree(float MOVE_POWER, float ROT_POWER, const Ve
 	Release();
 
 	// マウス設定
-	Key::GetIns().SetMouseFixed(true);
+	//Key::GetIns().SetMouseFixed(true);
 
 	// 状態遷移
 	mode = MODE::Free;
@@ -271,7 +269,7 @@ void MultifuncCamera::ChangeModeDisplayRemote(const Vector3& fixedLookAtPos, con
 	Release();
 
 	// マウス設定
-	Key::GetIns().SetMouseFixed(true);
+	//Key::GetIns().SetMouseFixed(true);
 
 	// 状態遷移
 	mode = MODE::DisplayRemote;
@@ -338,7 +336,7 @@ void MultifuncCamera::ChangeModeFollowRemote(const Vector3* targetPos, const Vec
 	Release();
 
 	// マウス設定
-	Key::GetIns().SetMouseFixed(true);
+	//Key::GetIns().SetMouseFixed(true);
 
 	// 状態遷移
 	mode = MODE::FollowRemote;
@@ -380,7 +378,7 @@ void MultifuncCamera::ChangeModeFollowYaw(const Vector3* targetPos, const Vector
 	Release();
 
 	// マウス設定
-	Key::GetIns().SetMouseFixed(true);
+	//Key::GetIns().SetMouseFixed(true);
 
 	// 状態遷移
 	mode = MODE::FollowYaw;
@@ -461,22 +459,10 @@ void MultifuncCamera::FixedPointModeFunc(void)
 // 更新処理
 void MultifuncCamera::FreeModeFunc(void)
 {
-#pragma region 角度 (コントローラースティック -> マウス -> ボタン の順に確認して入力があったもので回転させる)
+#pragma region 角度
 
 	// コントローラーの右スティックベクトルを代入
-	Vector3 rot = Key::GetIns().GetRightStickVec(false).ToVector3YX();
-
-	// コントローラーの右スティックが入力なしならマウスの移動ベクトルを代入
-	if (rot == 0.0f) { rot = Key::GetIns().GetMouseMoveSize().ToVector2().ToVector3YX() / MOUSE_SENSI; }
-
-	// マウスが動いてなかったらボタンでの入力を検出してボタンごとに回転方向を 加算/減算 していく
-	if (rot == 0.0f) {
-		if (Key::GetIns().GetInfo(KEY_TYPE::CAMERA_ROT_LEFT).now) { rot.y--; }
-		if (Key::GetIns().GetInfo(KEY_TYPE::CAMERA_ROT_RIGHT).now) { rot.y++; }
-		if (Key::GetIns().GetInfo(KEY_TYPE::CAMERA_ROT_FRONT).now) { rot.x--; }
-		if (Key::GetIns().GetInfo(KEY_TYPE::CAMERA_ROT_BACK).now) { rot.x++; }
-		rot.Normalize();
-	}
+	Vector3 rot = Vector3::XYonly(Input::GetIns().GetPriorityAKeyR().x, Input::GetIns().GetPriorityAKeyR().z);
 
 	// 最終的に入力が１つでもあれば回転させる
 	if (rot != 0.0f) {
@@ -494,20 +480,7 @@ void MultifuncCamera::FreeModeFunc(void)
 
 #pragma region 移動 (コントローラースティック -> ボタン の順に確認して入力があったもので移動させる)
 	// コントローラーの左スティックベクトルを代入
-	Vector3 dir = Key::GetIns().GetLeftStickVec(false).ToVector3XZ();
-
-	// コントローラーの左スティックの入力が検出されなかった場合、ボタンでの入力を検出してボタンごとに移動方向を 加算/減算 していく
-	if (dir == 0.0f) {
-		if (Key::GetIns().GetInfo(KEY_TYPE::CAMERA_MOVE_FRONT).now) { dir.z++; }
-		if (Key::GetIns().GetInfo(KEY_TYPE::CAMERA_MOVE_BACK).now) { dir.z--; }
-		if (Key::GetIns().GetInfo(KEY_TYPE::CAMERA_MOVE_RIGHT).now) { dir.x++; }
-		if (Key::GetIns().GetInfo(KEY_TYPE::CAMERA_MOVE_LEFT).now) { dir.x--; }
-		dir.Normalize();
-	}
-
-	// Y軸はボタンのため共通して検出する
-	if (Key::GetIns().GetInfo(KEY_TYPE::CAMERA_MOVE_UP).now) { dir.y++; }
-	if (Key::GetIns().GetInfo(KEY_TYPE::CAMERA_MOVE_DOWN).now) { dir.y--; }
+	Vector3 dir = Input::GetIns().GetPriorityAKeyL();
 
 	// 入力があれば、方向×スピードで移動量を作って、座標に足して移動
 	if (dir != 0.0f) { pos += dir.TransMat(MGetRotY(angle.y)) * MOVE_POWER; }
@@ -521,22 +494,10 @@ void MultifuncCamera::FreeModeFunc(void)
 // 更新処理
 void MultifuncCamera::DisplayRemoteModeFunc(void)
 {
-#pragma region 角度 (コントローラースティック -> マウス -> ボタン の順に確認して入力があったもので回転させる)
+#pragma region 角度
 
 	// コントローラーの右スティックベクトルを代入
-	Vector3 rot = Key::GetIns().GetRightStickVec(false).ToVector3YX();
-
-	// コントローラーの右スティックが入力なしならマウスの移動ベクトルを代入
-	if (rot == 0.0f) { rot = Key::GetIns().GetMouseMoveSize().ToVector2().ToVector3YX() / MOUSE_SENSI; }
-
-	// マウスが動いてなかったらボタンでの入力を検出してボタンごとに回転方向を 加算/減算 していく
-	if (rot == 0.0f) {
-		if (Key::GetIns().GetInfo(KEY_TYPE::CAMERA_ROT_LEFT).now) { rot.y--; }
-		if (Key::GetIns().GetInfo(KEY_TYPE::CAMERA_ROT_RIGHT).now) { rot.y++; }
-		if (Key::GetIns().GetInfo(KEY_TYPE::CAMERA_ROT_FRONT).now) { rot.x--; }
-		if (Key::GetIns().GetInfo(KEY_TYPE::CAMERA_ROT_BACK).now) { rot.x++; }
-		rot.Normalize();
-	}
+	Vector3 rot = Vector3::XYonly(Input::GetIns().GetPriorityAKeyR().x, Input::GetIns().GetPriorityAKeyR().z);
 
 	// 最終的に入力が1つでもあれば回転させる
 	if (rot != 0.0f) {
@@ -545,15 +506,15 @@ void MultifuncCamera::DisplayRemoteModeFunc(void)
 		controlAngle += rot * ROT_POWER;
 
 		// 回転の数値制御
-		if (controlAngle.y <= Deg2Rad(0.0f)) { controlAngle.y += Deg2Rad(360.0f); }
-		if (controlAngle.y >= Deg2Rad(360.0f)) { controlAngle.y -= Deg2Rad(360.0f); }
+		if (controlAngle.z <= Deg2Rad(0.0f)) { controlAngle.z += Deg2Rad(360.0f); }
+		if (controlAngle.z >= Deg2Rad(360.0f)) { controlAngle.z -= Deg2Rad(360.0f); }
 		if (controlAngle.x <= Deg2Rad(0.0f)) { controlAngle.x += Deg2Rad(360.0f); }
 		if (controlAngle.x >= Deg2Rad(360.0f)) { controlAngle.x -= Deg2Rad(360.0f); }
 	}
 #pragma endregion
 
 	// 現在の追従対象の座標と角度情報から自身(カメラ)の座標を算出する
-	pos = fixedLookAtPos + lookAtDiff.TransMat(MatrixAllMultXY({ Vector3::XYonly(controlAngle.x,controlAngle.y) }));
+	pos = fixedLookAtPos + lookAtDiff.TransMat(MatrixAllMultXY({ Vector3::XZonly(controlAngle.x,controlAngle.z) }));
 
 	// 角度
 	angle = CalcCameraAngle(pos, fixedLookAtPos);
@@ -573,7 +534,7 @@ void MultifuncCamera::DisplayAutoModeFunc(void)
 	if (controlAngle.y <= Deg2Rad(0.0f)) { controlAngle.y += Deg2Rad(360.0f); }
 
 	// 現在の追従対象の座標と角度情報から自身(カメラ)の座標を算出する
-	pos = fixedLookAtPos + lookAtDiff.TransMat(MatrixAllMultXY({ Vector3::XYonly(controlAngle.x,controlAngle.y) }));
+	pos = fixedLookAtPos + lookAtDiff.TransMat(MatrixAllMultXY({ Vector3::XZonly(controlAngle.x,controlAngle.z) }));
 
 	// 角度
 	angle = CalcCameraAngle(pos, fixedLookAtPos);
@@ -589,22 +550,8 @@ void MultifuncCamera::FollowRemoteModeFunc(void)
 	// 追従対象が設定されていなかったら処理をしない(安全)
 	if (targetPos == nullptr) { return; }
 
-	// 回転処理(コントローラー -> マウス-> ボタン の順に入力を確認していく)
-
 	// コントローラーの右スティックベクトルを代入
-	Vector3 rot = Key::GetIns().GetRightStickVec(false).ToVector3YX();
-
-	// コントローラーの右スティックが入力なしならマウスの移動ベクトルを代入
-	if (rot == 0.0f) { rot = Key::GetIns().GetMouseMoveSize().ToVector2().ToVector3YX() / MOUSE_SENSI; }
-
-	// マウスが動いてなかったらボタンでの入力を検出してボタンごとに回転方向を 加算/減算 していく
-	if (rot == 0.0f) {
-		if (Key::GetIns().GetInfo(KEY_TYPE::CAMERA_ROT_RIGHT).now) { rot.y++; }
-		if (Key::GetIns().GetInfo(KEY_TYPE::CAMERA_ROT_LEFT).now) { rot.y--; }
-		if (Key::GetIns().GetInfo(KEY_TYPE::CAMERA_ROT_FRONT).now) { rot.x--; }
-		if (Key::GetIns().GetInfo(KEY_TYPE::CAMERA_ROT_BACK).now) { rot.x++; }
-		rot.Normalize();
-	}
+	Vector3 rot = Vector3::XYonly(Input::GetIns().GetPriorityAKeyR().x, Input::GetIns().GetPriorityAKeyR().z);
 
 	// 最終的に入力が1つでもあれば回転させる
 	if (rot != 0.0f) {
@@ -618,8 +565,8 @@ void MultifuncCamera::FollowRemoteModeFunc(void)
 	}
 
 	// 現在の追従対象の座標と角度情報から自身(カメラ)の座標を算出する
-	pos = *targetPos + cameraOffset.TransMat(MatrixAllMultXY({ Vector3::XYonly(controlAngle.x,controlAngle.y) }));
-	lookAtPos = *targetPos + lookAtOffset.TransMat(MatrixAllMultXY({ Vector3::XYonly(controlAngle.x, controlAngle.y) }));
+	pos = *targetPos + cameraOffset.TransMat(MatrixAllMultXZ({ Vector3::XZonly(controlAngle.x,controlAngle.z) }));
+	lookAtPos = *targetPos + lookAtOffset.TransMat(MatrixAllMultXZ({ Vector3::XZonly(controlAngle.x, controlAngle.z) }));
 
 	// 角度
 	angle = CalcCameraAngle(pos, lookAtPos);
@@ -635,20 +582,8 @@ void MultifuncCamera::FollowYawModeFunc(void)
 	// 追従対象が設定されていなかったら処理をしない(安全)
 	if (targetPos == nullptr) { return; }
 
-	// 回転処理(コントローラー -> マウス-> ボタン の順に入力を確認していく)
-
 	// コントローラーの右スティックベクトルを代入
-	Vector3 rot = Vector3::Yonly(Key::GetIns().GetRightStickVec(false).ToVector3YX().y);
-
-	// コントローラーの右スティックが入力なしならマウスの移動ベクトルを代入
-	if (rot == 0.0f) { rot = Vector3::Yonly((float)Key::GetIns().GetMouseMoveSize().x / MOUSE_SENSI); }
-
-	// マウスが動いてなかったらボタンでの入力を検出してボタンごとに回転方向を 加算/減算 していく
-	if (rot == 0.0f) {
-		if (Key::GetIns().GetInfo(KEY_TYPE::CAMERA_ROT_RIGHT).now) { rot.y++; }
-		if (Key::GetIns().GetInfo(KEY_TYPE::CAMERA_ROT_LEFT).now) { rot.y--; }
-		rot.Normalize();
-	}
+	Vector3 rot = Vector3::Yonly(Input::GetIns().GetPriorityAKeyR().x);
 
 	// 最終的に入力が1つでもあれば回転させる
 	if (rot != 0.0f) {

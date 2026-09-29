@@ -170,7 +170,7 @@ Vector3 InputManager::GetAKeyL(const KEYPAD_NO& no)
 	case InputManager::KEYPAD_NO::PAD3:
 	case InputManager::KEYPAD_NO::PAD4:
 
-		return pads_.at((int)no)->GetDirectionXZAKeyL().Normalized();
+		return pads_.at((int)no)->GetDirectionXZAKeyL();
 		break;
 
 	case InputManager::KEYPAD_NO::KEY:
@@ -214,27 +214,6 @@ Vector3 InputManager::GetAKeyR(const KEYPAD_NO& no)
 		break;
 
 	case InputManager::KEYPAD_NO::KEY: {
-		// 上下左右をアナログに変換
-		Vector3 nowPos = Vector3();
-
-		if (keyboard_->GetKey(KEY_INPUT_UP).keyNew) {
-			nowPos.z += 1.0f;
-		}
-		if (keyboard_->GetKey(KEY_INPUT_DOWN).keyNew) {
-			nowPos.z -= 1.0f;
-		}
-		if (keyboard_->GetKey(KEY_INPUT_RIGHT).keyNew) {
-			nowPos.x += 1.0f;
-		}
-		if (keyboard_->GetKey(KEY_INPUT_LEFT).keyNew) {
-			nowPos.x -= 1.0f;
-		}
-		if (nowPos != Vector3()) {
-			return nowPos.Normalized();
-		}
-		break;
-	}
-	case InputManager::KEYPAD_NO::MOUSE: {
 
 		//　中心からの差分をとる
 		Vector3 nowPos = Vector3();
@@ -398,8 +377,6 @@ std::vector<Vector3> InputManager::GetPriorityAKeyR(const COMMAND& com, int& num
 				break;
 			case static_cast<int>(KEYPAD_NO::KEY):
 				temp.emplace_back(GetAKeyR(KEYPAD_NO::KEY));
-			case static_cast<int>(KEYPAD_NO::MOUSE):
-				temp.emplace_back(GetAKeyR(KEYPAD_NO::MOUSE));
 				break;
 			default:
 				break;

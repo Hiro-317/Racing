@@ -2,7 +2,7 @@
 
 #include "../../../Application/Application.h"
 
-#include "../../Input/KeyManager.h"
+#include "../../../Manager/Input/InputManager.h"
 
 FollowRemoteCamera::FollowRemoteCamera(
 	const Vector3* targetPos,
@@ -33,7 +33,7 @@ FollowRemoteCamera::FollowRemoteCamera(
 	this->angle = CalcCameraAngle(pos, lookAtPos);
 
 	// カメラ回転が有効だったらマウスを固定しておく
-	if (ROT_POWER != 0.0f) { Key::GetIns().SetMouseFixed(true); }
+	//if (ROT_POWER != 0.0f) { Key::GetIns().SetMouseFixed(true); }
 }
 
 void FollowRemoteCamera::NormalUpdate(void)
@@ -41,22 +41,8 @@ void FollowRemoteCamera::NormalUpdate(void)
 	// 追従対象が設定されていなかったら処理をしない(安全)
 	if (targetPos == nullptr) { return; }
 
-	// 回転処理(コントローラー -> マウス-> ボタン の順に入力を確認していく)
-
-	// コントローラーの右スティックベクトルを代入
-	Vector3 rot = Key::GetIns().GetRightStickVec(false).ToVector3YX();
-
-	// コントローラーの右スティックが入力なしならマウスの移動ベクトルを代入
-	if (rot == 0.0f) { rot = Key::GetIns().GetMouseMoveSize().ToVector2().ToVector3YX() / MOUSE_SENSI; }
-
-	// マウスが動いてなかったらボタンでの入力を検出してボタンごとに回転方向を 加算/減算 していく
-	if (rot == 0.0f) {
-		if (Key::GetIns().GetInfo(KEY_TYPE::CAMERA_ROT_RIGHT).now) { rot.y++; }
-		if (Key::GetIns().GetInfo(KEY_TYPE::CAMERA_ROT_LEFT).now) { rot.y--; }
-		if (Key::GetIns().GetInfo(KEY_TYPE::CAMERA_ROT_FRONT).now) { rot.x--; }
-		if (Key::GetIns().GetInfo(KEY_TYPE::CAMERA_ROT_BACK).now) { rot.x++; }
-		rot.Normalize();
-	}
+	// 回転処理
+	Vector3 rot = Vector3::XYonly(Input::GetIns().GetPriorityAKeyR().x, Input::GetIns().GetPriorityAKeyR().z);
 
 	// 最終的に入力が1つでもあれば回転させる
 	if (rot != 0.0f) {
@@ -80,5 +66,5 @@ void FollowRemoteCamera::NormalUpdate(void)
 void FollowRemoteCamera::SubRelease(void)
 {
 	// 生成時固定したマウスを戻す
-	Key::GetIns().SetMouseFixed(false);
+	//Key::GetIns().SetMouseFixed(false);
 }
