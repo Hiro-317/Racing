@@ -9,17 +9,13 @@
 
 InputManager* InputManager::inst_ = nullptr;
 
-void InputManager::CreateInstance(void)
+void InputManager::CreateIns(void)
 {
 	inst_ = new InputManager();
 }
 
-InputManager& InputManager::GetInstance(void)
+InputManager& InputManager::GetIns(void)
 {
-	if (inst_ == nullptr) {
-
-		CreateInstance();
-	}
 	return *inst_;
 }
 
@@ -165,91 +161,93 @@ void InputManager::Update(void){
 	}
 }
 
-// リソースの破棄
-void InputManager::Release(void){
+Vector3 InputManager::GetAKeyL(const KEYPAD_NO& no)
+{
+	switch (no)
+	{
+	case InputManager::KEYPAD_NO::PAD1:
+	case InputManager::KEYPAD_NO::PAD2:
+	case InputManager::KEYPAD_NO::PAD3:
+	case InputManager::KEYPAD_NO::PAD4:
 
-	// 解放
-	keyboard_->Release();
-	mouse_->Release();
-	for (auto p : pads_) {
+		return pads_.at((int)no)->GetDirectionXZAKeyL().Normalized();
+		break;
 
-		p->Release();
-		delete p;
+	case InputManager::KEYPAD_NO::KEY:
+	case InputManager::KEYPAD_NO::MOUSE: {
+		// WASDをアナログに変換
+		Vector3 nowPos = Vector3();
+
+		if (keyboard_->GetKey(KEY_INPUT_W).keyNew) {
+			nowPos.z += 1.0f;
+		}
+		if (keyboard_->GetKey(KEY_INPUT_S).keyNew) {
+			nowPos.z -= 1.0f;
+		}
+		if (keyboard_->GetKey(KEY_INPUT_D).keyNew) {
+			nowPos.x += 1.0f;
+		}
+		if (keyboard_->GetKey(KEY_INPUT_A).keyNew) {
+			nowPos.x -= 1.0f;
+		}
+		if (nowPos != Vector3()) {
+			return nowPos.Normalized();
+		}
+		break;
 	}
-	delete keyboard_;
-	delete mouse_;
-	pads_.clear();
+	default:
+		return Vector3();
+		break;
+	}
 }
 
-std::map<InputManager::KEYPAD_NO, VECTOR>  InputManager::GetDirectionXZAKeyL(void)
+Vector3 InputManager::GetAKeyR(const KEYPAD_NO& no)
 {
-	std::map<KEYPAD_NO, VECTOR>  res;
+	switch (no)
+	{
+	case InputManager::KEYPAD_NO::PAD1:
+	case InputManager::KEYPAD_NO::PAD2:
+	case InputManager::KEYPAD_NO::PAD3:
+	case InputManager::KEYPAD_NO::PAD4:
 
-	Vector3 nowPos = Vector3();
+		return pads_.at((int)no)->GetDirectionXZAKeyR();
+		break;
 
-	// WASDをアナログに変換
-	if (keyboard_->GetKey(KEY_INPUT_W).keyNew) {
-		nowPos.z += 1.0f;
-	}
-	if (keyboard_->GetKey(KEY_INPUT_S).keyNew) {
-		nowPos.z -= 1.0f;
-	}
-	if (keyboard_->GetKey(KEY_INPUT_D).keyNew) {
-		nowPos.x += 1.0f;
-	}
-	if (keyboard_->GetKey(KEY_INPUT_A).keyNew) {
-		nowPos.x -= 1.0f;
-	}
-	if (nowPos != Vector3()) {
-		nowPos = nowPos.Normalized().ToVECTOR();
-	}
-	res[KEYPAD_NO::KEY] = nowPos.ToVECTOR();
+	case InputManager::KEYPAD_NO::KEY: {
+		// 上下左右をアナログに変換
+		Vector3 nowPos = Vector3();
 
-	// 現在の接続しているパッドの数のみ取得(1番から)
-	for (int num = static_cast<int>(KEYPAD_NO::PAD1); num < GetJoypadNum(); num++) {
-
-		nowPos = pads_.at(num)->GetDirectionXZAKeyL();
-		res[static_cast<KEYPAD_NO>(num)] = nowPos.ToVECTOR();
+		if (keyboard_->GetKey(KEY_INPUT_UP).keyNew) {
+			nowPos.z += 1.0f;
+		}
+		if (keyboard_->GetKey(KEY_INPUT_DOWN).keyNew) {
+			nowPos.z -= 1.0f;
+		}
+		if (keyboard_->GetKey(KEY_INPUT_RIGHT).keyNew) {
+			nowPos.x += 1.0f;
+		}
+		if (keyboard_->GetKey(KEY_INPUT_LEFT).keyNew) {
+			nowPos.x -= 1.0f;
+		}
+		if (nowPos != Vector3()) {
+			return nowPos.Normalized();
+		}
+		break;
 	}
-	return res;
-}
+	case InputManager::KEYPAD_NO::MOUSE: {
 
-std::map<InputManager::KEYPAD_NO, VECTOR>  InputManager::GetDirectionXZAKeyR(void)
-{
-	std::map<KEYPAD_NO, VECTOR>  res;
-
-	Vector3 nowPos = Vector3();
-
-	// WASDをアナログに変換
-	if (keyboard_->GetKey(KEY_INPUT_UP).keyNew) {
-		nowPos.z += 1.0f;
+		//　中心からの差分をとる
+		Vector3 nowPos = Vector3();
+		nowPos = Vector3(mouse_->GetMousePos());
+		Vector3 diffPos = Vector3::XZonly(nowPos.x - Application::SCREEN_SIZE_X_HALF, nowPos.y - Application::SCREEN_SIZE_Y_HALF);
+		// 感度を掛けて返す
+		return diffPos * Mouse::MOUSE_SENSI;
+		break;
 	}
-	if (keyboard_->GetKey(KEY_INPUT_DOWN).keyNew) {
-		nowPos.z -= 1.0f;
+	default:
+		return Vector3();
+		break;
 	}
-	if (keyboard_->GetKey(KEY_INPUT_LEFT).keyNew) {
-		nowPos.x += 1.0f;
-	}
-	if (keyboard_->GetKey(KEY_INPUT_RIGHT).keyNew) {
-		nowPos.x -= 1.0f;
-	}
-	if (nowPos != Vector3()) {
-		nowPos = nowPos.Normalized().ToVECTOR();
-	}
-	res[KEYPAD_NO::KEY] = nowPos.ToVECTOR();
-
-	//　中心からの差分をとる
-	nowPos = Vector3(mouse_->GetMousePos());
-	VECTOR diffPos = VGet(nowPos.x - Application::SCREEN_SIZE_X_HALF, 0.0f, nowPos.y - Application::SCREEN_SIZE_Y_HALF);
-	res[KEYPAD_NO::KEY] = VScale(diffPos, Mouse::MOUSE_SENSI);
-
-	// 現在の接続しているパッドの数のみ取得(1番から)
-	for (int num = static_cast<int>(KEYPAD_NO::PAD1); num < GetJoypadNum(); num++) {
-
-		nowPos = pads_.at(num)->GetDirectionXZAKeyR();
-		res[static_cast<KEYPAD_NO>(num)] = VScale(nowPos.ToVECTOR(), Controller::CameraSensi);
-	}
-	return res;
 }
 
 InputBase::Info InputManager::GetKey(const COMMAND& com, const KEYPAD_NO& no)
@@ -292,6 +290,16 @@ InputBase::Info InputManager::GetPriorityKey(const COMMAND& com)
 	return GetKey(com, mostPriority_);
 }
 
+Vector3 InputManager::GetPriorityAKeyL(void)
+{
+	return GetAKeyL(mostPriority_);
+}
+
+Vector3 InputManager::GetPriorityAKeyR(void)
+{
+	return GetAKeyR(mostPriority_);
+}
+
 std::vector<InputBase::Info> InputManager::GetPriorityKey(const COMMAND& com, int& num)
 {
 	// 返り値を格納する変数
@@ -318,6 +326,80 @@ std::vector<InputBase::Info> InputManager::GetPriorityKey(const COMMAND& com, in
 				break;
 			case static_cast<int>(KEYPAD_NO::KEY):
 				temp.emplace_back(GetKey(com, KEYPAD_NO::KEY));
+				break;
+			default:
+				break;
+			}
+		}
+	}
+	// 少なくてもそのまま
+	return temp;
+}
+
+std::vector<Vector3> InputManager::GetPriorityAKeyL(const COMMAND& com, int& num)
+{
+	// 返り値を格納する変数
+	std::vector<Vector3> temp;
+
+	// 優先順に回す
+	for (int i = 0; i < num; i++) {
+		// 優先順確認
+		if (orderOfPriority_.at(i)) {
+			// 各情報の取得
+			switch (i)
+			{
+			case static_cast<int>(KEYPAD_NO::PAD1):
+				temp.emplace_back(GetAKeyL(KEYPAD_NO::PAD1));
+				break;
+			case static_cast<int>(KEYPAD_NO::PAD2):
+				temp.emplace_back(GetAKeyL(KEYPAD_NO::PAD2));
+				break;
+			case static_cast<int>(KEYPAD_NO::PAD3):
+				temp.emplace_back(GetAKeyL(KEYPAD_NO::PAD3));
+				break;
+			case static_cast<int>(KEYPAD_NO::PAD4):
+				temp.emplace_back(GetAKeyL(KEYPAD_NO::PAD4));
+				break;
+			case static_cast<int>(KEYPAD_NO::KEY):
+				temp.emplace_back(GetAKeyL(KEYPAD_NO::KEY));
+				break;
+			default:
+				break;
+			}
+		}
+	}
+	// 少なくてもそのまま
+	return temp;
+}
+
+std::vector<Vector3> InputManager::GetPriorityAKeyR(const COMMAND& com, int& num)
+{
+	// 返り値を格納する変数
+	std::vector<Vector3> temp;
+
+	// 優先順に回す
+	for (int i = 0; i < num; i++) {
+		// 優先順確認
+		if (orderOfPriority_.at(i)) {
+			// 各情報の取得
+			switch (i)
+			{
+			case static_cast<int>(KEYPAD_NO::PAD1):
+				temp.emplace_back(GetAKeyR(KEYPAD_NO::PAD1));
+				break;
+			case static_cast<int>(KEYPAD_NO::PAD2):
+				temp.emplace_back(GetAKeyR(KEYPAD_NO::PAD2));
+				break;
+			case static_cast<int>(KEYPAD_NO::PAD3):
+				temp.emplace_back(GetAKeyR(KEYPAD_NO::PAD3));
+				break;
+			case static_cast<int>(KEYPAD_NO::PAD4):
+				temp.emplace_back(GetAKeyR(KEYPAD_NO::PAD4));
+				break;
+			case static_cast<int>(KEYPAD_NO::KEY):
+				temp.emplace_back(GetAKeyR(KEYPAD_NO::KEY));
+			case static_cast<int>(KEYPAD_NO::MOUSE):
+				temp.emplace_back(GetAKeyR(KEYPAD_NO::MOUSE));
 				break;
 			default:
 				break;
@@ -395,4 +477,24 @@ InputBase::Info InputManager::GetKeyInfo(std::vector<InputBase::Info> infos)
 		if (info.keyNew || info.keyOld) { return info; }
 	}
 	return infos.front();
+}
+
+// リソースの破棄
+void InputManager::Release(void){
+
+	// 解放
+	keyboard_->Release();
+	mouse_->Release();
+	for (auto p : pads_) {
+
+		p->Release();
+		delete p;
+		p = nullptr;
+	}
+	pads_.clear();
+
+	delete keyboard_;
+	keyboard_ = nullptr;
+	delete mouse_;
+	mouse_ = nullptr;
 }

@@ -55,20 +55,20 @@ public:
 	};
 
 	// インスタンスを明示的に生成
-	static void CreateInstance(void);
+	static void CreateIns(void);
 	// インスタンスの取得
-	static InputManager& GetInstance(void);
+	static InputManager& GetIns(void);
+	// インスタンスの破棄
+	static void DeleteIns(void) { inst_->Release(); delete inst_; inst_ = nullptr; }
 
 	// 初期化
 	void Init(void);
 	// 更新
 	void Update(void);
-	// リソースの破棄
-	void Release(void);
 
 	// 方向を取得
-	std::map<InputManager::KEYPAD_NO, VECTOR> GetDirectionXZAKeyL(void);
-	std::map<InputManager::KEYPAD_NO, VECTOR>  GetDirectionXZAKeyR(void);
+	Vector3 GetAKeyL(const KEYPAD_NO& no);
+	Vector3  GetAKeyR(const KEYPAD_NO& no);
 
 	// 特定機種ののコマンドの状態を取得
 	// マウスはKEYで
@@ -76,8 +76,12 @@ public:
 
 	// 優先順に一つ取得
 	InputBase::Info GetPriorityKey(const COMMAND& com);
+	Vector3 GetPriorityAKeyL(void);
+	Vector3 GetPriorityAKeyR(void);
 	// 指定数(優先機種を0から)
 	std::vector<InputBase::Info> GetPriorityKey(const COMMAND& com, int& num);
+	std::vector<Vector3> GetPriorityAKeyL(const COMMAND& com, int& num);
+	std::vector<Vector3> GetPriorityAKeyR(const COMMAND& com, int& num);
 
 	// 最優先されたタイプを取得
 	KEYPAD_NO GetMostPriority(void) { return mostPriority_; }
@@ -212,6 +216,9 @@ private:
 	InputManager(InputManager&&) = delete;
 	InputManager& operator=(InputManager&&) = delete;
 
+	// リソースの破棄
+	void Release(void);
+
 	// コマンドロード
 	void CommandLoad(void);
 
@@ -239,3 +246,5 @@ private:
 	KEYPAD_NO mostPriority_;
 	Controller::JOYPAD_TYPE mostPriorityType_;
 };
+
+using Input = InputManager;

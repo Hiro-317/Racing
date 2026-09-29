@@ -27,8 +27,8 @@ public:
 	static constexpr float THRESHOLD = 0.05f;
 
 	// アナログキーの入力値\を取得
-	VECTOR GetDirectionXZAKeyL(void);
-	VECTOR GetDirectionXZAKeyR(void);
+	Vector3 GetDirectionXZAKeyL(void);
+	Vector3 GetDirectionXZAKeyR(void);
 
 	JOYPAD_TYPE GetJPadType(void) { return GetJPadDType(); }
 
@@ -55,7 +55,7 @@ private:
 	bool GetJPadInputState(int key);
 
 	// アナログキーの入力値から方向を取得
-	VECTOR GetDirectionXZAKey(int aKeyX, int aKeyY);
+	Vector3 GetDirectionXZAKey(int aKeyX, int aKeyY);
 
 	// 左スティック
 	int analogKeyLX;

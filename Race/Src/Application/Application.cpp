@@ -5,7 +5,7 @@
 
 #include "../Manager/FPS/FPS.h"
 //#include "../Manager/Net/NetWorkManager.h"
-#include "../Manager/Input/KeyManager.h"
+#include "../Manager/Input/InputManager.h"
 #include "../Manager/Sound/SoundManager.h"
 #include "../Manager/Font/FontManager.h"
 #include "../Manager/Effect/EffectManager.h"
@@ -74,7 +74,7 @@ void Application::Init(void)
 	//Net::CreateIns();
 
 	// 入力管理クラスの生成 / 初期化処理
-	Key::CreateIns();
+	Input::CreateIns();
 
 	// サウンド管理クラスの生成 / 初期化処理
 	Snd::CreateIns();
@@ -105,7 +105,7 @@ void Application::Run(void)
 		//Net::GetIns().Update();
 
 		// 入力管理クラスの更新
-		KeyManager::GetIns().Update();
+		Input::GetIns().Update();
 
 		// シーン管理更新
 		SceneManager::GetIns().Update();
@@ -114,7 +114,7 @@ void Application::Run(void)
 		Snd::GetIns().Update();
 
 		// デバッグ表示切替
-		if (Key::GetIns().GetInfo(KEY_TYPE::DEBUG_DRAW_SWITCH).down) { DrawDebugSwitch(); }
+		//if (Input::GetIns().GetInfo(KEY_TYPE::DEBUG_DRAW_SWITCH).down) { DrawDebugSwitch(); }
 
 		// フレームレート計算
 		fps->CalcFrameRate();
@@ -154,7 +154,7 @@ void Application::Release(void)
 	Snd::DeleteIns();
 
 	// 入力制御削除
-	Key::DeleteIns();
+	Input::DeleteIns();
 
 	// 通信管理削除
 	//Net::DeleteIns();

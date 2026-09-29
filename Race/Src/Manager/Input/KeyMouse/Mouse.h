@@ -27,12 +27,12 @@ public:
 	void Clear(void) { infos_.clear(); }
 
 	// マウス座標の取得
-	VECTOR GetMousePos(void) const { return mousePos_; }
+	Vector3 GetMousePos(void) const { return Vector3(mousePos_); }
 
 private:
 
 	// マウスカーソルの位置
-	VECTOR mousePos_;
+	Vector3 mousePos_;
 
 	// マウスボタンの入力状態
 	int mouseInput_;

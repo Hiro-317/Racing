@@ -38,19 +38,19 @@ void Controller::Release(void)
 {
 }
 
-VECTOR Controller::GetDirectionXZAKeyL(void) 
+Vector3 Controller::GetDirectionXZAKeyL(void) 
 {
-	return GetDirectionXZAKey(analogKeyLX, analogKeyLY);
+	return Vector3(GetDirectionXZAKey(analogKeyLX, analogKeyLY));
 }
 
-VECTOR Controller::GetDirectionXZAKeyR(void)
+Vector3 Controller::GetDirectionXZAKeyR(void)
 {
-	return GetDirectionXZAKey(analogKeyRX, analogKeyRY);
+	return Vector3(GetDirectionXZAKey(analogKeyRX, analogKeyRY));
 }
 
-VECTOR Controller::GetDirectionXZAKey(int aKeyX, int aKeyY)
+Vector3 Controller::GetDirectionXZAKey(int aKeyX, int aKeyY)
 {
-	VECTOR ret = { 0.0f, 0.0f, 0.0f };
+	Vector3 ret = Vector3();
 
 	// スティックの個々の入力値は、
 	// -1000.0f ～ 1000.0f の範囲で返ってくるが、

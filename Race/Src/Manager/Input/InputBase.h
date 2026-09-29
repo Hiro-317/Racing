@@ -3,6 +3,8 @@
 #include <vector>
 #include <Dxlib.h>
 
+#include "../../Common/Vector3.h"
+
 
 class InputBase
 {
