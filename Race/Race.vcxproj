@@ -39,8 +39,12 @@
     <ClCompile Include="Src\Manager\Effect\EffectManager.cpp" />
     <ClCompile Include="Src\Manager\Font\FontManager.cpp" />
     <ClCompile Include="Src\Manager\FPS\FPS.cpp" />
-    <ClCompile Include="Src\Manager\Input\InputTextManager.cpp" />
+    <ClCompile Include="Src\Manager\Input\Controller\Controller.cpp" />
+    <ClCompile Include="Src\Manager\Input\InputBase.cpp" />
+    <ClCompile Include="Src\Manager\Input\InputManager.cpp" />
+    <ClCompile Include="Src\Manager\Input\KeyMouse\Keyboard.cpp" />
     <ClCompile Include="Src\Manager\Input\KeyManager.cpp" />
+    <ClCompile Include="Src\Manager\Input\KeyMouse\Mouse.cpp" />
     <ClCompile Include="Src\Manager\Loading\Loading.cpp" />
     <ClCompile Include="Src\Manager\Scene\Fade\Default\DefaultFadeScene.cpp" />
     <ClCompile Include="Src\Manager\Scene\Fade\FadeSceneBase.cpp" />
@@ -80,8 +84,12 @@
     <ClInclude Include="Src\Manager\Effect\EffectManager.h" />
     <ClInclude Include="Src\Manager\Font\FontManager.h" />
     <ClInclude Include="Src\Manager\FPS\FPS.h" />
-    <ClInclude Include="Src\Manager\Input\InputTextManager.h" />
+    <ClInclude Include="Src\Manager\Input\Controller\Controller.h" />
+    <ClInclude Include="Src\Manager\Input\InputBase.h" />
+    <ClInclude Include="Src\Manager\Input\InputManager.h" />
+    <ClInclude Include="Src\Manager\Input\KeyMouse\Keyboard.h" />
     <ClInclude Include="Src\Manager\Input\KeyManager.h" />
+    <ClInclude Include="Src\Manager\Input\KeyMouse\Mouse.h" />
     <ClInclude Include="Src\Manager\Loading\Loading.h" />
     <ClInclude Include="Src\Manager\Scene\Fade\Default\DefaultFadeScene.h" />
     <ClInclude Include="Src\Manager\Scene\Fade\FadeDefine.h" />
