@@ -4,7 +4,7 @@
 
 #include "SceneManager.h"
 
-#include "../../Manager/Effect/EffectManager.h"
+//#include "../../Manager/Effect/EffectManager.h"
 #include "../../Manager/Loading/Loading.h"
 
 #include "../../Manager/Camera/CurrentCamera.h"
@@ -15,7 +15,7 @@
 //#include "../Lobby/LobbyScene.h"
 //#include "../Lobby/MultiLobbyScene.h"
 //#include "../BossSelect/BossSelectScene.h"
-//#include "../Game/GameScene.h"
+#include "../../Scenes/GameScene/GameScene.h"
 //#include "../Clear/ClearScene.h"
 //#include"../GameOver/GameOver.h"
 
@@ -57,7 +57,7 @@ void SceneManager::Init(void)
 	Init3D();
 
 	// 最初のタイトルシーンは予約を経由せず、この初期化処理内で読み込みを開始する
-	StartLoad(CreateScene(SCENE_ID::Title), LOAD_COMMIT::Jump);
+	StartLoad(CreateScene(SCENE_ID::Game), LOAD_COMMIT::Jump);
 }
 
 void SceneManager::Release(void)
@@ -541,7 +541,7 @@ std::unique_ptr<SceneBase> SceneManager::CreateScene(SCENE_ID scene)const
 
 	//case SCENE_ID::BossSelect: { return std::make_unique<BossSelectScene>(); }
 
-	//case SCENE_ID::Game: { return std::make_unique<GameScene>(); }
+	case SCENE_ID::Game: { return std::make_unique<GameScene>(); }
 
 	//case SCENE_ID::Clear: { return std::make_unique<ClearScene>(); }
 

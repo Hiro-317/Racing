@@ -83,10 +83,6 @@ private:
 
 	// 押し出しを行う際の重さ（0 ～ 100 で設定）
 	unsigned char pushWeight;
-
-	// 加速度の更新
-	void AccelUpdate(void);
-
 	// 重力更新
 	void Gravity(void);
 
@@ -219,4 +215,8 @@ protected:
 	virtual void SubAlphaDraw(void) {}
 	// 派生先追加解放
 	virtual void SubRelease(void) {}
+
+	// 加速度の更新
+	virtual void AccelUpdate(void);
+
 };

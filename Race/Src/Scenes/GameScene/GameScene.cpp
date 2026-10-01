@@ -8,7 +8,7 @@
 
 //#include "../../Manager/Net/NetWorkManager.h"
 #include "../../Manager/Camera/MultifuncCamera/MultifuncCamera.h"
-#include "../../Manager/Input/KeyManager.h"
+#include "../../Manager/Input/InputManager.h"
 #include "../../Manager/Sound/SoundManager.h"
 #include "../../Manager/Font/FontManager.h"
 #include "../../Manager/Effect/EffectManager.h"
@@ -18,8 +18,6 @@
 
 GameScene::GameScene() :
 	SceneBase(),
-	bossInsRef(nullptr),
-	playerInsRef(nullptr),
 	focusFlg(false),
 	time(0.0f)
 {
@@ -29,9 +27,7 @@ void GameScene::SubPostLoad(void)
 {
 	//Snd::GetIns().ChangeScene("Game");
 
-	// プレイヤーを生成
-	ObjAdd(new PlayerManager());
-	playerInsRef = ObjSerch<PlayerManager>(objects);
+	ObjAdd(new CarBase());
 }
 
 void GameScene::SubPostInit(void)
@@ -75,13 +71,13 @@ void GameScene::SubPostUpdate(void)
 
 #pragma region 遷移判定（ポーズも含む）
 	// ポーズ判定
-	if (Key::GetIns().GetInfo(KEY_TYPE::PAUSE).down) {
+	//if (Key::GetIns().GetInfo(KEY_TYPE::PAUSE).down) {
 
-		//Net::GetIns().EventInformSend(MsgDataSystemInform::INFORM_TYPE::PushGamePause);
-		//EffectManager::GetIns()->PauseEffect();
-		//SceneManager::GetIns().PushScene(std::make_unique<GamePause>(Net::GetIns().GetSenderId()));
-		return;
-	}
+	//	//Net::GetIns().EventInformSend(MsgDataSystemInform::INFORM_TYPE::PushGamePause);
+	//	//EffectManager::GetIns()->PauseEffect();
+	//	//SceneManager::GetIns().PushScene(std::make_unique<GamePause>(Net::GetIns().GetSenderId()));
+	//	return;
+	//}
 
 	//// ゲームクリア判定
 	//if (bossInsRef->GetIsDeath()) {
@@ -123,19 +119,19 @@ void GameScene::SubPostUpdate(void)
 
 #if _DEBUG
 	// シーンを再読み込み
-	if (Key::GetIns().GetInfo(KEY_TYPE::DEBUG_RELOAD).down) {
-		SceneManager::GetIns().ChangeSceneFade(SCENE_ID::Game);
+	//if (Key::GetIns().GetInfo(KEY_TYPE::DEBUG_RELOAD).down) {
+	//	SceneManager::GetIns().ChangeSceneFade(SCENE_ID::Game);
 
-		// シーン切り替え時に前シーンのエフェクトを残さない
-		if (EffectManager::GetIns() != nullptr) { EffectManager::GetIns()->StopEffectAll(); }
+	//	// シーン切り替え時に前シーンのエフェクトを残さない
+	//	if (EffectManager::GetIns() != nullptr) { EffectManager::GetIns()->StopEffectAll(); }
 
-		return;
-	}
+	//	return;
+	//}
 #endif // _DEBUG
 
-	EffectManager::GetIns()->UpdateEffect();
-	EffectManager::GetIns()->ReceptionUpdate();
-	UpdateEffekseer3D();
+	//EffectManager::GetIns()->UpdateEffect();
+	//EffectManager::GetIns()->ReceptionUpdate();
+	//UpdateEffekseer3D();
 
 #pragma endregion
 
@@ -164,11 +160,11 @@ void GameScene::SubPostRelease(void)
 
 void GameScene::CreateCamera(void)
 {
-	camera = new MultifuncCamera(
+	/*camera = new MultifuncCamera(
 		false,
 		&ObjSerch<PlayerManager>(objects)->GetPlayerIns(0)->GetTrans().pos,
 		Vector3::YZonly(250, -550),
 		ObjSerch<PlayerManager>(objects)->GetPlayerIns(0)->GetInterestPos(),
 		Deg2Rad(4.0f)
-	);
+	);*/
 }

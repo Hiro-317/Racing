@@ -12,6 +12,7 @@ InputManager* InputManager::inst = nullptr;
 void InputManager::CreateIns(void)
 {
 	inst = new InputManager();
+	inst->Init();
 }
 
 InputManager& InputManager::GetIns(void)
@@ -95,6 +96,7 @@ void InputManager::Init(void){
 	keyboard->Init();
 	mouse = new Mouse();
 	mouse->Init();
+	mouse->SetMouseLock(false);
 
 	// ƒpƒbƒhŽæ“¾
 	for (int num = static_cast<int>(KEYPAD_NO::PAD1); num < static_cast<int>(KEYPAD_NO::PAD4); num++) {

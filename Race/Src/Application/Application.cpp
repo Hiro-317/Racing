@@ -8,7 +8,7 @@
 #include "../Manager/Input/InputManager.h"
 #include "../Manager/Sound/SoundManager.h"
 #include "../Manager/Font/FontManager.h"
-#include "../Manager/Effect/EffectManager.h"
+//#include "../Manager/Effect/EffectManager.h"
 //#include "../Manager/Ranking/Ranking.h"
 #include "../Manager/Scene/SceneManager.h"
 
@@ -83,7 +83,7 @@ void Application::Init(void)
 	Font::CreateIns();
 
 	// エフェクト管理クラス生成 / 初期化処理
-	EffectManager::CreateIns();
+	//EffectManager::CreateIns();
 
 	// ランキング管理クラス生成 / 読み込み
 	//Ranking::CreateIns();
@@ -145,7 +145,7 @@ void Application::Release(void)
 	//Ranking::DeleteIns();
 
 	// エフェクト管理クラス解放・削除
-	EffectManager::DeleteIns();
+	//EffectManager::DeleteIns();
 
 	// フォントデータの削除
 	Font::DeleteIns();

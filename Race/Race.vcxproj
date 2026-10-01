@@ -49,6 +49,7 @@
     <ClCompile Include="Src\Manager\Scene\Fade\Default\DefaultFadeScene.cpp" />
     <ClCompile Include="Src\Manager\Scene\Fade\FadeSceneBase.cpp" />
     <ClCompile Include="Src\Object\Car\CarBase.cpp" />
+    <ClCompile Include="Src\Scenes\GameScene\GameScene.cpp" />
     <ClCompile Include="Src\Scenes\SceneBase.cpp" />
     <ClCompile Include="Src\Manager\Scene\SceneManager.cpp" />
     <ClCompile Include="Src\Manager\Sound\SoundManager.cpp" />
@@ -95,6 +96,7 @@
     <ClInclude Include="Src\Manager\Scene\Fade\FadeDefine.h" />
     <ClInclude Include="Src\Manager\Scene\Fade\FadeSceneBase.h" />
     <ClInclude Include="Src\Object\Car\CarBase.h" />
+    <ClInclude Include="Src\Scenes\GameScene\GameScene.h" />
     <ClInclude Include="Src\Scenes\ObjectUseDefine.h" />
     <ClInclude Include="Src\Scenes\SceneBase.h" />
     <ClInclude Include="Src\Manager\Scene\SceneManager.h" />

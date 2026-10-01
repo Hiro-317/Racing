@@ -17,7 +17,7 @@ void Mouse::Update(void)
 	anyoneTrgDown = anyoneTrg = anyone = false;
 	mouseInput = GetMouseInput();
 
-	// キーボード検知
+	// キー検知
 	for (auto& p : infos)
 	{
 		p.second.keyOld = p.second.keyNew;
@@ -26,19 +26,21 @@ void Mouse::Update(void)
 	}
 
 	// マウス検知
-	int mouseX = 0;
-	int mouseY = 0;
-	GetMousePoint(&mouseX, &mouseY);
-	mousePos.x = static_cast<float>(mouseX);
-	mousePos.y = static_cast<float>(mouseY);
+	if (mouseLock) {
+		int mouseX = 0;
+		int mouseY = 0;
+		GetMousePoint(&mouseX, &mouseY);
+		mousePos.x = static_cast<float>(mouseX);
+		mousePos.y = static_cast<float>(mouseY);
 
-	if (!anyone && mousePos.x != Application::SCREEN_SIZE_X_HALF && mousePos.y != Application::SCREEN_SIZE_Y_HALF) {
+		if (!anyone && mousePos.x != Application::SCREEN_SIZE_X_HALF && mousePos.y != Application::SCREEN_SIZE_Y_HALF) {
 
-		anyone = true;
+			anyone = true;
+		}
+
+		// マウスを中央に
+		SetMousePoint(Application::SCREEN_SIZE_X_HALF, Application::SCREEN_SIZE_Y_HALF);
 	}
-
-	// マウスを中央に
-	SetMousePoint(Application::SCREEN_SIZE_X_HALF, Application::SCREEN_SIZE_Y_HALF);
 }
 
 void Mouse::Release(void)

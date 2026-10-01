@@ -2,8 +2,8 @@
 
 #include"../SceneBase.h"
 
-class BossBase;
-class PlayerManager;
+#include "../../Object/Car/CarBase.h"
+
 
 class GameScene : public SceneBase
 {
@@ -27,9 +27,6 @@ private:
 	void SubPostRelease(void)override;
 
 	void CreateCamera(void)override;
-
-	const BossBase* bossInsRef;
-	const PlayerManager* playerInsRef;
 
 	// カメラ状態変更フラグ
 	bool focusFlg;

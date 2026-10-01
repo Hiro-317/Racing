@@ -29,6 +29,9 @@ public:
 	// マウス座標の取得
 	Vector3 GetMousePos(void) const { return Vector3(mousePos); }
 
+	// マウスの固定の制御
+	void SetMouseLock(bool flg) { mouseLock = flg; }
+
 private:
 
 	// マウスカーソルの位置
@@ -39,4 +42,7 @@ private:
 
 	// マウスの入力取得
 	bool CheckMouse(int key);
+
+	// マウスの固定
+	bool mouseLock;
 };
