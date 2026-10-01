@@ -59,27 +59,27 @@ public:
 	bool Added(int key);
 
 	// 判定を行うキーをクリア
-	void Clear(void) { infos_.clear(); }
+	void Clear(void) { infos.clear(); }
 
 	// キーの状態を取得
-	Info GetKey(int key) const { return infos_.at(key); }
+	Info GetKey(int key) const { return infos.at(key); }
 
 	// 何かしているか
-	bool GetAnyone(void) { return anyone_; }
+	bool GetAnyone(void) { return anyone; }
 	// 何か押しているか
-	bool GetAnyoneTrg(void) { return anyoneTrg_; }
+	bool GetAnyoneTrg(void) { return anyoneTrg; }
 	// 今何か押されたか
-	bool GetAnyoneTrgDown(void) { return anyoneTrgDown_; }
+	bool GetAnyoneTrgDown(void) { return anyoneTrgDown; }
 
 protected:
 
 	// キー情報
-	std::map<int, Info> infos_;
+	std::map<int, Info> infos;
 
 	// 今何か押されたか
-	bool anyoneTrgDown_;
+	bool anyoneTrgDown;
 	// 何か押されているか
-	bool anyoneTrg_;
+	bool anyoneTrg;
 	// 何かしているか
-	bool anyone_;
+	bool anyone;
 };

@@ -59,7 +59,7 @@ public:
 	// インスタンスの取得
 	static InputManager& GetIns(void);
 	// インスタンスの破棄
-	static void DeleteIns(void) { inst_->Release(); delete inst_; inst_ = nullptr; }
+	static void DeleteIns(void) { inst->Release(); delete inst; inst = nullptr; }
 
 	// 初期化
 	void Init(void);
@@ -84,8 +84,8 @@ public:
 	std::vector<Vector3> GetPriorityAKeyR(const COMMAND& com, int& num);
 
 	// 最優先されたタイプを取得
-	KEYPAD_NO GetMostPriority(void) { return mostPriority_; }
-	Controller::JOYPAD_TYPE GetMostPriorityType(void) { return mostPriorityType_; }
+	KEYPAD_NO GetMostPriority(void) { return mostPriority; }
+	Controller::JOYPAD_TYPE GetMostPriorityType(void) { return mostPriorityType; }
 
 	// (今のフレームで)最優先の物が何か押しているか
 	bool GetPriorityAnyoneTrg(void);
@@ -109,25 +109,25 @@ public:
 		case InputManager::KEYPAD_NO::PAD4:
 		{
 			// コマンド登録されているか
-			if (padCommand_.find(com) != padCommand_.end()) {
+			if (padCommand.find(com) != padCommand.end()) {
 				//すでに入っているキーは何か
-				for (int i = 0; i < padCommand_[com].size(); i++) {
+				for (int i = 0; i < padCommand[com].size(); i++) {
 					//同じキーが入っていればフラグを立てる
-					if (padCommand_[com][i] == key) {
+					if (padCommand[com][i] == key) {
 						flg = true;
 					}
 				}
 			}
 			// コマンド登録されてないか同じキーでないなら登録
-			if (padCommand_.find(com) == padCommand_.end() || !flg) {
-				padCommand_[com].emplace_back(key);
+			if (padCommand.find(com) == padCommand.end() || !flg) {
+				padCommand[com].emplace_back(key);
 			}
 
 			// 更新用キーが登録されているか(一回でいいため)
-			if (!pads_.at((int)type)->Added(key)) {
+			if (!pads.at((int)type)->Added(key)) {
 				// されていないなら登録
 				for (int i = 0; i < (int)KEYPAD_NO::PAD4; i++) {
-					pads_[i]->Add(key);
+					pads[i]->Add(key);
 				}
 			}
 			break;
@@ -137,24 +137,24 @@ public:
 		case InputManager::KEYPAD_NO::KEY:
 		{
 			// コマンド登録されているか
-			if (keyCommand_.find(com) != keyCommand_.end()) {
+			if (keyCommand.find(com) != keyCommand.end()) {
 				//すでに入っているキーは何か
-				for (int i = 0; i < keyCommand_[com].size(); i++) {
+				for (int i = 0; i < keyCommand[com].size(); i++) {
 					//同じキーが入っていればフラグを立てる
-					if (keyCommand_[com][i] == key) {
+					if (keyCommand[com][i] == key) {
 						flg = true;
 					}
 				}
 			}
 			// コマンド登録されてないか同じキーでないなら登録
-			if (keyCommand_.find(com) == keyCommand_.end() || !flg) {
-				keyCommand_[com].emplace_back(key);
+			if (keyCommand.find(com) == keyCommand.end() || !flg) {
+				keyCommand[com].emplace_back(key);
 			}
 
 			// 更新用キーが登録されているか(一回でいいため)
-			if (!keyboard_->Added(key)) {
+			if (!keyboard->Added(key)) {
 				// されていないなら登録
-				keyboard_->Add(key);
+				keyboard->Add(key);
 			}
 			break;
 		}
@@ -163,24 +163,24 @@ public:
 		case InputManager::KEYPAD_NO::MOUSE:
 		{
 			// コマンド登録されているか
-			if (mouseCommand_.find(com) != mouseCommand_.end()) {
+			if (mouseCommand.find(com) != mouseCommand.end()) {
 				//すでに入っているキーは何か
-				for (int i = 0; i < mouseCommand_[com].size(); i++) {
+				for (int i = 0; i < mouseCommand[com].size(); i++) {
 					//同じキーが入っていればフラグを立てる
-					if (mouseCommand_[com][i] == key) {
+					if (mouseCommand[com][i] == key) {
 						flg = true;
 					}
 				}
 			}
 			// コマンド登録されてないか同じキーでないなら登録
-			if (mouseCommand_.find(com) == mouseCommand_.end() || !flg) {
-				mouseCommand_[com].emplace_back(key);
+			if (mouseCommand.find(com) == mouseCommand.end() || !flg) {
+				mouseCommand[com].emplace_back(key);
 			}
 
 			// 更新用キーが登録されているか(一回でいいため)
-			if (!mouse_->Added(key)) {
+			if (!mouse->Added(key)) {
 				// されていないなら登録
-				mouse_->Add(key);
+				mouse->Add(key);
 			}
 		}
 		break;
@@ -193,16 +193,16 @@ public:
 	void CommandClear() {
 	
 		// コマンドの消去
-		padCommand_.clear();
-		keyCommand_.clear();
-		mouseCommand_.clear();
+		padCommand.clear();
+		keyCommand.clear();
+		mouseCommand.clear();
 
 		// 更新用登録の消去
 		for (int i = 0; i < (int)KEYPAD_NO::PAD4; i++) {
-			pads_[i]->Clear();
+			pads[i]->Clear();
 		}
-		keyboard_->Clear();
-		mouse_->Clear();
+		keyboard->Clear();
+		mouse->Clear();
 	}
 
 private:
@@ -226,25 +226,25 @@ private:
 	InputBase::Info GetKeyInfo(std::vector<InputBase::Info> infos);
 
 	//インスタンス
-	static InputManager* inst_;
+	static InputManager* inst;
 
 	// パッド情報
-	std::vector<Controller*> pads_;
+	std::vector<Controller*> pads;
 
 	// キーマウ情報
-	Keyboard* keyboard_;
-	Mouse* mouse_;
+	Keyboard* keyboard;
+	Mouse* mouse;
 
 	// キーマウコマンド
-	std::map<InputManager::COMMAND, std::vector<int>> keyCommand_;
-	std::map<InputManager::COMMAND, std::vector<int>> mouseCommand_;
+	std::map<InputManager::COMMAND, std::vector<int>> keyCommand;
+	std::map<InputManager::COMMAND, std::vector<int>> mouseCommand;
 	//パッドコマンド
-	std::map<InputManager::COMMAND, std::vector<int>> padCommand_;
+	std::map<InputManager::COMMAND, std::vector<int>> padCommand;
 
 	// 優先
-	std::vector<bool> orderOfPriority_;
-	KEYPAD_NO mostPriority_;
-	Controller::JOYPAD_TYPE mostPriorityType_;
+	std::vector<bool> orderOfPriority;
+	KEYPAD_NO mostPriority;
+	Controller::JOYPAD_TYPE mostPriorityType;
 };
 
 using Input = InputManager;

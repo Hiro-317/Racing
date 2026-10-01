@@ -24,18 +24,18 @@ public:
 	void Release(void) override;
 
 	// 判定を行うキーをクリア
-	void Clear(void) { infos_.clear(); }
+	void Clear(void) { infos.clear(); }
 
 	// マウス座標の取得
-	Vector3 GetMousePos(void) const { return Vector3(mousePos_); }
+	Vector3 GetMousePos(void) const { return Vector3(mousePos); }
 
 private:
 
 	// マウスカーソルの位置
-	Vector3 mousePos_;
+	Vector3 mousePos;
 
 	// マウスボタンの入力状態
-	int mouseInput_;
+	int mouseInput;
 
 	// マウスの入力取得
 	bool CheckMouse(int key);

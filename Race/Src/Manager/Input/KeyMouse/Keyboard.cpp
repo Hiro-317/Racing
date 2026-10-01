@@ -3,16 +3,16 @@
 
 void Keyboard::Init(void)
 {
-	anyoneTrgDown_ = anyoneTrg_ = anyone_ = false;
+	anyoneTrgDown = anyoneTrg = anyone = false;
 }
 
 void Keyboard::Update(void)
 {
 	// 初期化
-	anyoneTrgDown_ = anyoneTrg_ = anyone_ = false; 
+	anyoneTrgDown = anyoneTrg = anyone = false; 
 
 	// キーボード検知
-	for (auto& p : infos_)
+	for (auto& p : infos)
 	{
 		p.second.keyOld = p.second.keyNew;
 		p.second.keyNew = CheckHitKey(p.second.key);

@@ -38,9 +38,9 @@ private:
 	const int CONTROLLER_NUM;
 
 	// コントローラ情報
-	DINPUT_JOYSTATE joyDInState_;
+	DINPUT_JOYSTATE joyDInState;
 	// コントローラ情報(XBOX)
-	XINPUT_STATE joyXInState_;
+	XINPUT_STATE joyXInState;
 
 	// 接続されたコントローラの種別を取得する
 	JOYPAD_TYPE GetJPadDType(void);

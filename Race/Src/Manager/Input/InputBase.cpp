@@ -10,14 +10,14 @@ void InputBase::Update(std::pair<const int, Info>& p)
 	p.second.keyTrgDown = p.second.keyNew && !p.second.keyOld;
 	p.second.keyTrgUp = !p.second.keyNew && p.second.keyOld;
 
-	if (!anyoneTrgDown_) {
-		anyoneTrgDown_ = p.second.keyTrgDown;
-		anyoneTrg_ = p.second.keyTrgDown;
-		anyone_ = p.second.keyTrgDown;
+	if (!anyoneTrgDown) {
+		anyoneTrgDown = p.second.keyTrgDown;
+		anyoneTrg = p.second.keyTrgDown;
+		anyone = p.second.keyTrgDown;
 	}
-	if (!anyoneTrg_) {
-		anyoneTrg_ = p.second.keyNew;
-		anyone_ = p.second.keyNew;
+	if (!anyoneTrg) {
+		anyoneTrg = p.second.keyNew;
+		anyone = p.second.keyNew;
 	}
 }
 
@@ -29,10 +29,10 @@ void InputBase::Add(int key)
 	info.keyNew = false;
 	info.keyTrgDown = false;
 	info.keyTrgUp = false;
-	infos_.emplace(key, info);
+	infos.emplace(key, info);
 }
 
 bool InputBase::Added(int key)
 {
-	return infos_.find(key) != infos_.end();
+	return infos.find(key) != infos.end();
 }

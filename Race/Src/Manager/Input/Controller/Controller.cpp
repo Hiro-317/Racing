@@ -12,16 +12,16 @@ Controller::~Controller(void)
 
 void Controller::Init(void)
 {
-	anyoneTrgDown_ = anyoneTrg_ = anyone_ = false;
+	anyoneTrgDown = anyoneTrg = anyone = false;
 }
 
 void Controller::Update(void)
 {
 	// 初期化
-	anyoneTrgDown_ = anyoneTrg_ = anyone_ = false;
+	anyoneTrgDown = anyoneTrg = anyone = false;
 
 	// パッド検知
-	for (auto& p : infos_)
+	for (auto& p : infos)
 	{
 		p.second.keyOld = p.second.keyNew;
 		p.second.keyNew = GetJPadInputState(p.second.key);
@@ -29,8 +29,8 @@ void Controller::Update(void)
 	}
 	// スティックの更新
 	bool stick = GetJPadInputState(-1);
-	if (!anyone_) {
-		anyone_ = stick;
+	if (!anyone) {
+		anyone = stick;
 	}
 }
 
@@ -278,13 +278,13 @@ Controller::JOYPAD_TYPE Controller::GetJPadDType(void)
 DINPUT_JOYSTATE Controller::GetJPadDInputState(void)
 {
 	// コントローラ情報
-	GetJoypadDirectInputState(CONTROLLER_NUM, &joyDInState_);
-	return joyDInState_;
+	GetJoypadDirectInputState(CONTROLLER_NUM, &joyDInState);
+	return joyDInState;
 }
 
 XINPUT_STATE Controller::GetJPadXInputState(void)
 {
 	// コントローラ情報
-	GetJoypadXInputState(CONTROLLER_NUM, &joyXInState_);
-	return joyXInState_;
+	GetJoypadXInputState(CONTROLLER_NUM, &joyXInState);
+	return joyXInState;
 }

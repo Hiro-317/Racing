@@ -5,7 +5,7 @@
 
 void Mouse::Init(void)
 {
-	anyoneTrgDown_ = anyoneTrg_ = anyone_ = false;
+	anyoneTrgDown = anyoneTrg = anyone = false;
 
 	// マウスを中央に
 	SetMousePoint(Application::SCREEN_SIZE_X_HALF, Application::SCREEN_SIZE_Y_HALF);
@@ -14,11 +14,11 @@ void Mouse::Init(void)
 void Mouse::Update(void)
 {
 	// 初期化
-	anyoneTrgDown_ = anyoneTrg_ = anyone_ = false;
-	mouseInput_ = GetMouseInput();
+	anyoneTrgDown = anyoneTrg = anyone = false;
+	mouseInput = GetMouseInput();
 
 	// キーボード検知
-	for (auto& p : infos_)
+	for (auto& p : infos)
 	{
 		p.second.keyOld = p.second.keyNew;
 		p.second.keyNew = CheckMouse(p.second.key);
@@ -29,12 +29,12 @@ void Mouse::Update(void)
 	int mouseX = 0;
 	int mouseY = 0;
 	GetMousePoint(&mouseX, &mouseY);
-	mousePos_.x = static_cast<float>(mouseX);
-	mousePos_.y = static_cast<float>(mouseY);
+	mousePos.x = static_cast<float>(mouseX);
+	mousePos.y = static_cast<float>(mouseY);
 
-	if (!anyone_ && mousePos_.x != Application::SCREEN_SIZE_X_HALF && mousePos_.y != Application::SCREEN_SIZE_Y_HALF) {
+	if (!anyone && mousePos.x != Application::SCREEN_SIZE_X_HALF && mousePos.y != Application::SCREEN_SIZE_Y_HALF) {
 
-		anyone_ = true;
+		anyone = true;
 	}
 
 	// マウスを中央に
@@ -47,14 +47,14 @@ void Mouse::Release(void)
 
 bool Mouse::CheckMouse(int key)
 {
-	if (mouseInput_ & key) {
+	if (mouseInput & key) {
 
 		return true;
 	}
 	return false;
 }
 
-Mouse::Mouse(void) : mousePos_()
+Mouse::Mouse(void) : mousePos()
 {
-	mouseInput_ = -1;
+	mouseInput = -1;
 }

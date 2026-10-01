@@ -21,7 +21,7 @@ public:
 	void Release(void) override;
 
 	// 判定を行うキーをクリア
-	void Clear(void) { infos_.clear(); }
+	void Clear(void) { infos.clear(); }
 
 private:
 };
