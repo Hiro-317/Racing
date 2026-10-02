@@ -49,6 +49,7 @@ void CarBase::SubUpdate(void)
 		if (torqueMax < torque) { torqueMax = torque; torqueMaxRpm = rpm; }
 		hoursepower = (torque * rpm) / 9550.0f;
 		if (hoursepowerMax < hoursepower) { hoursepowerMax = hoursepower; hoursepowerMaxRpm = rpm; }
+		speed = (rpm * 60 * DX_PI_F * TIRE_SIZE_ROUND) / (FIRST_GEAR_RATIO * FINAL_GEAR_RATIO * 1000.0f);
 		float rad = SLOP * rpm + NEEDLE_MIN_RAD;
 		needlePos = Vector2(TACHOMETER_POS.x + NEEDLE_LENGTH * cosf(rad), TACHOMETER_POS.y + NEEDLE_LENGTH * -sinf(rad));
 	}
@@ -58,6 +59,7 @@ void CarBase::SubDraw(void)
 {
 	DrawLineAA(TACHOMETER_POS.x, TACHOMETER_POS.y, needlePos.x, needlePos.y, 0xff0000, 5.0f);
 	DrawCircleAA(TACHOMETER_POS.x, TACHOMETER_POS.y, NEEDLE_LENGTH / 2, 32, 0x000000);
+	DrawFormatString(TACHOMETER_POS.x - 10, TACHOMETER_POS.y - 5, 0xffffff, "%.0f", speed);
 
 	DrawFormatString(100, 20, 0xffffff, "%.2f", rpm);
 	DrawFormatString(200, 20, 0xffffff, "%.2f", torque);

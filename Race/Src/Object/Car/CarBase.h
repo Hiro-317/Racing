@@ -35,6 +35,12 @@ private:
 	static constexpr float MAX_HORSEPOWER = 47.0f;
 	static constexpr float MAX_HORSEPOWER_RPM = 6000.0f;
 
+	static constexpr float FIRST_GEAR_RATIO = 3.571f;
+	static constexpr float FINAL_GEAR_RATIO = 4.875f;
+	static constexpr float LOST_RATIO = 0.9f;
+
+	static constexpr float TIRE_SIZE_ROUND = 0.562f;
+
 	static constexpr int DEFAULT_ENGINE_FREQUENCY = 48000;
 
 	const Vector2 TACHOMETER_POS = Vector2(Application::SCREEN_SIZE_X_HALF, Application::SCREEN_SIZE_Y - 200);
@@ -59,4 +65,5 @@ private:
 	float hoursepower;
 	float hoursepowerMax;
 	float hoursepowerMaxRpm;
+	float speed;
 };
