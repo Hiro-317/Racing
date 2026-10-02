@@ -1,4 +1,4 @@
-#include "CarBase.h"
+﻿#include "CarBase.h"
 
 #include "../../Manager/Input/InputManager.h"
 
@@ -21,7 +21,6 @@ void CarBase::SubUpdate(void)
 		if (Input::GetIns().GetPriorityKey(Input::COMMAND::USE).keyTrgDown) {
 
 			engineFlg = true;
-			rpm = MIN_RPM;
 		}
 	}
 	else {
@@ -45,12 +44,12 @@ void CarBase::SubUpdate(void)
 
 				rpm = MIN_RPM;
 			}
-			else {
-
-				rpm += IDLING_RPM;
-			}
 		}
-		float rad = Deg2Rad(225.0f - (rpm * rpm) / 300000.0f);
+		torque = MAX_TORQUE * powf(rpm / MAX_TORQUE_RPM, TORQUE_CURVE) * expf(TORQUE_CURVE * (1 - rpm / MAX_TORQUE_RPM));
+		if (torqueMax < torque) { torqueMax = torque; torqueMaxRpm = rpm; }
+		hoursepower = (torque * rpm) / 9550.0f;
+		if (hoursepowerMax < hoursepower) { hoursepowerMax = hoursepower; hoursepowerMaxRpm = rpm; }
+		float rad = SLOP * rpm + NEEDLE_MIN_RAD;
 		needlePos = Vector2(TACHOMETER_POS.x + NEEDLE_LENGTH * cosf(rad), TACHOMETER_POS.y + NEEDLE_LENGTH * -sinf(rad));
 	}
 }
@@ -58,8 +57,19 @@ void CarBase::SubUpdate(void)
 void CarBase::SubDraw(void)
 {
 	DrawLineAA(TACHOMETER_POS.x, TACHOMETER_POS.y, needlePos.x, needlePos.y, 0xff0000, 5.0f);
+	DrawCircleAA(TACHOMETER_POS.x, TACHOMETER_POS.y, NEEDLE_LENGTH / 2, 32, 0x000000);
 
-	DrawFormatString(100, 100, 0xffffff, "%.2f", rpm);
+	DrawFormatString(100, 20, 0xffffff, "%.2f", rpm);
+	DrawFormatString(200, 20, 0xffffff, "%.2f", torque);
+	DrawFormatString(200, 40, 0xffffff, "%.2f", torqueMax);
+	DrawFormatString(200, 60, 0xffffff, "%.2f", torqueMaxRpm);
+	DrawFormatString(300, 20, 0xffffff, "%.2f", hoursepower);
+	DrawFormatString(300, 40, 0xffffff, "%.2f", hoursepowerMax);
+	DrawFormatString(300, 60, 0xffffff, "%.2f", hoursepowerMaxRpm);
+}
+
+void CarBase::SubRelease(void)
+{
 }
 
 void CarBase::AccelUpdate(void)
