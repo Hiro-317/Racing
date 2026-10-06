@@ -67,7 +67,7 @@ void Application::Init(void)
 	SetUseDirectInputFlag(true);
 
 	// FPS‰Šú‰»
-	fps = new FPS;
+	fps = new FPS(FRAME_PAR_SECOND);
 	fps->Init();
 
 	// ’ÊMŠÇ—ƒNƒ‰ƒX‚Ì¶¬ / ‰Šú‰»ˆ—

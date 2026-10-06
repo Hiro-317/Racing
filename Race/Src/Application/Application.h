@@ -17,6 +17,9 @@ public:
 	// エフェクト最大数
 	static constexpr int EFFECT_MAX_NUM = 8000;
 
+	// FPS
+	static constexpr int FRAME_PAR_SECOND = 60;
+
 public:
 	// シングルトン（生成・取得・削除）
 	static void CreateIns(void) { if (ins == nullptr) { ins = new Application(); ins->Init(); } }

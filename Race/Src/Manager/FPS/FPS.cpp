@@ -6,8 +6,9 @@
 #include "../../Manager/Scene/SceneManager.h"
 
 
-FPS::FPS()
-	:currentTime(0)
+FPS::FPS(int fps)
+	:FRAME_RATE(1000 / (float)fps)
+	,currentTime(0)
 	,prevFrameTime(0)
 	,frameCnt(0)
 	,updateFrameRateTime(0)

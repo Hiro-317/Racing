@@ -1,11 +1,9 @@
 #pragma once
 
-static constexpr float FRAME_RATE(1000 / 60);
-
 class FPS
 {
 public:
-	FPS();
+	FPS(int fps);
 	~FPS();
 
 	//èâä˙âª
@@ -18,6 +16,9 @@ public:
 	void DrawFrameRate(void);
 
 private:
+
+	const float FRAME_RATE;
+
 	int currentTime;
 	int prevFrameTime;
 
