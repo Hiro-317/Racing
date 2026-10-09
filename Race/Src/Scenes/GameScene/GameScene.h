@@ -31,11 +31,11 @@ private:
 	// カメラ状態変更フラグ
 	bool focusFlg;
 
-	// 1フレームの秒数
-	const float FRAME_TIME = 1.0f / 60.0f;
 	// 時間計測
 	float time;
 
 	// マルチで時間をどのくらいの間隔で同期するか（秒数）
 	const char MULTI_TIME_SEND_COUNT = 5;
+
+	CarBase* carInsRef;
 };

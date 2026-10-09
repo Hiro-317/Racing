@@ -12,11 +12,14 @@ public:
 	~CarBase(void);
 
 	void Load(void) override;
+	void UiDraw(void) override;
+
+	const Vector3& GetFocusPoint(void) { return focusPos; }
 
 protected:
 
+	void SubInit(void) override;
 	void SubUpdate(void) override;
-	void SubDraw(void) override;
 	void SubRelease(void) override;
 
 	void AccelUpdate(void) override;
@@ -104,7 +107,11 @@ private:
 	// エンジンブレーキ係数
 	static constexpr float ENGINE_BRAKE = 0.01f;
 
-	// エンジン状態
+	// 焦点距離
+	const Vector3 FOCUS_POINT = Vector3::Zonly(400.0f);
+	Vector3 focusPos;
+
+	// エンジン稼働状態
 	bool engineFlg;
 
 	// 針先の位置
@@ -137,4 +144,8 @@ private:
 
 	// 今のギア
 	int nowGear;
+
+	// ステア角度
+	float nowSteer;
+	float prevSteer;
 };

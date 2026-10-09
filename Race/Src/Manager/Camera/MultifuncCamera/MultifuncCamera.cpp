@@ -462,7 +462,7 @@ void MultifuncCamera::FreeModeFunc(void)
 #pragma region 角度
 
 	// コントローラーの右スティックベクトルを代入
-	Vector3 rot = Vector3::XYonly(Input::GetIns().GetPriorityAKeyR().x, Input::GetIns().GetPriorityAKeyR().z);
+	Vector3 rot = Vector3::XYonly(Input::GetIns().GetPriorityAKeyRNorm().x, Input::GetIns().GetPriorityAKeyRNorm().z);
 
 	// 最終的に入力が１つでもあれば回転させる
 	if (rot != 0.0f) {
@@ -480,7 +480,7 @@ void MultifuncCamera::FreeModeFunc(void)
 
 #pragma region 移動 (コントローラースティック -> ボタン の順に確認して入力があったもので移動させる)
 	// コントローラーの左スティックベクトルを代入
-	Vector3 dir = Input::GetIns().GetPriorityAKeyL();
+	Vector3 dir = Input::GetIns().GetPriorityAKeyLNorm();
 
 	// 入力があれば、方向×スピードで移動量を作って、座標に足して移動
 	if (dir != 0.0f) { pos += dir.TransMat(MGetRotY(angle.y)) * MOVE_POWER; }
@@ -497,7 +497,7 @@ void MultifuncCamera::DisplayRemoteModeFunc(void)
 #pragma region 角度
 
 	// コントローラーの右スティックベクトルを代入
-	Vector3 rot = Vector3::XYonly(Input::GetIns().GetPriorityAKeyR().x, Input::GetIns().GetPriorityAKeyR().z);
+	Vector3 rot = Vector3::XYonly(Input::GetIns().GetPriorityAKeyRNorm().x, Input::GetIns().GetPriorityAKeyRNorm().z);
 
 	// 最終的に入力が1つでもあれば回転させる
 	if (rot != 0.0f) {
@@ -551,7 +551,7 @@ void MultifuncCamera::FollowRemoteModeFunc(void)
 	if (targetPos == nullptr) { return; }
 
 	// コントローラーの右スティックベクトルを代入
-	Vector3 rot = Vector3::XYonly(Input::GetIns().GetPriorityAKeyR().x, Input::GetIns().GetPriorityAKeyR().z);
+	Vector3 rot = Vector3::XYonly(Input::GetIns().GetPriorityAKeyRNorm().x, Input::GetIns().GetPriorityAKeyRNorm().z);
 
 	// 最終的に入力が1つでもあれば回転させる
 	if (rot != 0.0f) {
@@ -583,7 +583,7 @@ void MultifuncCamera::FollowYawModeFunc(void)
 	if (targetPos == nullptr) { return; }
 
 	// コントローラーの右スティックベクトルを代入
-	Vector3 rot = Vector3::Yonly(Input::GetIns().GetPriorityAKeyR().x);
+	Vector3 rot = Vector3::Yonly(Input::GetIns().GetPriorityAKeyRNorm().x);
 
 	// 最終的に入力が1つでもあれば回転させる
 	if (rot != 0.0f) {

@@ -18,6 +18,7 @@ public:
 		const Vector3* targetPos,
 		const Vector3* focusPos,
 		float TARGET_DISTANCE_MIN = 350.0f, float TARGET_DISTANCE_MAX = 400.0f,
+		float smoothing = 0.1f,
 		float fov = 80.0f * (DX_PI_F / 180.0f)
 	);
 
@@ -59,6 +60,9 @@ private:
 
 	// ç≈ëÂãóó£
 	float TARGET_DISTANCE_MAX;
+
+	// ï‚ä‘ìx
+	float smoothing;
 
 	// çXêV
 	void NormalUpdate(void)override;

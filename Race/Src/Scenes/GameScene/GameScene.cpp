@@ -7,7 +7,7 @@
 #include "../../Application/Application.h"
 
 //#include "../../Manager/Net/NetWorkManager.h"
-#include "../../Manager/Camera/MultifuncCamera/MultifuncCamera.h"
+#include "../../Manager/Camera/FollowAuto/FollowAutoCamera.h"
 #include "../../Manager/Input/InputManager.h"
 #include "../../Manager/Sound/SoundManager.h"
 #include "../../Manager/Font/FontManager.h"
@@ -28,6 +28,7 @@ void GameScene::SubPostLoad(void)
 	//Snd::GetIns().ChangeScene("Game");
 
 	ObjAdd(new CarBase());
+	carInsRef = ObjSerch<CarBase>(objects);
 }
 
 void GameScene::SubPostInit(void)
@@ -138,7 +139,7 @@ void GameScene::SubPostUpdate(void)
 #pragma region éûä‘åvë™
 
 	// éûä‘çXêV
-	time += FRAME_TIME;
+	time += 1 / App::FRAME_PAR_SECOND;
 
 	//// ìØä˙
 	//if (Net::GetIns().GetState() != Net::NetState::None&&Net::GetIns().IsHost()) {
@@ -160,11 +161,5 @@ void GameScene::SubPostRelease(void)
 
 void GameScene::CreateCamera(void)
 {
-	/*camera = new MultifuncCamera(
-		false,
-		&ObjSerch<PlayerManager>(objects)->GetPlayerIns(0)->GetTrans().pos,
-		Vector3::YZonly(250, -550),
-		ObjSerch<PlayerManager>(objects)->GetPlayerIns(0)->GetInterestPos(),
-		Deg2Rad(4.0f)
-	);*/
+	camera = new FollowAutoCamera(&carInsRef->GetTrans().pos, &carInsRef->GetFocusPoint(), 600.0f, 610.0f, 0.8f);
 }

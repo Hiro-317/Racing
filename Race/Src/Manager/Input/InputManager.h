@@ -76,10 +76,14 @@ public:
 
 	// —Dæ‡‚Éˆê‚Âæ“¾
 	InputBase::Info GetPriorityKey(const COMMAND& com);
+	Vector3 GetPriorityAKeyLNorm(void);
+	Vector3 GetPriorityAKeyRNorm(void);
 	Vector3 GetPriorityAKeyL(void);
 	Vector3 GetPriorityAKeyR(void);
 	// w’è”(—Dæ‹@í‚ğ0‚©‚ç)
 	std::vector<InputBase::Info> GetPriorityKey(const COMMAND& com, int& num);
+	std::vector<Vector3> GetPriorityAKeyLNorm(const COMMAND& com, int& num);
+	std::vector<Vector3> GetPriorityAKeyRNorm(const COMMAND& com, int& num);
 	std::vector<Vector3> GetPriorityAKeyL(const COMMAND& com, int& num);
 	std::vector<Vector3> GetPriorityAKeyR(const COMMAND& com, int& num);
 

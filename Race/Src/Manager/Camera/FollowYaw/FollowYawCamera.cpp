@@ -42,7 +42,7 @@ void FollowYawCamera::NormalUpdate(void)
 	if (targetPos == nullptr) { return; }
 
 	// ‰ñ“]ˆ—
-	Vector3 rot = Vector3::XYonly(Input::GetIns().GetPriorityAKeyR().x, Input::GetIns().GetPriorityAKeyR().z);
+	Vector3 rot = Vector3::XYonly(Input::GetIns().GetPriorityAKeyRNorm().x, Input::GetIns().GetPriorityAKeyRNorm().z);
 
 	// ÅI“I‚É“ü—Í‚ª1‚Â‚Å‚à‚ ‚ê‚Î‰ñ“]‚³‚¹‚é
 	if (rot != 0.0f) {

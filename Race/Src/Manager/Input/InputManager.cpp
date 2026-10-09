@@ -91,6 +91,10 @@ void InputManager::CommandLoad(void)
 // 初期化
 void InputManager::Init(void){
 
+	// 初期化
+	mostPriority = KEYPAD_NO::NON;
+	mostPriorityType = Controller::JOYPAD_TYPE::NON;
+
 	// キーマウ取得
 	keyboard = new Keyboard();
 	keyboard->Init();
@@ -144,16 +148,11 @@ void InputManager::Update(void){
 			mostPriorityType = Controller::JOYPAD_TYPE::NON;
 		}
 		// どれも動いてないときは直近のものを取るようにする
-		// 直近がないならPAD1
-		// 繋いでなくても仮想的に
+		// 直近がないならキーマウ
 		else {
 			if (tmp == KEYPAD_NO::NON) {
 				orderOfPriority.emplace_back(true);
-				mostPriority = KEYPAD_NO::PAD1;
-				mostPriorityType = pads.at(static_cast<int>(KEYPAD_NO::PAD1))->GetJPadType();
-				if (mostPriorityType == Controller::JOYPAD_TYPE::NON) {
-					mostPriorityType = Controller::JOYPAD_TYPE::XBOX_360;
-				}
+				mostPriority = KEYPAD_NO::KEY;
 			}
 			else {
 				mostPriority = tmp;
@@ -191,7 +190,7 @@ Vector3 InputManager::GetAKeyL(const KEYPAD_NO& no)
 		if (keyboard->GetKey(KEY_INPUT_A).keyNew) {
 			nowPos.x -= 1.0f;
 		}
-		return nowPos.Normalized();
+		return nowPos;
 		break;
 	}
 	default:
@@ -268,6 +267,16 @@ InputBase::Info InputManager::GetPriorityKey(const COMMAND& com)
 	return GetKey(com, mostPriority);
 }
 
+Vector3 InputManager::GetPriorityAKeyLNorm(void)
+{
+	return GetAKeyL(mostPriority).Normalized();
+}
+
+Vector3 InputManager::GetPriorityAKeyRNorm(void)
+{
+	return GetAKeyR(mostPriority).Normalized();
+}
+
 Vector3 InputManager::GetPriorityAKeyL(void)
 {
 	return GetAKeyL(mostPriority);
@@ -304,6 +313,78 @@ std::vector<InputBase::Info> InputManager::GetPriorityKey(const COMMAND& com, in
 				break;
 			case static_cast<int>(KEYPAD_NO::KEY):
 				temp.emplace_back(GetKey(com, KEYPAD_NO::KEY));
+				break;
+			default:
+				break;
+			}
+		}
+	}
+	// 少なくてもそのまま
+	return temp;
+}
+
+std::vector<Vector3> InputManager::GetPriorityAKeyLNorm(const COMMAND& com, int& num)
+{
+	// 返り値を格納する変数
+	std::vector<Vector3> temp;
+
+	// 優先順に回す
+	for (int i = 0; i < num; i++) {
+		// 優先順確認
+		if (orderOfPriority.at(i)) {
+			// 各情報の取得
+			switch (i)
+			{
+			case static_cast<int>(KEYPAD_NO::PAD1):
+				temp.emplace_back(GetAKeyL(KEYPAD_NO::PAD1).Normalized());
+				break;
+			case static_cast<int>(KEYPAD_NO::PAD2):
+				temp.emplace_back(GetAKeyL(KEYPAD_NO::PAD2).Normalized());
+				break;
+			case static_cast<int>(KEYPAD_NO::PAD3):
+				temp.emplace_back(GetAKeyL(KEYPAD_NO::PAD3).Normalized());
+				break;
+			case static_cast<int>(KEYPAD_NO::PAD4):
+				temp.emplace_back(GetAKeyL(KEYPAD_NO::PAD4).Normalized());
+				break;
+			case static_cast<int>(KEYPAD_NO::KEY):
+				temp.emplace_back(GetAKeyL(KEYPAD_NO::KEY).Normalized());
+				break;
+			default:
+				break;
+			}
+		}
+	}
+	// 少なくてもそのまま
+	return temp;
+}
+
+std::vector<Vector3> InputManager::GetPriorityAKeyRNorm(const COMMAND& com, int& num)
+{
+	// 返り値を格納する変数
+	std::vector<Vector3> temp;
+
+	// 優先順に回す
+	for (int i = 0; i < num; i++) {
+		// 優先順確認
+		if (orderOfPriority.at(i)) {
+			// 各情報の取得
+			switch (i)
+			{
+			case static_cast<int>(KEYPAD_NO::PAD1):
+				temp.emplace_back(GetAKeyR(KEYPAD_NO::PAD1).Normalized());
+				break;
+			case static_cast<int>(KEYPAD_NO::PAD2):
+				temp.emplace_back(GetAKeyR(KEYPAD_NO::PAD2).Normalized());
+				break;
+			case static_cast<int>(KEYPAD_NO::PAD3):
+				temp.emplace_back(GetAKeyR(KEYPAD_NO::PAD3).Normalized());
+				break;
+			case static_cast<int>(KEYPAD_NO::PAD4):
+				temp.emplace_back(GetAKeyR(KEYPAD_NO::PAD4).Normalized());
+				break;
+			case static_cast<int>(KEYPAD_NO::KEY):
+				temp.emplace_back(GetAKeyR(KEYPAD_NO::KEY).Normalized());
 				break;
 			default:
 				break;

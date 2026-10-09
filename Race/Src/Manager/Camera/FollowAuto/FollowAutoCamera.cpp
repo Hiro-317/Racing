@@ -10,6 +10,7 @@ FollowAutoCamera::FollowAutoCamera(
 	const Vector3* targetPos,
 	const Vector3* focusPos,
 	float TARGET_DISTANCE_MIN, float TARGET_DISTANCE_MAX,
+	float smoothing,
 	float fov
 ) :
 	CameraBase(Vector3(), Vector3(), fov),
@@ -20,7 +21,9 @@ FollowAutoCamera::FollowAutoCamera(
 	lookAtPos(),
 
 	TARGET_DISTANCE_MIN(TARGET_DISTANCE_MIN),
-	TARGET_DISTANCE_MAX(TARGET_DISTANCE_MAX)
+	TARGET_DISTANCE_MAX(TARGET_DISTANCE_MAX),
+
+	smoothing(smoothing)
 {
 	NormalUpdate();
 }
@@ -46,8 +49,7 @@ void FollowAutoCamera::NormalUpdate(void)
 	desiredPos.y += std::clamp(((*targetPos - *focusPos) * 0.5f).Length(), 250.0f, 400.0f);
 
 	// ï‚ä‘ÅiÉKÉ^Ç¬Ç´ñhé~Åj
-	const float smooth = 0.1f;
-	pos += (desiredPos - pos) * smooth;
+	pos += (desiredPos - pos) * smoothing;
 	if (pos.y <= CAMERA_DOWN) { pos.y = CAMERA_DOWN; }
 
 	// íçéãì_ÇéZèo

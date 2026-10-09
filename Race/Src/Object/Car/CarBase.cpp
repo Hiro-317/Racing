@@ -2,11 +2,14 @@
 
 #include "../../Manager/Input/InputManager.h"
 
+
 CarBase::CarBase(void) : 
 	ActorBase(), engineFlg(false), rpm(), needlePos(TACHOMETER_POS.x + NEEDLE_LENGTH * cosf(NEEDLE_MIN_RAD), TACHOMETER_POS.y + NEEDLE_LENGTH * -sinf(NEEDLE_MIN_RAD)), nowGear(0)
 {
 	// この車体のアイドリング時の最低速度
 	idleSpeed = (MIN_RPM * 3.6f * 2.0f * DX_PI_F * TIRE_SIZE) / (GEAR_RATIO[0] * FINAL_GEAR_RATIO * 60.0f);
+	// 焦点距離最初に設定
+	focusPos = trans.pos + FOCUS_POINT.TransMat(MatrixAllMultY({ trans.angle }));
 }
 
 CarBase::~CarBase(void)
@@ -15,10 +18,25 @@ CarBase::~CarBase(void)
 
 void CarBase::Load(void)
 {
+	trans.model = MV1LoadModel("kari.mv1");
+}
+
+void CarBase::SubInit(void)
+{
 }
 
 void CarBase::SubUpdate(void)
 {
+	// 焦点距離更新
+	focusPos = trans.pos + FOCUS_POINT.TransMat(MatrixAllMultY({ trans.angle }));
+
+	// ステア角度の保持
+	prevSteer = prevSteer;
+	nowSteer = Input::GetIns().GetPriorityAKeyL().x;
+	if (nowSteer != 0.0f) {
+		nowSteer = Input::GetIns().GetPriorityAKeyL().x;
+
+	}
 	// エンジンオフなら
 	if (!engineFlg) {
 		// 回転数があるなら
@@ -68,15 +86,15 @@ void CarBase::SubUpdate(void)
 		// その回転数のトルク出力を計算しておく
 		torque = MAX_TORQUE * powf(rpm / MAX_TORQUE_RPM, TORQUE_CURVE) * expf(TORQUE_CURVE * (1 - rpm / MAX_TORQUE_RPM));
 		// ブレーキ踏んでいて
-		if (Input::GetIns().GetPriorityKey(Input::COMMAND::RUN).keyNew) {
+		if (Input::GetIns().GetPriorityAKeyL().z < 0.0f || Input::GetIns().GetPriorityKey(Input::COMMAND::RUN).keyNew) {
 			// 速度がゼロで
 			if (speed == 0.0f) {
 				// アクセルを踏んでいるとき
-				if (Input::GetIns().GetPriorityKey(Input::COMMAND::DODGE).keyNew) {
+				if (Input::GetIns().GetPriorityAKeyL().z > 0) {
 					// フューエルカットが働いてないなら
 					if (!fuelCut) {
 						// 回転数を上げ
-						rpm += UP_RPM;
+						rpm += UP_RPM * Input::GetIns().GetPriorityAKeyL().z;
 						// ローンチの回転数に行ったら
 						if (rpm > MAX_TORQUE_RPM) {
 							// フューエルカットをかける
@@ -106,7 +124,7 @@ void CarBase::SubUpdate(void)
 			// 速度が出ているとき
 			else {
 				// エンジンブレーキとブレーキで速度を落としそこから回転数を出す
-				speed -= 0.5f;
+				speed += 0.5f * Input::GetIns().GetPriorityAKeyL().z;
 				speed += EngineBrake() / Application::FRAME_PAR_SECOND;
 				rpm = (speed * GEAR_RATIO[nowGear] * FINAL_GEAR_RATIO * 60.0f) / (3.6f * 2.0f * DX_PI_F * TIRE_SIZE);
 				// 速度がゼロ以下になったら
@@ -136,9 +154,9 @@ void CarBase::SubUpdate(void)
 		// 最低速度以上なら(クラッチ全つながりしてる)
 		else {
 			// アクセルオンかつフューエルカットが働いてないなら
-			if (Input::GetIns().GetPriorityKey(Input::COMMAND::DODGE).keyNew && !fuelCut) {
+			if (Input::GetIns().GetPriorityAKeyL().z != 0.0f && !fuelCut) {
 				// 加速
-				speed += Acceleration()/ Application::FRAME_PAR_SECOND;
+				speed += Acceleration(Input::GetIns().GetPriorityAKeyL().z)/ Application::FRAME_PAR_SECOND;
 				// 回転数を速度から出す
 				rpm = (speed * GEAR_RATIO[nowGear] * FINAL_GEAR_RATIO * 60.0f) / (3.6f * 2.0f * DX_PI_F * TIRE_SIZE);
 				// レブリミットにかかったら
@@ -172,6 +190,26 @@ void CarBase::SubUpdate(void)
 	// その針先の位置
 	needlePos = Vector2(TACHOMETER_POS.x + NEEDLE_LENGTH * cosf(rad), TACHOMETER_POS.y + NEEDLE_LENGTH * -sinf(rad));
 
+	Vector3 forward = Vector3(sinf(trans.angle.y), 0.0f, cosf(trans.angle.y));
+
+	float temp = nowSteer - prevSteer;
+	nowSteer = prevSteer + temp * 0.5f;
+
+	Vector3 steerDirection = Vector3(sinf(trans.angle.y + nowSteer), 0.0f, cosf(trans.angle.y + nowSteer));
+
+	float steerRate = fabsf(nowSteer);
+	float forwardRate = 1 - steerRate;
+
+	Vector3 vec = forward * forwardRate + steerDirection * steerRate;
+
+	vec = vec.Normalized() * speed;
+
+	trans.pos += vec;
+
+	float yawSpeed = nowSteer * 2.0f * speed / 100.0f / Application::FRAME_PAR_SECOND;
+
+	trans.angle.y += yawSpeed;
+
 	// ここからデータロガー
 	//
 	// 最高トルク
@@ -181,7 +219,7 @@ void CarBase::SubUpdate(void)
 	if (hoursepowerMax < hoursepower) { hoursepowerMax = hoursepower; hoursepowerMaxRpm = rpm; }
 }
 
-void CarBase::SubDraw(void)
+void CarBase::UiDraw(void)
 {
 	// 点線の範囲
 	for (int i = 0; i <= (int)MAX_SCALE / 100; i++) {
@@ -196,7 +234,7 @@ void CarBase::SubDraw(void)
 			Vector2 line = Vector2(TACHOMETER_POS.x + (NEEDLE_LENGTH + 3.0f) * cosf(rad), TACHOMETER_POS.y + (NEEDLE_LENGTH + 3.0f) * -sinf(rad));
 			// 根本少し内側に数字
 			Vector2 number = Vector2(TACHOMETER_POS.x + (BLANK_LENGTH - 15.0f) * cosf(rad), TACHOMETER_POS.y + (BLANK_LENGTH - 15.0f) * -sinf(rad));
-			DrawFormatString(number.x - 5.0f, number.y - 5.0f, 0xffffff, "%d", i / 10);
+			DrawFormatString((int)number.x - 5, (int)number.y - 5, 0xffffff, "%d", i / 10);
 			// レッドゾーン以下なら太い白線
 			if (i < 70) {
 				DrawLineAA(line.x, line.y, brank.x, brank.y, 0xffffff, 3.0f);
@@ -236,25 +274,28 @@ void CarBase::SubDraw(void)
 	// 針の描画
 	DrawLineAA(TACHOMETER_POS.x, TACHOMETER_POS.y, needlePos.x, needlePos.y, 0xff0000, 5.0f);
 	// レッドライン
-	DrawCircleAA(TACHOMETER_POS.x, TACHOMETER_POS.y, NEEDLE_LENGTH / 2 + 3.0f, 32, 0xff0000);
+	DrawCircleAA(TACHOMETER_POS.x, TACHOMETER_POS.y, NEEDLE_LENGTH / 2.0f + 3.0f, 32, 0xff0000);
 	// ディスプレイ
-	DrawCircleAA(TACHOMETER_POS.x, TACHOMETER_POS.y, NEEDLE_LENGTH / 2, 32, 0x000000);
+	DrawCircleAA(TACHOMETER_POS.x, TACHOMETER_POS.y, NEEDLE_LENGTH / 2.0f, 32, 0x000000);
 	// 速度表示のためフォントサイズ拡大
 	SetFontSize(40);
 	// 速度を10のあまりにして
 	int s = static_cast<int>(speed) % 10;
 	// 下1桁描画
-	DrawFormatString(TACHOMETER_POS.x + 12, TACHOMETER_POS.y - 20, 0xffffff, "%d", s);
+	DrawFormatString((int)TACHOMETER_POS.x + 12, (int)TACHOMETER_POS.y - 20, 0xffffff, "%d", s);
 	// 10で割り2桁目3桁目の2桁にしそれが1以上なら
 	if ((s = static_cast<int>(speed) / 10) >= 1) {
 		// 二桁目描画
-		DrawFormatString(TACHOMETER_POS.x - 12, TACHOMETER_POS.y - 20, 0xffffff, "%d", s % 10);
+		DrawFormatString((int)TACHOMETER_POS.x - 12, (int)TACHOMETER_POS.y - 20, 0xffffff, "%d", s % 10);
 	}
 	// 100で割り3桁目のみにしそれが１以上なら
 	if ((s = static_cast<int>(speed) / 100) >= 1) {
 		// 三桁目描画
-		DrawFormatString(TACHOMETER_POS.x - 36, TACHOMETER_POS.y - 20, 0xffffff, "%d", s);
+		DrawFormatString((int)TACHOMETER_POS.x - 36, (int)TACHOMETER_POS.y - 20, 0xffffff, "%d", s);
 	}
+	// 今のギア数
+	DrawBoxAA(TACHOMETER_POS.x - NEEDLE_LENGTH * 3.0f / 2.0f - 10.0f, TACHOMETER_POS.y - 20.0f, TACHOMETER_POS.x - NEEDLE_LENGTH * 3.0f / 2.0f + 30.0f, TACHOMETER_POS.y + 20.0f, 0xffffff, false, 2.0f);
+	DrawFormatString((int)(TACHOMETER_POS.x - NEEDLE_LENGTH * 3.0f / 2.0f), (int)(TACHOMETER_POS.y - 20.0f), 0xffffff, "%d", nowGear + 1);
 	// 変えたフォントサイズを戻す
 	SetFontSize(16);
 
@@ -270,8 +311,7 @@ void CarBase::SubDraw(void)
 	DrawFormatString(300, 20, 0xffffff, "%.2f", hoursepower);
 	DrawFormatString(300, 40, 0xffffff, "%.2f", hoursepowerMax);
 	DrawFormatString(300, 60, 0xffffff, "%.2f", hoursepowerMaxRpm);
-	// 今のギア数
-	DrawFormatString(400, 20, 0xffffff, "%d", nowGear + 1);
+	DrawFormatString(500, 20, 0xffffff, "%.2f : %.2f : %.2f", trans.pos.x, trans.pos.y, trans.pos.z);
 }
 
 void CarBase::SubRelease(void)

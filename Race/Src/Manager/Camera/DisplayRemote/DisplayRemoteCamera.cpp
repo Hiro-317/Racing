@@ -29,7 +29,7 @@ void DisplayRemoteCamera::NormalUpdate(void)
 #pragma region 角度
 
 	// コントローラーの右スティックベクトルを代入
-	Vector3 rot = Vector3::XYonly(Input::GetIns().GetPriorityAKeyR().x, Input::GetIns().GetPriorityAKeyR().z);
+	Vector3 rot = Vector3::XYonly(Input::GetIns().GetPriorityAKeyRNorm().x, Input::GetIns().GetPriorityAKeyRNorm().z);
 
 	// 最終的に入力が1つでもあれば回転させる
 	if (rot != 0.0f) {

@@ -75,7 +75,7 @@ Vector3 Controller::GetDirectionXZAKey(int aKeyX, int aKeyY)
 	dirZ = (dirZ / len) * scale;
 	
 	// Zは前に倒すとマイナス値が返ってくるので反転
-	ret = VNorm({ dirX, 0.0f, -dirZ });
+	ret = Vector3(dirX, 0.0f, -dirZ);
 	return ret;
 }
 
