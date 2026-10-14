@@ -6,12 +6,16 @@
 #include <utility>
 #include <vector>
 
-#include "ObjectUseDefine.h"
+#include "../Object/ActorBase/ActorDrawTypeDefine.h"
 
 class CollisionManager;
 class CameraBase;
 class ActorBase;
 struct Vector2I;
+
+class PostEffectBase;
+
+class SkyBox;
 
 class SceneBase
 {
@@ -19,10 +23,10 @@ public:
 	// シーンのライフサイクル状態
 	enum class STATE
 	{
-		CREATED,     // コンストラクタ直後
-		LOADED,      // Load完了
-		INITIALIZED, // Init完了。Update / Draw可能
-		RELEASED,    // Release完了
+		Created,     // コンストラクタ直後
+		Loaded,      // Load完了
+		Initialized, // Init完了。Update / Draw可能
+		Released,    // Release完了
 	};
 
 	// コンストラクタ
@@ -51,10 +55,34 @@ public:
 	STATE GetState(void)const { return state; }
 
 	// Update / Draw可能な状態か
-	bool IsInitialized(void)const { return state == STATE::INITIALIZED; }
+	bool IsInitialized(void)const { return state == STATE::Initialized; }
+
+	// 当たり判定管理クラスを取得する。使用しない場合はnullptrを返す
+	CollisionManager* GetCollisionManager(void)const { return collision; }
 
 	// カメラを取得する。カメラを使用しない場合はnullptrを返す。
 	CameraBase* GetCamera(void)const { return camera; }
+
+	// ポストエフェクトを追加
+	void AddPostEffect(PostEffectBase* postEffect);
+
+	// 指定した種類のポストエフェクトを削除
+	template<class T = PostEffectBase>
+	void RemovePostEffect() {
+		for (auto it = postEffects.begin(); it != postEffects.end(); ++it) {
+			T* effect = dynamic_cast<T*>(*it);
+
+			if (effect == nullptr) { continue; }
+
+			effect->Release();
+
+			delete effect;
+
+			postEffects.erase(it);
+
+			return;
+		}
+	}
 
 #pragma region シーンスタック設定
 
@@ -76,45 +104,10 @@ public:
 
 #pragma endregion
 
-#pragma region 画面演出
-
-	// ヒットストップ演出
-	static void HitStop(int time = 20);
-
-	// スロー演出（interフレームに1回だけゲーム更新する）
-	static void Slow(int time = 10, int inter = 5);
-
-	// 画面揺れの種類
-	enum ShakeKinds
-	{
-		WID,   // 横揺れ
-		HIG,   // 縦揺れ
-		DIAG,  // 斜め揺れ
-		ROUND, // 円を描くように揺れる
-	};
-
-	// 画面揺れの大きさ
-	enum ShakeSize
-	{
-		SMALL = 3,
-		MEDIUM = 5,
-		BIG = 8,
-	};
-
-	/// <summary>
-	/// 画面揺れを開始する。
-	/// </summary>
-	/// <param name="kinds">揺れ方</param>
-	/// <param name="size">揺れの大きさ</param>
-	/// <param name="time">揺れるフレーム数</param>
-	static void Shake(ShakeKinds kinds = ShakeKinds::DIAG, ShakeSize size = ShakeSize::MEDIUM, int time = 20);
-
-#pragma endregion
-
 protected:
 
 	// 既に生成済みのActorを追加する場合に使用する。所有権はSceneBaseへ移る
-	void ObjAdd(ActorBase* newObj);
+	void AddActor(ActorBase* newActor);
 
 #pragma region 派生先の主要関数
 
@@ -152,6 +145,9 @@ protected:
 	// 当たり判定管理クラスを使用するかどうか
 	virtual bool UseCollisionManager(void)const { return true; }
 
+	// スカイボックスを使用するかどうか
+	virtual bool UseSkyBox(void)const { return false; }
+
 private:
 
 	// 二重Load / 二重Releaseを防止する「状態」
@@ -160,26 +156,20 @@ private:
 	// 当たり判定管理
 	CollisionManager* collision;
 
-	// ゲーム更新を実行するフレームか判定する
-	bool IsUpdateFrame(void);
-	// 画面揺れによる描画位置を値で返す
-	Vector2I GetShakePoint(void);
+	// ポストエフェクト配列
+	std::vector<PostEffectBase*> postEffects;
 
-#pragma region 画面演出用
-
-	static int hitStop;
-	static int slow;
-	static int slowInter;
-	static int slowCounter;
-
-	static int shake;
-	static ShakeKinds shakeKinds;
-	static ShakeSize shakeSize;
-
-	// 画面揺れを適用するためのメインスクリーン
+	// ポストエフェクト用のスクリーンハンドル
 	int mainScreen;
+	int tempScreen[2];
 
-#pragma endregion
+	// スカイボックス
+	SkyBox* skyBox;
+
+	// アクター描画関数
+	void ActorsDraw(const std::vector<ActorBase*>& actors, ACTOR_DRAW_TYPE drawType);
+
+	void ActorsColliderDebugDraw(const std::vector<ActorBase*>& actors);
 
 protected:
 
@@ -190,8 +180,5 @@ protected:
 	virtual void CreateCamera(void) { camera = nullptr; }
 
 	// Actor格納用配列
-	std::vector<ActorBase*> objects;
+	std::vector<ActorBase*> actors;
 };
-
-using ShakeKinds = SceneBase::ShakeKinds;
-using ShakeSize = SceneBase::ShakeSize;

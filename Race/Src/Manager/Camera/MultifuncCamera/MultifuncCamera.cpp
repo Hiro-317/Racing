@@ -4,6 +4,8 @@
 
 #include "../../../Manager/Input/InputManager.h"
 
+#include "../../../Common/Utility.h"
+
 #pragma region コンストラクタ
 
 // 定点モードとして生成

@@ -1,8 +1,9 @@
 #pragma once
 
-#include"../../Object/Common/Transform.h"
+#include"../../Object/Common/Transform/Transform.h"
 
 #include <algorithm>
+#include <stdexcept>
 
 class CameraEventBase;
 

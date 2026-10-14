@@ -11,7 +11,6 @@
 #include "../../Manager/Input/InputManager.h"
 #include "../../Manager/Sound/SoundManager.h"
 #include "../../Manager/Font/FontManager.h"
-#include "../../Manager/Effect/EffectManager.h"
 
 #include "../../Manager/Scene/SceneManager.h"
 
@@ -27,8 +26,9 @@ void GameScene::SubPostLoad(void)
 {
 	//Snd::GetIns().ChangeScene("Game");
 
-	ObjAdd(new CarBase());
-	carInsRef = ObjSerch<CarBase>(objects);
+	carInsRef = new CarBase();
+	AddActor(carInsRef);
+
 }
 
 void GameScene::SubPostInit(void)
@@ -156,6 +156,7 @@ void GameScene::SubUiDraw(void)
 void GameScene::SubPostRelease(void)
 {
 	//Net::GetIns().ReceptionDataReset();
+	carInsRef = nullptr;
 }
 
 

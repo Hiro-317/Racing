@@ -9,7 +9,7 @@ CarBase::CarBase(void) :
 	// この車体のアイドリング時の最低速度
 	idleSpeed = (MIN_RPM * 3.6f * 2.0f * DX_PI_F * TIRE_SIZE) / (GEAR_RATIO[0] * FINAL_GEAR_RATIO * 60.0f);
 	// 焦点距離最初に設定
-	focusPos = trans.pos + FOCUS_POINT.TransMat(MatrixAllMultY({ trans.angle }));
+	focusPos = trans.pos + FOCUS_POINT.TransMat({ trans.rotation.ToMatrix()});
 }
 
 CarBase::~CarBase(void)
@@ -18,7 +18,7 @@ CarBase::~CarBase(void)
 
 void CarBase::Load(void)
 {
-	trans.model = MV1LoadModel("kari.mv1");
+	trans.LoadModel("Car/kari");
 }
 
 void CarBase::SubInit(void)
@@ -28,15 +28,12 @@ void CarBase::SubInit(void)
 void CarBase::SubUpdate(void)
 {
 	// 焦点距離更新
-	focusPos = trans.pos + FOCUS_POINT.TransMat(MatrixAllMultY({ trans.angle }));
+	focusPos = trans.pos + FOCUS_POINT.TransMat({ trans.rotation.ToMatrix()});
 
 	// ステア角度の保持
-	prevSteer = prevSteer;
+	prevSteer = nowSteer;
 	nowSteer = Input::GetIns().GetPriorityAKeyL().x;
-	if (nowSteer != 0.0f) {
-		nowSteer = Input::GetIns().GetPriorityAKeyL().x;
 
-	}
 	// エンジンオフなら
 	if (!engineFlg) {
 		// 回転数があるなら
@@ -124,7 +121,7 @@ void CarBase::SubUpdate(void)
 			// 速度が出ているとき
 			else {
 				// エンジンブレーキとブレーキで速度を落としそこから回転数を出す
-				speed += 0.5f * Input::GetIns().GetPriorityAKeyL().z;
+				speed += 0.25f * Input::GetIns().GetPriorityAKeyL().z;
 				speed += EngineBrake() / Application::FRAME_PAR_SECOND;
 				rpm = (speed * GEAR_RATIO[nowGear] * FINAL_GEAR_RATIO * 60.0f) / (3.6f * 2.0f * DX_PI_F * TIRE_SIZE);
 				// 速度がゼロ以下になったら
@@ -190,12 +187,12 @@ void CarBase::SubUpdate(void)
 	// その針先の位置
 	needlePos = Vector2(TACHOMETER_POS.x + NEEDLE_LENGTH * cosf(rad), TACHOMETER_POS.y + NEEDLE_LENGTH * -sinf(rad));
 
-	Vector3 forward = Vector3(sinf(trans.angle.y), 0.0f, cosf(trans.angle.y));
+	Vector3 forward = Vector3(sinf(trans.rotation.x), 0.0f, cosf(trans.rotation.y));
 
 	float temp = nowSteer - prevSteer;
 	nowSteer = prevSteer + temp * 0.5f;
 
-	Vector3 steerDirection = Vector3(sinf(trans.angle.y + nowSteer), 0.0f, cosf(trans.angle.y + nowSteer));
+	Vector3 steerDirection = Vector3(sinf(trans.rotation.x + nowSteer), 0.0f, cosf(trans.rotation.z + nowSteer));
 
 	float steerRate = fabsf(nowSteer);
 	float forwardRate = 1 - steerRate;
@@ -206,9 +203,11 @@ void CarBase::SubUpdate(void)
 
 	trans.pos += vec;
 
-	float yawSpeed = nowSteer * 2.0f * speed / 100.0f / Application::FRAME_PAR_SECOND;
+	yawSpeed = (nowSteer * 2.0f * speed / 100.0f) / Application::FRAME_PAR_SECOND;
 
-	trans.angle.y += yawSpeed;
+	//float yaw = trans.rotation.y + yawSpeed;
+	//trans.SetAngle(yaw);
+	trans.AddAngleYDeg(Rad2Deg(yawSpeed));
 
 	// ここからデータロガー
 	//
@@ -219,7 +218,7 @@ void CarBase::SubUpdate(void)
 	if (hoursepowerMax < hoursepower) { hoursepowerMax = hoursepower; hoursepowerMaxRpm = rpm; }
 }
 
-void CarBase::UiDraw(void)
+void CarBase::SubDraw(void)
 {
 	// 点線の範囲
 	for (int i = 0; i <= (int)MAX_SCALE / 100; i++) {
@@ -236,7 +235,7 @@ void CarBase::UiDraw(void)
 			Vector2 number = Vector2(TACHOMETER_POS.x + (BLANK_LENGTH - 15.0f) * cosf(rad), TACHOMETER_POS.y + (BLANK_LENGTH - 15.0f) * -sinf(rad));
 			DrawFormatString((int)number.x - 5, (int)number.y - 5, 0xffffff, "%d", i / 10);
 			// レッドゾーン以下なら太い白線
-			if (i < 70) {
+			if (i < RED_ZONE) {
 				DrawLineAA(line.x, line.y, brank.x, brank.y, 0xffffff, 3.0f);
 			}
 			// レッドゾーン以上なら太い赤線
@@ -249,7 +248,7 @@ void CarBase::UiDraw(void)
 			// 線先の位置
 			Vector2 line = Vector2(TACHOMETER_POS.x + NEEDLE_LENGTH * cosf(rad), TACHOMETER_POS.y + NEEDLE_LENGTH * -sinf(rad));
 			// レッドゾーン以下なら少し太い白線
-			if (i < 70) {
+			if (i < RED_ZONE) {
 				DrawLineAA(line.x, line.y, brank.x, brank.y, 0xffffff, 2.0f);
 			}
 			// レッドゾーン以上なら少し太い赤線
@@ -262,7 +261,7 @@ void CarBase::UiDraw(void)
 			// 線先の位置
 			Vector2 line = Vector2(TACHOMETER_POS.x + (NEEDLE_LENGTH - 3.0f) * cosf(rad), TACHOMETER_POS.y + (NEEDLE_LENGTH - 3.0f) * -sinf(rad));
 			// レッドゾーン以下なら細い白線
-			if (i < 70) {
+			if (i < RED_ZONE) {
 				DrawLineAA(line.x, line.y, brank.x, brank.y, 0xffffff);
 			}
 			// レッドゾーン以上なら細い赤線
@@ -311,14 +310,14 @@ void CarBase::UiDraw(void)
 	DrawFormatString(300, 20, 0xffffff, "%.2f", hoursepower);
 	DrawFormatString(300, 40, 0xffffff, "%.2f", hoursepowerMax);
 	DrawFormatString(300, 60, 0xffffff, "%.2f", hoursepowerMaxRpm);
-	DrawFormatString(500, 20, 0xffffff, "%.2f : %.2f : %.2f", trans.pos.x, trans.pos.y, trans.pos.z);
+	// 現在の座標
+	DrawFormatString(400, 20, 0xffffff, "%.2f : %.2f : %.2f", trans.pos.x, trans.pos.y, trans.pos.z);
+	// 現在のステア角度と旋回速度
+	DrawFormatString(700, 20, 0xffffff, "%.2f", nowSteer);
+	DrawFormatString(700, 40, 0xffffff, "%.5f", yawSpeed);
 }
 
 void CarBase::SubRelease(void)
-{
-}
-
-void CarBase::AccelUpdate(void)
 {
 }
 

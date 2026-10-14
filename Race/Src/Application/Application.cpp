@@ -4,12 +4,14 @@
 #include "Application.h"
 
 #include "../Manager/FPS/FPS.h"
+#include "../Manager/TimeScale/TimeScale.h"
 //#include "../Manager/Net/NetWorkManager.h"
 #include "../Manager/Input/InputManager.h"
 #include "../Manager/Sound/SoundManager.h"
 #include "../Manager/Font/FontManager.h"
 //#include "../Manager/Effect/EffectManager.h"
 //#include "../Manager/Ranking/Ranking.h"
+#include "../Manager/Shader/ShaderResourceManager.h"
 #include "../Manager/Scene/SceneManager.h"
 
 Application* Application::ins = nullptr;
@@ -70,6 +72,9 @@ void Application::Init(void)
 	fps = new FPS(FRAME_PAR_SECOND);
 	fps->Init();
 
+	// 時間倍率管理クラスの生成
+	TimeScale::CreateIns();
+
 	// 通信管理クラスの生成 / 初期化処理
 	//Net::CreateIns();
 
@@ -81,6 +86,9 @@ void Application::Init(void)
 
 	// フォントデータ生成 / 初期化処理
 	Font::CreateIns();
+
+	// シェーダーデータ生成
+	ShaderResourceManager::CreateIns();
 
 	// エフェクト管理クラス生成 / 初期化処理
 	//EffectManager::CreateIns();
@@ -100,6 +108,9 @@ void Application::Run(void)
 	{
 		// フレームレート上限まで経過していないなら再ループさせる
 		if (!fps->UpdateFrameRate()) { continue; }
+
+		// 時間倍率管理クラスの更新
+		TimeScale::GetIns().Update();
 
 		// 通信管理クラスの更新
 		//Net::GetIns().Update();
@@ -141,6 +152,9 @@ void Application::Release(void)
 	// シーン管理解放・削除	
 	SceneManager::DeleteIns();
 
+	// シェーダーデータの削除
+	ShaderResourceManager::DeleteIns();
+
 	// ランキング管理クラス保存・削除
 	//Ranking::DeleteIns();
 
@@ -158,6 +172,9 @@ void Application::Release(void)
 
 	// 通信管理削除
 	//Net::DeleteIns();
+
+	// 時間倍率管理クラス削除
+	TimeScale::DeleteIns();
 
 	// フレームレート解放
 	delete fps;

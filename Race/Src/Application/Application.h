@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../Common/Utility.h"
+
 // ƒNƒ‰ƒX‚Ì‘O•ûéŒ¾
 class FPS;
 

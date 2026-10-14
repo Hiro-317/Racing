@@ -5,13 +5,20 @@
 class CapsuleCollider : public ColliderBase
 {
 public:
-	CapsuleCollider(COLLIDER_TAG type, const Vector3& localStartPos, const Vector3& localEndPos, float radius, const Vector3& pos = Vector3(), const Vector3& angle = Vector3()) :
-		ColliderBase(type, pos, angle),
-		startPos(localStartPos),
-		endPos(localEndPos),
+	CapsuleCollider(
+		COLLIDER_TAG tag,
+		const Vector3& startPos,
+		const Vector3& endPos,
+		float radius,
+		const Vector3& pos = Vector3(),
+		const Quaternion& rotation = Quaternion()
+	) :
+		ColliderBase(tag, pos, rotation),
+		startPos(startPos),
+		endPos(endPos),
 		radius(radius)
 	{
-		SetShape(SHAPE::CAPSULE);
+		SetShape(COLLIDER_SHAPE::Capsule);
 	}
 	~CapsuleCollider()override {}
 
@@ -70,14 +77,6 @@ public:
 			)
 		);
 	}
-
-#pragma endregion
-
-#pragma region ローカルセット関数
-
-	void SetStartPos(const Vector3& pos) { startPos = pos; }
-	void SetEndPos(const Vector3& pos) { endPos = pos; }
-
 #pragma endregion
 
 	void DrawDebug(unsigned int color = 0xffffff)override {

@@ -1,7 +1,7 @@
 #pragma once
 #include <algorithm>
 
-#include "../ActorBase.h"
+#include "../ActorBase/ActorBase.h"
 #include "../../Application/Application.h"
 
 class CarBase : public ActorBase {
@@ -12,7 +12,6 @@ public:
 	~CarBase(void);
 
 	void Load(void) override;
-	void UiDraw(void) override;
 
 	const Vector3& GetFocusPoint(void) { return focusPos; }
 
@@ -20,9 +19,10 @@ protected:
 
 	void SubInit(void) override;
 	void SubUpdate(void) override;
+	void SubDraw(void) override;
 	void SubRelease(void) override;
 
-	void AccelUpdate(void) override;
+	void VelocityUpdate(bool deceleration) override {}
 
 private:
 
@@ -44,6 +44,8 @@ private:
 	static constexpr float MIN_RPM = 1000.0f;
 	// レブリミット
 	static constexpr float MAX_RPM = 7700.0f;
+	// レッドゾーン
+	static constexpr int RED_ZONE = 70;
 	// 空ぶかしで上がる回転数
 	static constexpr float UP_RPM = 125.0f;
 	// 空ぶかしで下がる回転数
@@ -148,4 +150,7 @@ private:
 	// ステア角度
 	float nowSteer;
 	float prevSteer;
+
+	// 回転スピード
+	float yawSpeed;
 };

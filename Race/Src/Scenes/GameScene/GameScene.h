@@ -28,6 +28,8 @@ private:
 
 	void CreateCamera(void)override;
 
+	bool UseSkyBox(void)const override { return true; }
+
 	// カメラ状態変更フラグ
 	bool focusFlg;
 
