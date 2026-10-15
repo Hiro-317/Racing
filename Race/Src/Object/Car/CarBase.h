@@ -107,7 +107,7 @@ private:
 	// 転がり抵抗係数
 	static constexpr float RR = 0.011f;
 	// エンジンブレーキ係数
-	static constexpr float ENGINE_BRAKE = 0.01f;
+	static constexpr float ENGINE_BRAKE = 0.0075f;
 
 	// 焦点距離
 	const Vector3 FOCUS_POINT = Vector3::Zonly(400.0f);

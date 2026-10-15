@@ -27,9 +27,6 @@ void CarBase::SubInit(void)
 
 void CarBase::SubUpdate(void)
 {
-	// 焦点距離更新
-	focusPos = trans.pos + FOCUS_POINT.TransMat({ trans.rotation.ToMatrix()});
-
 	// ステア角度の保持
 	prevSteer = nowSteer;
 	nowSteer = Input::GetIns().GetPriorityAKeyL().x;
@@ -187,12 +184,12 @@ void CarBase::SubUpdate(void)
 	// その針先の位置
 	needlePos = Vector2(TACHOMETER_POS.x + NEEDLE_LENGTH * cosf(rad), TACHOMETER_POS.y + NEEDLE_LENGTH * -sinf(rad));
 
-	Vector3 forward = Vector3(sinf(trans.rotation.x), 0.0f, cosf(trans.rotation.y));
+	Vector3 forward = Vector3(sinf(trans.rotation.y), 0.0f, cosf(trans.rotation.y));
 
 	float temp = nowSteer - prevSteer;
-	nowSteer = prevSteer + temp * 0.5f;
+	nowSteer = prevSteer + temp * 0.3f;
 
-	Vector3 steerDirection = Vector3(sinf(trans.rotation.x + nowSteer), 0.0f, cosf(trans.rotation.z + nowSteer));
+	Vector3 steerDirection = Vector3(sinf(trans.rotation.y + nowSteer), 0.0f, cosf(trans.rotation.y + nowSteer));
 
 	float steerRate = fabsf(nowSteer);
 	float forwardRate = 1 - steerRate;
@@ -206,8 +203,10 @@ void CarBase::SubUpdate(void)
 	yawSpeed = (nowSteer * 2.0f * speed / 100.0f) / Application::FRAME_PAR_SECOND;
 
 	//float yaw = trans.rotation.y + yawSpeed;
-	//trans.SetAngle(yaw);
-	trans.AddAngleYDeg(Rad2Deg(yawSpeed));
+	//trans.SetAngle(Vector3::Yonly(yaw));
+	trans.AddAngle(Vector3::Yonly(yawSpeed));
+	// 焦点距離更新
+	focusPos = trans.pos + trans.rotation.Rotate(FOCUS_POINT);
 
 	// ここからデータロガー
 	//
@@ -315,6 +314,9 @@ void CarBase::SubDraw(void)
 	// 現在のステア角度と旋回速度
 	DrawFormatString(700, 20, 0xffffff, "%.2f", nowSteer);
 	DrawFormatString(700, 40, 0xffffff, "%.5f", yawSpeed);
+	DrawFormatString(700, 60, 0xffffff, "%.5f", trans.rotation.y);
+
+	DrawSphere3D(focusPos.ToVECTOR(), 200.0f, 35, 0xff00ff, 0xff00ff, true);
 }
 
 void CarBase::SubRelease(void)
