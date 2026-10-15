@@ -13,7 +13,7 @@ public:
 
 	void Load(void) override;
 
-	const Vector3& GetFocusPoint(void) { return focusPos; }
+	const Vector3& GetMoveVec(void) { return moveVec; }
 
 protected:
 
@@ -109,10 +109,6 @@ private:
 	// エンジンブレーキ係数
 	static constexpr float ENGINE_BRAKE = 0.0075f;
 
-	// 焦点距離
-	const Vector3 FOCUS_POINT = Vector3::Zonly(400.0f);
-	Vector3 focusPos;
-
 	// エンジン稼働状態
 	bool engineFlg;
 
@@ -150,6 +146,10 @@ private:
 	// ステア角度
 	float nowSteer;
 	float prevSteer;
+
+	// 進む向き
+	Vector3 moveVec;
+	Vector3 forward;
 
 	// 回転スピード
 	float yawSpeed;

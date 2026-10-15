@@ -33,6 +33,7 @@
     <ClCompile Include="Src\Manager\Camera\DisplayRemote\DisplayRemoteCamera.cpp" />
     <ClCompile Include="Src\Manager\Camera\FollowAuto\FollowAutoCamera.cpp" />
     <ClCompile Include="Src\Manager\Camera\FollowRemote\FollowRemoteCamera.cpp" />
+    <ClCompile Include="Src\Manager\Camera\FollowVec\FollowVecCamera.cpp" />
     <ClCompile Include="Src\Manager\Camera\FollowYaw\FollowYawCamera.cpp" />
     <ClCompile Include="Src\Manager\Camera\Free\FreeCamera.cpp" />
     <ClCompile Include="Src\Manager\Camera\MultifuncCamera\MultifuncCamera.cpp" />
@@ -91,6 +92,7 @@
     <ClInclude Include="Src\Manager\Camera\FixedPoint\FixedPointCamera.h" />
     <ClInclude Include="Src\Manager\Camera\FollowAuto\FollowAutoCamera.h" />
     <ClInclude Include="Src\Manager\Camera\FollowRemote\FollowRemoteCamera.h" />
+    <ClInclude Include="Src\Manager\Camera\FollowVec\FollowVecCamera.h" />
     <ClInclude Include="Src\Manager\Camera\FollowYaw\FollowYawCamera.h" />
     <ClInclude Include="Src\Manager\Camera\Free\FreeCamera.h" />
     <ClInclude Include="Src\Manager\Camera\MultifuncCamera\MultifuncCamera.h" />

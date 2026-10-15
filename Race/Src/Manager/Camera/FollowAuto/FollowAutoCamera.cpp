@@ -2,15 +2,14 @@
 
 #include <algorithm>
 
-#include "../../../Application/Application.h"
+#include "../../../Common/Utility.h"
 
-#include "../../../Manager/Input/InputManager.h"
+#include "../../../Application/Application.h"
 
 FollowAutoCamera::FollowAutoCamera(
 	const Vector3* targetPos,
 	const Vector3* focusPos,
 	float TARGET_DISTANCE_MIN, float TARGET_DISTANCE_MAX,
-	float smoothing,
 	float fov
 ) :
 	CameraBase(Vector3(), Vector3(), fov),
@@ -21,9 +20,7 @@ FollowAutoCamera::FollowAutoCamera(
 	lookAtPos(),
 
 	TARGET_DISTANCE_MIN(TARGET_DISTANCE_MIN),
-	TARGET_DISTANCE_MAX(TARGET_DISTANCE_MAX),
-
-	smoothing(smoothing)
+	TARGET_DISTANCE_MAX(TARGET_DISTANCE_MAX)
 {
 	NormalUpdate();
 }
@@ -48,8 +45,8 @@ void FollowAutoCamera::NormalUpdate(void)
 	// çÇÇ≥ï‚ê≥
 	desiredPos.y += std::clamp(((*targetPos - *focusPos) * 0.5f).Length(), 250.0f, 400.0f);
 
-	// ï‚ä‘ÅiÉKÉ^Ç¬Ç´ñhé~Åj
-	pos += (desiredPos - pos) * smoothing;
+	// à⁄ìÆ
+	SmoothCameraMove(pos, desiredPos);
 	if (pos.y <= CAMERA_DOWN) { pos.y = CAMERA_DOWN; }
 
 	// íçéãì_ÇéZèo
@@ -57,5 +54,5 @@ void FollowAutoCamera::NormalUpdate(void)
 	if (lookAtPos.y <= FOCUS_DOWN) { lookAtPos.y = FOCUS_DOWN; }
 
 	// äpìx
-	angle = CalcCameraAngle(pos, lookAtPos);
+	rotation = CalcCameraRotation(pos, lookAtPos);
 }

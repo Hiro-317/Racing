@@ -7,7 +7,7 @@
 #include "../../Application/Application.h"
 
 //#include "../../Manager/Net/NetWorkManager.h"
-#include "../../Manager/Camera/FollowAuto/FollowAutoCamera.h"
+#include "../../Manager/Camera/FollowVec/FollowVecCamera.h"
 #include "../../Manager/Input/InputManager.h"
 #include "../../Manager/Sound/SoundManager.h"
 #include "../../Manager/Font/FontManager.h"
@@ -162,5 +162,5 @@ void GameScene::SubPostRelease(void)
 
 void GameScene::CreateCamera(void)
 {
-	camera = new FollowAutoCamera(&carInsRef->GetTrans().pos, &carInsRef->GetFocusPoint(), 600.0f, 610.0f, 0.8f);
+	camera = new FollowVecCamera(&carInsRef->GetTrans().pos, &carInsRef->GetMoveVec());
 }
