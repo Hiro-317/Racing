@@ -3,8 +3,14 @@
 #include "../../Manager/Input/InputManager.h"
 
 
-CarBase::CarBase(void) : 
-	ActorBase(), engineFlg(false), rpm(), needlePos(TACHOMETER_POS.x + NEEDLE_LENGTH * cosf(NEEDLE_MIN_RAD), TACHOMETER_POS.y + NEEDLE_LENGTH * -sinf(NEEDLE_MIN_RAD)), nowGear(0)
+CarBase::CarBase(void) :
+	ActorBase(),
+	engineFlg(false),
+	rpm(),
+	needlePos(TACHOMETER_POS.x + NEEDLE_LENGTH * cosf(NEEDLE_MIN_RAD), TACHOMETER_POS.y + NEEDLE_LENGTH * -sinf(NEEDLE_MIN_RAD)),
+	nowGear(0),
+	grip(1.0f),
+	driftAmount(0.0f)
 {
 	// この車体のアイドリング時の最低速度
 	idleSpeed = (MIN_RPM * 3.6f * 2.0f * DX_PI_F * TIRE_SIZE) / (GEAR_RATIO[0] * FINAL_GEAR_RATIO * 60.0f);
@@ -18,7 +24,7 @@ CarBase::~CarBase(void)
 
 void CarBase::Load(void)
 {
-	trans.LoadModel("Car/kari");
+	trans.LoadModel("Car/damball");
 }
 
 void CarBase::SubInit(void)
@@ -184,28 +190,42 @@ void CarBase::SubUpdate(void)
 	// その針先の位置
 	needlePos = Vector2(TACHOMETER_POS.x + NEEDLE_LENGTH * cosf(rad), TACHOMETER_POS.y + NEEDLE_LENGTH * -sinf(rad));
 
-	MATRIX rot = trans.rotation.ToMatrix();
-	forward = Vector3(sinf(atan2f(rot.m[0][2], rot.m[2][2])), 0.0f, cosf(atan2f(rot.m[0][2], rot.m[2][2])));
-
 	float temp = nowSteer - prevSteer;
 	nowSteer = prevSteer + temp * 0.05f;
 
-	Vector3 steerDirection = Vector3(sinf(atan2f(rot.m[0][2], rot.m[2][2]) + nowSteer), 0.0f, cosf(atan2f(rot.m[0][2], rot.m[2][2]) + nowSteer));
+	// 旋回によって生じる横速度の目標値
+	float targetSideSpeed = -nowSteer * fabsf(speed) * 0.03f;
 
-	float steerRate = fabsf(nowSteer);
-	float forwardRate = 1 - steerRate;
+	// 横速度を目標値に近づける
+	float sideResponse = grip * 5.0f;
+	float response = 1.0f - expf(-sideResponse / App::FRAME_PAR_SECOND);
+	sideSpeed += (targetSideSpeed - sideSpeed) * sideResponse / App::FRAME_PAR_SECOND;
 
-	moveVec = forward * forwardRate + steerDirection * steerRate;
+	// 速度が高いほど旋回しにくくする
+	float minFactor = 0.3f;      // 最低旋回倍率
+	float referenceSpeed = 30.0f; // 減衰の基準速度（m/s）
+	float falloff = 2.0f;         // 減衰の強さ
 
-	moveVec = moveVec.Normalized() * speed;
+	float speedFactor = minFactor + (1.0f - minFactor) * expf(-powf(speed / referenceSpeed, falloff));
+
+	float targetYawSpeed = nowSteer * 1.5f * speedFactor;
+
+	// 回転速度を滑らかに変化させる
+	yawSpeed += (targetYawSpeed - yawSpeed) * 5.0f / App::FRAME_PAR_SECOND;
+
+	trans.AddAngle(Vector3::Yonly(yawSpeed / App::FRAME_PAR_SECOND));
+
+	MATRIX rot = trans.rotation.ToMatrix();
+	float yaw = atan2f(rot.m[0][2], rot.m[2][2]);
+
+	forward = Vector3(-sinf(yaw), 0.0f, cosf(yaw));
+
+	Vector3 forward = Vector3(-sinf(yaw), 0.0f, cosf(yaw));
+	Vector3 right = Vector3(cosf(yaw), 0.0f, sinf(yaw));
+
+	moveVec = forward * speed + right * sideSpeed;
 
 	trans.pos += moveVec;
-
-	yawSpeed = (nowSteer * 2.0f * speed / 100.0f) / Application::FRAME_PAR_SECOND;
-
-	//float yaw = trans.rotation.y + yawSpeed;
-	//trans.SetAngle(Vector3::Yonly(yaw));
-	trans.AddAngle(Vector3::Yonly(yawSpeed));
 
 	// ここからデータロガー
 	//
@@ -318,6 +338,13 @@ void CarBase::SubDraw(void)
 	DrawFormatString(700, 100, 0xffffff, "%.2f : %.2f : %.2f", forward.x, forward.y, forward.z);
 
 	DrawSphere3D((trans.pos + moveVec * 100.0f).ToVECTOR(), 200.0f, 32, 0xffffff, 0xfffffff, true);
+
+	DrawCube3D(VECTOR{ -100000.0f, 0.0f, -100000.0f }, VECTOR{ 100000.0f, 0.0f, 100000.0f }, 0xffffff, 0xffffff, true);
+
+	for (float i = 0; i < 200.0f; i++) {
+		DrawLine3D(VECTOR{ -100000.0f, 0.5f, i * 1000.0f - 100000.0f }, VECTOR{ 100000.0f, 0.5f, i * 1000.0f - 100000.0f }, 0xff0000);
+		DrawLine3D(VECTOR{ i * 1000.0f - 100000.0f, 0.5f, -100000.0f }, VECTOR{ i * 1000.0f - 100000.0f, 0.5f, 100000.0f }, 0x0000ff);
+	}
 }
 
 void CarBase::SubRelease(void)

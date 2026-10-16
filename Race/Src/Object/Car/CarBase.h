@@ -151,6 +151,14 @@ private:
 	Vector3 moveVec;
 	Vector3 forward;
 
+	// 車体横方向の速度
+	float sideSpeed;
+
+	// 横方向のグリップ
+	float grip;
+	// ドリフト状態
+	float driftAmount; 
+
 	// 回転スピード
 	float yawSpeed;
 };
