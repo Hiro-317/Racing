@@ -201,14 +201,7 @@ void CarBase::SubUpdate(void)
 	float response = 1.0f - expf(-sideResponse / App::FRAME_PAR_SECOND);
 	sideSpeed += (targetSideSpeed - sideSpeed) * sideResponse / App::FRAME_PAR_SECOND;
 
-	// 速度が高いほど旋回しにくくする
-	float minFactor = 0.3f;      // 最低旋回倍率
-	float referenceSpeed = 30.0f; // 減衰の基準速度（m/s）
-	float falloff = 2.0f;         // 減衰の強さ
-
-	float speedFactor = minFactor + (1.0f - minFactor) * expf(-powf(speed / referenceSpeed, falloff));
-
-	float targetYawSpeed = nowSteer * 1.5f * speedFactor;
+	float targetYawSpeed = nowSteer * 2.0f;
 
 	// 回転速度を滑らかに変化させる
 	yawSpeed += (targetYawSpeed - yawSpeed) * 5.0f / App::FRAME_PAR_SECOND;
