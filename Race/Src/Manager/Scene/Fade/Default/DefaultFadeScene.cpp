@@ -18,6 +18,6 @@ void DefaultFadeScene::SubFadeDraw(float ratio)
 	const int alpha = static_cast<int>(255.0f * ratio);
 
 	SetDrawBlendMode(DX_BLENDMODE_ALPHA, alpha);
-	DrawBox(0, 0, App::SCREEN_SIZE_X, App::SCREEN_SIZE_Y, color, true);
+	DrawBox(0, 0, App::GetIns().GetScreenSizeX(), App::GetIns().GetScreenSizeY(), color, true);
 	SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
 }

@@ -83,7 +83,7 @@ private:
 	static constexpr float TIRE_SIZE = 0.203f;
 
 	// タコメーターの位置
-	const Vector2 TACHOMETER_POS = Vector2(Application::SCREEN_SIZE_X_HALF, Application::SCREEN_SIZE_Y - 100);
+	const Vector2 TACHOMETER_POS = Vector2(App::GetIns().GetScreenSizeXHalf(), App::GetIns().GetScreenSizeY() - 100);
 	// タコメーターの最大スケール
 	static constexpr float MAX_SCALE = 9000.0f;
 

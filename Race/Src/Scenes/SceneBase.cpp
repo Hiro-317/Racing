@@ -31,7 +31,7 @@ SceneBase::SceneBase(void) :
 
 	skyBox(nullptr),
 
-	camera(nullptr),
+	camera(),
 
 	actors()
 {
@@ -46,10 +46,11 @@ void SceneBase::Load(void)
 	SubPreLoad();
 
 	// 画面揺れを適用するため、一度このスクリーンへ3D描画をまとめる
-	mainScreen = MakeScreen(App::SCREEN_SIZE_X, App::SCREEN_SIZE_Y, true);
+	mainScreen = MakeScreen(App::GetIns().GetScreenSizeXHalf(), App::GetIns().GetScreenSizeY(), true);
+	App::GetIns().SetScreenSize(App::GetIns().GetScreenSizeXHalf(), App::GetIns().GetScreenSizeY());
 	if (mainScreen < 0) { throw std::runtime_error("SceneBaseのメインスクリーン生成に失敗しました"); }
-	tempScreen[0] = MakeScreen(App::SCREEN_SIZE_X, App::SCREEN_SIZE_Y, true);
-	tempScreen[1] = MakeScreen(App::SCREEN_SIZE_X, App::SCREEN_SIZE_Y, true);
+	tempScreen[0] = MakeScreen(App::GetIns().GetScreenSizeX(), App::GetIns().GetScreenSizeY(), true);
+	tempScreen[1] = MakeScreen(App::GetIns().GetScreenSizeX(), App::GetIns().GetScreenSizeY(), true);
 
 	// シーンごとに独立した当たり判定管理クラスを生成する
 	if (UseCollisionManager()) { collision = new CollisionManager(); }
@@ -75,7 +76,7 @@ void SceneBase::Init(void)
 	SubPreInit();
 
 	// カメラ初期化
-	if (camera != nullptr) { camera->Init(); }
+	if (camera.back() != nullptr) { for(auto cam : camera) cam->Init(); }
 
 	// スカイボックス初期化
 	if (skyBox != nullptr) { skyBox->Init(); }
@@ -101,7 +102,7 @@ void SceneBase::Update(void)
 	SubPreUpdate();
 
 	// カメラ情報をDxLibへ反映
-	if (camera != nullptr) { camera->Apply(); }
+	if (camera.back() != nullptr) { for (auto cam : camera) cam->Apply(); }
 
 	// オブジェクト全ての更新処理
 	for (ActorBase* actor : actors) { actor->Update(); }
@@ -113,7 +114,7 @@ void SceneBase::Update(void)
 	SubPostUpdate();
 
 	// カメラ更新
-	if (camera != nullptr) { camera->Update(); }
+	if (camera.back() != nullptr) { for (auto cam : camera) cam->Update(); }
 
 	// スカイボックス更新
 	if (skyBox != nullptr) { skyBox->Update(); }
@@ -128,78 +129,81 @@ void SceneBase::Draw(void)
 
 #pragma region 画面揺れ用スクリーンへ描画
 
-	SetDrawScreen(mainScreen);
-	ClearDrawScreen();
+	for (int i = 0; i < camera.size(); i++) {
 
-	// カメラ情報をDxLibへ反映
-	if (camera != nullptr) { camera->Apply(); }
+		SetDrawScreen(mainScreen);
+		ClearDrawScreen();
+
+		// カメラ情報をDxLibへ反映
+		if (camera.at(i) != nullptr) { camera.at(i)->Apply(); }
 
 #pragma endregion
 
 #pragma region メイン描画
 
-	// スカイボックス描画
-	if (skyBox != nullptr) { skyBox->Draw(); }
+		// スカイボックス描画
+		if (skyBox != nullptr) { skyBox->Draw(); }
 
-	// 通常描画
-	SubPreDraw();
-	ActorsDraw(actors, ACTOR_DRAW_TYPE::Normal);
-	SubPostDraw();
+		// 通常描画
+		SubPreDraw();
+		ActorsDraw(actors, ACTOR_DRAW_TYPE::Normal);
+		SubPostDraw();
 
-	// 半透明描画
-	SetDrawBlendMode(DX_BLENDMODE_ALPHA, 150);
-	ActorsDraw(actors, ACTOR_DRAW_TYPE::Alpha);
-	SubAlphaDraw();
+		// 半透明描画
+		SetDrawBlendMode(DX_BLENDMODE_ALPHA, 150);
+		ActorsDraw(actors, ACTOR_DRAW_TYPE::Alpha);
+		SubAlphaDraw();
 
-	ActorsColliderDebugDraw(actors);
+		ActorsColliderDebugDraw(actors);
 
-	// デバッグ用チャンク描画
-	//if (collision != nullptr && camera != nullptr) { collision->DrawChunkGrid(camera->GetPos()); }
+		// デバッグ用チャンク描画
+		//if (collision != nullptr && camera != nullptr) { collision->DrawChunkGrid(camera->GetPos()); }
 
-	SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
+		SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
 
 #pragma endregion
 
 #pragma region ポストエフェクト適用
 
-	// 最初の入力はシーン本体
-	int srcScreen = mainScreen;
+		// 最初の入力はシーン本体
+		int srcScreen = mainScreen;
 
-	// tempScreen[0] → tempScreen[1] → tempScreen[0]...
-	int tempIndex = 0;
+		// tempScreen[0] → tempScreen[1] → tempScreen[0]...
+		int tempIndex = 0;
 
-	for (PostEffectBase* postEffect : postEffects) {
-		if (postEffect == nullptr) { continue; }
+		for (PostEffectBase* postEffect : postEffects) {
+			if (postEffect == nullptr) { continue; }
 
-		const int dstScreen = tempScreen[tempIndex];
+			const int dstScreen = tempScreen[tempIndex];
 
-		// srcScreenの内容にポストエフェクトを掛けて
-		// dstScreenへ描画
-		postEffect->Apply(srcScreen, dstScreen);
+			// srcScreenの内容にポストエフェクトを掛けて
+			// dstScreenへ描画
+			postEffect->Apply(srcScreen, dstScreen);
 
-		// 今生成した画面を次の入力にする
-		srcScreen = dstScreen;
+			// 今生成した画面を次の入力にする
+			srcScreen = dstScreen;
 
-		// 次は反対側の一時スクリーンを使用
-		tempIndex = 1 - tempIndex;
-	}
+			// 次は反対側の一時スクリーンを使用
+			tempIndex = 1 - tempIndex;
+		}
 
 #pragma endregion
 
-	SetDrawScreen(DX_SCREEN_BACK);
+		SetDrawScreen(DX_SCREEN_BACK);
 
-	// PostEffectが0個ならmainScreen、
-	// 1個以上なら最後に生成されたtempScreenが入っている
-	DrawGraph(0, 0, srcScreen, true);
+		// PostEffectが0個ならmainScreen、
+		// 1個以上なら最後に生成されたtempScreenが入っている
+		DrawGraph(App::GetIns().GetScreenSizeX()*i, 0, srcScreen, true);
 
 #pragma region UI描画
 
-	ActorsDraw(actors, ACTOR_DRAW_TYPE::Ui);
-	SubUiDraw();
+		ActorsDraw(actors, ACTOR_DRAW_TYPE::Ui);
+		SubUiDraw();
 
-	if (camera != nullptr) { camera->DrawDebug(); }
+		if (camera.back() != nullptr) { camera.back()->DrawDebug(); }
 
 #pragma endregion
+	}
 }
 
 void SceneBase::Release(void)
@@ -241,10 +245,13 @@ void SceneBase::Release(void)
 	}
 
 	// カメラ解放
-	if (camera != nullptr) {
-		camera->Release();
-		delete camera;
-		camera = nullptr;
+	if (camera.back() != nullptr) {
+		for (auto cam : camera) {
+			cam->Release();
+			delete cam;
+			cam = nullptr;
+		}
+		camera.clear();
 	}
 
 	// 画面演出用のスクリーン解放

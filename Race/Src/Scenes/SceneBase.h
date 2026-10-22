@@ -61,7 +61,7 @@ public:
 	CollisionManager* GetCollisionManager(void)const { return collision; }
 
 	// カメラを取得する。カメラを使用しない場合はnullptrを返す。
-	CameraBase* GetCamera(void)const { return camera; }
+	CameraBase* GetCamera(void)const { return camera.back(); }
 
 	// ポストエフェクトを追加
 	void AddPostEffect(PostEffectBase* postEffect);
@@ -174,10 +174,10 @@ private:
 protected:
 
 	// カメラ
-	CameraBase* camera;
+	std::vector<CameraBase*> camera;
 
 	// カメラ生成
-	virtual void CreateCamera(void) { camera = nullptr; }
+	virtual void CreateCamera(void) { camera.clear(); }
 
 	// Actor格納用配列
 	std::vector<ActorBase*> actors;

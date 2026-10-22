@@ -62,8 +62,8 @@ void Loading::Update(void)
 void Loading::Draw(void)
 {
 	using app = Application;
-	int xx = app::SCREEN_SIZE_X;
-	int yy = app::SCREEN_SIZE_Y;
+	int xx = app::GetIns().GetScreenSizeX();
+	int yy = app::GetIns().GetScreenSizeY();
 	int x = xx / 2;
 	int y = yy / 2;
 

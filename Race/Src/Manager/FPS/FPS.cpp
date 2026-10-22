@@ -69,8 +69,8 @@ void FPS::CalcFrameRate(void)
 void FPS::DrawFrameRate(void)
 {
 	DrawFormatString(
-		Application::SCREEN_SIZE_X - 90,
-		Application::SCREEN_SIZE_Y - 20,
+		App::GetIns().GetScreenSizeX() - 90,
+		App::GetIns().GetScreenSizeY() - 20,
 		0xff0000,
 		"FPS[%.2f]",
 		frameRate

@@ -8,13 +8,11 @@ class FPS;
 class Application
 {
 public:
-	// スクリーンサイズ
-	static constexpr int SCREEN_SIZE_X = 1440;	// スクリーン横幅;
-	static constexpr int SCREEN_SIZE_Y = 810;	// スクリーン縦幅;
-
-	// スクリーンの真ん中
-	static constexpr int SCREEN_SIZE_X_HALF = SCREEN_SIZE_X / 2;
-	static constexpr int SCREEN_SIZE_Y_HALF = SCREEN_SIZE_Y / 2;
+	// 全体スクリーンサイズ
+	static constexpr int DEFAULT_SIZE_X = 1440;	// スクリーン横幅;
+	static constexpr int DEFAULT_SIZE_Y = 810;	// スクリーン横幅;
+	static constexpr int DEFAULT_SIZE_X_HALF = DEFAULT_SIZE_X / 2;	// スクリーン横幅;
+	static constexpr int DEFAULT_SIZE_Y_HALF = DEFAULT_SIZE_Y / 2;	// スクリーン横幅;
 
 	// エフェクト最大数
 	static constexpr int EFFECT_MAX_NUM = 8000;
@@ -22,13 +20,10 @@ public:
 	// FPS
 	static constexpr int FRAME_PAR_SECOND = 60;
 
-public:
 	// シングルトン（生成・取得・削除）
 	static void CreateIns(void) { if (ins == nullptr) { ins = new Application(); ins->Init(); } }
 	static Application& GetIns(void) { return *ins; }
 	static void DeleteIns(void) { if (ins != nullptr) delete ins; ins = nullptr; }
-
-public:
 
 	void Init(void);	// 初期化
 	void Run(void);		// ゲームループの開始
@@ -40,6 +35,9 @@ public:
 	// 解放成功／失敗の判定
 	bool IsReleaseFail(void) const { return isReleaseFail; };
 
+	// 現在のスクリーンサイズの変更
+	void SetScreenSize(int x, int y);
+
 	// ゲーム終了
 	void GameEnd(void) { gameEnd = true; }
 
@@ -50,6 +48,10 @@ public:
 	// デバッグ描画の切り替え（現在の逆に切り替える）
 	void DrawDebugSwitch(void) { drawDebug = !drawDebug; }
 
+	int GetScreenSizeX(void){ return ScreenSizeX; }
+	int GetScreenSizeY(void){ return ScreenSizeY; }
+	int GetScreenSizeXHalf(void){ return ScreenSizeXHalf; }
+	int GetScreenSizeYHalf(void){ return ScreenSizeYHalf; }
 
 private:
 	// デフォルトコンストラクタをprivateにして、
@@ -69,7 +71,6 @@ private:
 	// Application copy = *Application::GetInstance();
 	// Application copied(*Application::GetInstance());
 	// Application moved = std::move(*Application::GetInstance());
-private:
 
 	// 静的インスタンス
 	static Application* ins;
@@ -88,6 +89,14 @@ private:
 
 	// デバッグ描画（true = 「描画する」、false = 「描画しない」）
 	bool drawDebug;
+
+	int ScreenSizeX;	// スクリーン横幅;
+	int ScreenSizeY;	// スクリーン縦幅;
+
+	// スクリーンの真ん中
+	int ScreenSizeXHalf;
+	int ScreenSizeYHalf;
+
 };
 
 // Applicationの省略形

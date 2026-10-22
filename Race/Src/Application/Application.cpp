@@ -42,7 +42,8 @@ void Application::Init(void)
 	SetWindowIconID(123);
 
 	// ウィンドウ関連
-	SetGraphMode(SCREEN_SIZE_X, SCREEN_SIZE_Y, 32);	// サイズ変更
+	SetScreenSize(DEFAULT_SIZE_X, DEFAULT_SIZE_Y);
+	SetGraphMode(ScreenSizeX, ScreenSizeY, 32);	// サイズ変更
 	ChangeWindowMode(false);
 #ifdef _DEBUG
 	ChangeWindowMode(true);
@@ -183,4 +184,12 @@ void Application::Release(void)
 	Effkseer_End();
 	// DxLib終了
 	if (DxLib_End() == -1) { isReleaseFail = true; }
+}
+
+void Application::SetScreenSize(int x, int y)
+{
+	ScreenSizeX = x;
+	ScreenSizeY = y;
+	ScreenSizeXHalf = ScreenSizeX / 2;
+	ScreenSizeYHalf = ScreenSizeY / 2;
 }

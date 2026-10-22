@@ -8,7 +8,7 @@ void Mouse::Init(void)
 	anyoneTrgDown = anyoneTrg = anyone = false;
 
 	// マウスを中央に
-	SetMousePoint(Application::SCREEN_SIZE_X_HALF, Application::SCREEN_SIZE_Y_HALF);
+	SetMousePoint(App::GetIns().GetScreenSizeXHalf(), App::GetIns().GetScreenSizeYHalf());
 }
 
 void Mouse::Update(void)
@@ -33,13 +33,13 @@ void Mouse::Update(void)
 		mousePos.x = static_cast<float>(mouseX);
 		mousePos.y = static_cast<float>(mouseY);
 
-		if (!anyone && mousePos.x != Application::SCREEN_SIZE_X_HALF && mousePos.y != Application::SCREEN_SIZE_Y_HALF) {
+		if (!anyone && mousePos.x != App::GetIns().GetScreenSizeXHalf() && mousePos.y != App::GetIns().GetScreenSizeYHalf()) {
 
 			anyone = true;
 		}
 
 		// マウスを中央に
-		SetMousePoint(Application::SCREEN_SIZE_X_HALF, Application::SCREEN_SIZE_Y_HALF);
+		SetMousePoint(App::GetIns().GetScreenSizeXHalf(), App::GetIns().GetScreenSizeYHalf());
 	}
 }
 

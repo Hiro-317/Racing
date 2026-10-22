@@ -216,9 +216,9 @@ Vector3 InputManager::GetAKeyR(const KEYPAD_NO& no)
 		//　中心からの差分をとる
 		Vector3 nowPos = Vector3();
 		nowPos = Vector3(mouse->GetMousePos());
-		Vector3 diffPos = Vector3::XZonly(nowPos.x - App::SCREEN_SIZE_X_HALF, nowPos.y - App::SCREEN_SIZE_Y_HALF);
+		Vector3 diffPos = Vector3::XZonly(nowPos.x - App::GetIns().GetScreenSizeXHalf(), nowPos.y - App::GetIns().GetScreenSizeYHalf());
 		// -1～1になるようスクリーンの半分で割ってあげて返す
-		return Vector3::XZonly(diffPos.x / App::SCREEN_SIZE_X_HALF, diffPos.y / App::SCREEN_SIZE_Y_HALF);
+		return Vector3::XZonly(diffPos.x / App::GetIns().GetScreenSizeXHalf(), diffPos.y / App::GetIns().GetScreenSizeYHalf());
 		break;
 	}
 	default:

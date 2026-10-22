@@ -168,5 +168,6 @@ void GameScene::SubPostRelease(void)
 
 void GameScene::CreateCamera(void)
 {
-	camera = new FollowVecCamera(&carInsRef->GetTrans().pos, &carInsRef->GetMoveVec());
+	camera.emplace_back(new FollowVecCamera(&carInsRef->GetTrans().pos, &carInsRef->GetMoveVec()));
+	camera.emplace_back(new FollowVecCamera(&carInsRef->GetTrans().pos, &carInsRef->GetMoveVec()));
 }
