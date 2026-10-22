@@ -14,21 +14,27 @@
 
 #include "../../Manager/Scene/SceneManager.h"
 
+#include "../../Object/Stage/Stage.h"
+#include "../../Object/Point/Point.h"
+
 
 GameScene::GameScene() :
 	SceneBase(),
 	focusFlg(false),
 	time(0.0f)
 {
+	App::GetIns().SetDrawDebug(true);
 }
 
 void GameScene::SubPostLoad(void)
 {
 	//Snd::GetIns().ChangeScene("Game");
+	AddActor(new Stage());
 
 	carInsRef = new CarBase();
 	AddActor(carInsRef);
 
+	AddActor(new Point());
 }
 
 void GameScene::SubPostInit(void)

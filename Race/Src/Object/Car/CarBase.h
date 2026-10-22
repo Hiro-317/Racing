@@ -15,6 +15,8 @@ public:
 
 	const Vector3& GetMoveVec(void) { return moveVec; }
 
+	void OnCollision(COLLIDER_TAG ownTag, const ColliderBase& other, const CollisionResult& result) override;
+
 protected:
 
 	void SubInit(void) override;

@@ -60,7 +60,9 @@
     <ClCompile Include="Src\Object\Common\Shader\TestShader.cpp" />
     <ClCompile Include="Src\Object\Common\Shader\WaterShader.cpp" />
     <ClCompile Include="Src\Object\Common\Transform\Transform.cpp" />
+    <ClCompile Include="Src\Object\Point\Point.cpp" />
     <ClCompile Include="Src\Object\SkyBox\SkyBox.cpp" />
+    <ClCompile Include="Src\Object\Stage\Stage.cpp" />
     <ClCompile Include="Src\Scenes\GameScene\GameScene.cpp" />
     <ClCompile Include="Src\Scenes\PostEffect\CRTPostEffect\CRTPostEffect.cpp" />
     <ClCompile Include="Src\Scenes\PostEffect\FocusLinesPostEffect\FocusLinesPostEffect.cpp" />
@@ -121,7 +123,9 @@
     <ClInclude Include="Src\Object\Common\Shader\ShaderBase.h" />
     <ClInclude Include="Src\Object\Common\Shader\TestShader.h" />
     <ClInclude Include="Src\Object\Common\Shader\WaterShader.h" />
+    <ClInclude Include="Src\Object\Point\Point.h" />
     <ClInclude Include="Src\Object\SkyBox\SkyBox.h" />
+    <ClInclude Include="Src\Object\Stage\Stage.h" />
     <ClInclude Include="Src\Scenes\GameScene\GameScene.h" />
     <ClInclude Include="Src\Scenes\ActorUseDefine.h" />
     <ClInclude Include="Src\Scenes\PostEffect\CRTPostEffect\CRTPostEffect.h" />

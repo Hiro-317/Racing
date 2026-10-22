@@ -53,6 +53,9 @@
     <ClCompile Include="Src\Object\Common\Collider\ColliderBase.cpp" />
     <ClCompile Include="Src\Object\Common\Collider\MeshCollider.cpp" />
     <ClCompile Include="Src\Object\Common\Transform\Transform.cpp" />
+    <ClCompile Include="Src\Manager\Camera\FollowVec\FollowVecCamera.cpp" />
+    <ClCompile Include="Src\Object\Stage\Stage.cpp" />
+    <ClCompile Include="Src\Object\Point\Point.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Src\Application\Application.h" />
@@ -127,6 +130,9 @@
     <ClInclude Include="Src\Object\Common\Shader\WaterShader.h" />
     <ClInclude Include="Src\Common\Quaternion.h" />
     <ClInclude Include="Src\Object\Common\Collider\MeshCollider.h" />
+    <ClInclude Include="Src\Manager\Camera\FollowVec\FollowVecCamera.h" />
+    <ClInclude Include="Src\Object\Stage\Stage.h" />
+    <ClInclude Include="Src\Object\Point\Point.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Src\Shader\Water\WaterPS.hlsl" />

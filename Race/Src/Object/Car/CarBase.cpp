@@ -1,6 +1,7 @@
 ﻿#include "CarBase.h"
 
 #include "../../Manager/Input/InputManager.h"
+#include "../Common/Collider/CapsuleCollider.h"
 
 
 CarBase::CarBase(void) :
@@ -25,6 +26,11 @@ CarBase::~CarBase(void)
 void CarBase::Load(void)
 {
 	trans.LoadModel("Car/damball");
+	AddCollider(new CapsuleCollider(COLLIDER_TAG::Player, Vector3(0.0f, 80.0f, 150.0f), Vector3(0.0f, 80.0f, -150.0f), 80.0f));
+}
+
+void CarBase::OnCollision(COLLIDER_TAG ownTag, const ColliderBase& other, const CollisionResult& result)
+{
 }
 
 void CarBase::SubInit(void)
@@ -76,7 +82,7 @@ void CarBase::SubUpdate(void)
 			// ギアを下げた際最高回転数上回らないなら
 			if (rpm * (GEAR_RATIO[nowGear - 1] / GEAR_RATIO[nowGear]) <= MAX_RPM) {
 				// 上を押すか最低回転数に行ったら
-				if (Input::GetIns().GetPriorityKey(Input::COMMAND::UP).keyTrgDown || rpm <= MIN_RPM) {
+				if (Input::GetIns().GetPriorityKey(Input::COMMAND::UP).keyTrgDown) {
 					// ギアを落とし回転数を上げる
 					rpm = rpm * (GEAR_RATIO[nowGear - 1] / GEAR_RATIO[nowGear]);
 					nowGear--;
@@ -330,14 +336,7 @@ void CarBase::SubDraw(void)
 	DrawFormatString(700, 80, 0xffffff, "%.2f : %.2f : %.2f", moveVec.x, moveVec.y, moveVec.z);
 	DrawFormatString(700, 100, 0xffffff, "%.2f : %.2f : %.2f", forward.x, forward.y, forward.z);
 
-	DrawSphere3D((trans.pos + moveVec * 100.0f).ToVECTOR(), 200.0f, 32, 0xffffff, 0xfffffff, true);
-
-	DrawCube3D(VECTOR{ -100000.0f, 0.0f, -100000.0f }, VECTOR{ 100000.0f, 0.0f, 100000.0f }, 0xffffff, 0xffffff, true);
-
-	for (float i = 0; i < 200.0f; i++) {
-		DrawLine3D(VECTOR{ -100000.0f, 0.5f, i * 1000.0f - 100000.0f }, VECTOR{ 100000.0f, 0.5f, i * 1000.0f - 100000.0f }, 0xff0000);
-		DrawLine3D(VECTOR{ i * 1000.0f - 100000.0f, 0.5f, -100000.0f }, VECTOR{ i * 1000.0f - 100000.0f, 0.5f, 100000.0f }, 0x0000ff);
-	}
+	//DrawSphere3D((trans.pos + moveVec * 100.0f).ToVECTOR(), 200.0f, 32, 0xffffff, 0xfffffff, true);
 }
 
 void CarBase::SubRelease(void)
