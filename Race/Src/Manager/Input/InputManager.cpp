@@ -216,9 +216,9 @@ Vector3 InputManager::GetAKeyR(const KEYPAD_NO& no)
 		//Å@íÜêSÇ©ÇÁÇÃç∑ï™ÇÇ∆ÇÈ
 		Vector3 nowPos = Vector3();
 		nowPos = Vector3(mouse->GetMousePos());
-		Vector3 diffPos = Vector3::XZonly(nowPos.x - Application::SCREEN_SIZE_X_HALF, nowPos.y - Application::SCREEN_SIZE_Y_HALF);
-		// ä¥ìxÇä|ÇØÇƒï‘Ç∑
-		return diffPos * Mouse::MOUSE_SENSI;
+		Vector3 diffPos = Vector3::XZonly(nowPos.x - App::SCREEN_SIZE_X_HALF, nowPos.y - App::SCREEN_SIZE_Y_HALF);
+		// -1Å`1Ç…Ç»ÇÈÇÊÇ§ÉXÉNÉäÅ[ÉìÇÃîºï™Ç≈äÑÇ¡ÇƒÇ†Ç∞Çƒï‘Ç∑
+		return Vector3::XZonly(diffPos.x / App::SCREEN_SIZE_X_HALF, diffPos.y / App::SCREEN_SIZE_Y_HALF);
 		break;
 	}
 	default:
@@ -277,194 +277,14 @@ Vector3 InputManager::GetPriorityAKeyRNorm(void)
 	return GetAKeyR(mostPriority).Normalized();
 }
 
-Vector3 InputManager::GetPriorityAKeyL(void)
+Vector3 InputManager::GetPriorityAKeyLClamp(void)
 {
 	return GetAKeyL(mostPriority);
 }
 
-Vector3 InputManager::GetPriorityAKeyR(void)
+Vector3 InputManager::GetPriorityAKeyRClamp(void)
 {
 	return GetAKeyR(mostPriority);
-}
-
-std::vector<InputBase::Info> InputManager::GetPriorityKey(const COMMAND& com, int& num)
-{
-	// ï‘ÇËílÇäiî[Ç∑ÇÈïœêî
-	std::vector<InputBase::Info> temp;
-
-	// óDêÊèáÇ…âÒÇ∑
-	for (int i = 0; i < num; i++) {
-		// óDêÊèáämîF
-		if (orderOfPriority.at(i)) {
-			// äeèÓïÒÇÃéÊìæ
-			switch (i)
-			{
-			case static_cast<int>(KEYPAD_NO::PAD1):
-				temp.emplace_back(GetKey(com, KEYPAD_NO::PAD1));
-				break;
-			case static_cast<int>(KEYPAD_NO::PAD2):
-				temp.emplace_back(GetKey(com, KEYPAD_NO::PAD2));
-				break;
-			case static_cast<int>(KEYPAD_NO::PAD3):
-				temp.emplace_back(GetKey(com, KEYPAD_NO::PAD3));
-				break;
-			case static_cast<int>(KEYPAD_NO::PAD4):
-				temp.emplace_back(GetKey(com, KEYPAD_NO::PAD4));
-				break;
-			case static_cast<int>(KEYPAD_NO::KEY):
-				temp.emplace_back(GetKey(com, KEYPAD_NO::KEY));
-				break;
-			default:
-				break;
-			}
-		}
-	}
-	// è≠Ç»Ç≠ÇƒÇ‡ÇªÇÃÇ‹Ç‹
-	return temp;
-}
-
-std::vector<Vector3> InputManager::GetPriorityAKeyLNorm(const COMMAND& com, int& num)
-{
-	// ï‘ÇËílÇäiî[Ç∑ÇÈïœêî
-	std::vector<Vector3> temp;
-
-	// óDêÊèáÇ…âÒÇ∑
-	for (int i = 0; i < num; i++) {
-		// óDêÊèáämîF
-		if (orderOfPriority.at(i)) {
-			// äeèÓïÒÇÃéÊìæ
-			switch (i)
-			{
-			case static_cast<int>(KEYPAD_NO::PAD1):
-				temp.emplace_back(GetAKeyL(KEYPAD_NO::PAD1).Normalized());
-				break;
-			case static_cast<int>(KEYPAD_NO::PAD2):
-				temp.emplace_back(GetAKeyL(KEYPAD_NO::PAD2).Normalized());
-				break;
-			case static_cast<int>(KEYPAD_NO::PAD3):
-				temp.emplace_back(GetAKeyL(KEYPAD_NO::PAD3).Normalized());
-				break;
-			case static_cast<int>(KEYPAD_NO::PAD4):
-				temp.emplace_back(GetAKeyL(KEYPAD_NO::PAD4).Normalized());
-				break;
-			case static_cast<int>(KEYPAD_NO::KEY):
-				temp.emplace_back(GetAKeyL(KEYPAD_NO::KEY).Normalized());
-				break;
-			default:
-				break;
-			}
-		}
-	}
-	// è≠Ç»Ç≠ÇƒÇ‡ÇªÇÃÇ‹Ç‹
-	return temp;
-}
-
-std::vector<Vector3> InputManager::GetPriorityAKeyRNorm(const COMMAND& com, int& num)
-{
-	// ï‘ÇËílÇäiî[Ç∑ÇÈïœêî
-	std::vector<Vector3> temp;
-
-	// óDêÊèáÇ…âÒÇ∑
-	for (int i = 0; i < num; i++) {
-		// óDêÊèáämîF
-		if (orderOfPriority.at(i)) {
-			// äeèÓïÒÇÃéÊìæ
-			switch (i)
-			{
-			case static_cast<int>(KEYPAD_NO::PAD1):
-				temp.emplace_back(GetAKeyR(KEYPAD_NO::PAD1).Normalized());
-				break;
-			case static_cast<int>(KEYPAD_NO::PAD2):
-				temp.emplace_back(GetAKeyR(KEYPAD_NO::PAD2).Normalized());
-				break;
-			case static_cast<int>(KEYPAD_NO::PAD3):
-				temp.emplace_back(GetAKeyR(KEYPAD_NO::PAD3).Normalized());
-				break;
-			case static_cast<int>(KEYPAD_NO::PAD4):
-				temp.emplace_back(GetAKeyR(KEYPAD_NO::PAD4).Normalized());
-				break;
-			case static_cast<int>(KEYPAD_NO::KEY):
-				temp.emplace_back(GetAKeyR(KEYPAD_NO::KEY).Normalized());
-				break;
-			default:
-				break;
-			}
-		}
-	}
-	// è≠Ç»Ç≠ÇƒÇ‡ÇªÇÃÇ‹Ç‹
-	return temp;
-}
-
-std::vector<Vector3> InputManager::GetPriorityAKeyL(const COMMAND& com, int& num)
-{
-	// ï‘ÇËílÇäiî[Ç∑ÇÈïœêî
-	std::vector<Vector3> temp;
-
-	// óDêÊèáÇ…âÒÇ∑
-	for (int i = 0; i < num; i++) {
-		// óDêÊèáämîF
-		if (orderOfPriority.at(i)) {
-			// äeèÓïÒÇÃéÊìæ
-			switch (i)
-			{
-			case static_cast<int>(KEYPAD_NO::PAD1):
-				temp.emplace_back(GetAKeyL(KEYPAD_NO::PAD1));
-				break;
-			case static_cast<int>(KEYPAD_NO::PAD2):
-				temp.emplace_back(GetAKeyL(KEYPAD_NO::PAD2));
-				break;
-			case static_cast<int>(KEYPAD_NO::PAD3):
-				temp.emplace_back(GetAKeyL(KEYPAD_NO::PAD3));
-				break;
-			case static_cast<int>(KEYPAD_NO::PAD4):
-				temp.emplace_back(GetAKeyL(KEYPAD_NO::PAD4));
-				break;
-			case static_cast<int>(KEYPAD_NO::KEY):
-				temp.emplace_back(GetAKeyL(KEYPAD_NO::KEY));
-				break;
-			default:
-				break;
-			}
-		}
-	}
-	// è≠Ç»Ç≠ÇƒÇ‡ÇªÇÃÇ‹Ç‹
-	return temp;
-}
-
-std::vector<Vector3> InputManager::GetPriorityAKeyR(const COMMAND& com, int& num)
-{
-	// ï‘ÇËílÇäiî[Ç∑ÇÈïœêî
-	std::vector<Vector3> temp;
-
-	// óDêÊèáÇ…âÒÇ∑
-	for (int i = 0; i < num; i++) {
-		// óDêÊèáämîF
-		if (orderOfPriority.at(i)) {
-			// äeèÓïÒÇÃéÊìæ
-			switch (i)
-			{
-			case static_cast<int>(KEYPAD_NO::PAD1):
-				temp.emplace_back(GetAKeyR(KEYPAD_NO::PAD1));
-				break;
-			case static_cast<int>(KEYPAD_NO::PAD2):
-				temp.emplace_back(GetAKeyR(KEYPAD_NO::PAD2));
-				break;
-			case static_cast<int>(KEYPAD_NO::PAD3):
-				temp.emplace_back(GetAKeyR(KEYPAD_NO::PAD3));
-				break;
-			case static_cast<int>(KEYPAD_NO::PAD4):
-				temp.emplace_back(GetAKeyR(KEYPAD_NO::PAD4));
-				break;
-			case static_cast<int>(KEYPAD_NO::KEY):
-				temp.emplace_back(GetAKeyR(KEYPAD_NO::KEY));
-				break;
-			default:
-				break;
-			}
-		}
-	}
-	// è≠Ç»Ç≠ÇƒÇ‡ÇªÇÃÇ‹Ç‹
-	return temp;
 }
 
 bool InputManager::GetPriorityAnyoneTrg(void)

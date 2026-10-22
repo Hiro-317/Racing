@@ -41,7 +41,7 @@ void CarBase::SubUpdate(void)
 {
 	// ステア角度の保持
 	prevSteer = nowSteer;
-	nowSteer = Input::GetIns().GetPriorityAKeyL().x;
+	nowSteer = Input::GetIns().GetPriorityAKeyLClamp().x;
 
 	// エンジンオフなら
 	if (!engineFlg) {
@@ -92,15 +92,15 @@ void CarBase::SubUpdate(void)
 		// その回転数のトルク出力を計算しておく
 		torque = MAX_TORQUE * powf(rpm / MAX_TORQUE_RPM, TORQUE_CURVE) * expf(TORQUE_CURVE * (1 - rpm / MAX_TORQUE_RPM));
 		// ブレーキ踏んでいて
-		if (Input::GetIns().GetPriorityAKeyL().z < 0.0f || Input::GetIns().GetPriorityKey(Input::COMMAND::RUN).keyNew) {
+		if (Input::GetIns().GetPriorityAKeyLClamp().z < 0.0f || Input::GetIns().GetPriorityKey(Input::COMMAND::RUN).keyNew) {
 			// 速度がゼロで
 			if (speed == 0.0f) {
 				// アクセルを踏んでいるとき
-				if (Input::GetIns().GetPriorityAKeyL().z > 0) {
+				if (Input::GetIns().GetPriorityAKeyLClamp().z > 0) {
 					// フューエルカットが働いてないなら
 					if (!fuelCut) {
 						// 回転数を上げ
-						rpm += UP_RPM * Input::GetIns().GetPriorityAKeyL().z;
+						rpm += UP_RPM * Input::GetIns().GetPriorityAKeyLClamp().z;
 						// ローンチの回転数に行ったら
 						if (rpm > MAX_TORQUE_RPM) {
 							// フューエルカットをかける
@@ -130,7 +130,7 @@ void CarBase::SubUpdate(void)
 			// 速度が出ているとき
 			else {
 				// エンジンブレーキとブレーキで速度を落としそこから回転数を出す
-				speed += 0.25f * Input::GetIns().GetPriorityAKeyL().z;
+				speed += 0.25f * Input::GetIns().GetPriorityAKeyLClamp().z;
 				speed += EngineBrake() / Application::FRAME_PAR_SECOND;
 				rpm = (speed * GEAR_RATIO[nowGear] * FINAL_GEAR_RATIO * 60.0f) / (3.6f * 2.0f * DX_PI_F * TIRE_SIZE);
 				// 速度がゼロ以下になったら
@@ -160,9 +160,9 @@ void CarBase::SubUpdate(void)
 		// 最低速度以上なら(クラッチ全つながりしてる)
 		else {
 			// アクセルオンかつフューエルカットが働いてないなら
-			if (Input::GetIns().GetPriorityAKeyL().z != 0.0f && !fuelCut) {
+			if (Input::GetIns().GetPriorityAKeyLClamp().z != 0.0f && !fuelCut) {
 				// 加速
-				speed += Acceleration(Input::GetIns().GetPriorityAKeyL().z)/ Application::FRAME_PAR_SECOND;
+				speed += Acceleration(Input::GetIns().GetPriorityAKeyLClamp().z)/ Application::FRAME_PAR_SECOND;
 				// 回転数を速度から出す
 				rpm = (speed * GEAR_RATIO[nowGear] * FINAL_GEAR_RATIO * 60.0f) / (3.6f * 2.0f * DX_PI_F * TIRE_SIZE);
 				// レブリミットにかかったら

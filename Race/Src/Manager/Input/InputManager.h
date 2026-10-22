@@ -78,14 +78,8 @@ public:
 	InputBase::Info GetPriorityKey(const COMMAND& com);
 	Vector3 GetPriorityAKeyLNorm(void);
 	Vector3 GetPriorityAKeyRNorm(void);
-	Vector3 GetPriorityAKeyL(void);
-	Vector3 GetPriorityAKeyR(void);
-	// 指定数(優先機種を0から)
-	std::vector<InputBase::Info> GetPriorityKey(const COMMAND& com, int& num);
-	std::vector<Vector3> GetPriorityAKeyLNorm(const COMMAND& com, int& num);
-	std::vector<Vector3> GetPriorityAKeyRNorm(const COMMAND& com, int& num);
-	std::vector<Vector3> GetPriorityAKeyL(const COMMAND& com, int& num);
-	std::vector<Vector3> GetPriorityAKeyR(const COMMAND& com, int& num);
+	Vector3 GetPriorityAKeyLClamp(void);
+	Vector3 GetPriorityAKeyRClamp(void);
 
 	// 最優先されたタイプを取得
 	KEYPAD_NO GetMostPriority(void) { return mostPriority; }
