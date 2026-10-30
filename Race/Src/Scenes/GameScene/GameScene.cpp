@@ -8,7 +8,6 @@
 
 //#include "../../Manager/Net/NetWorkManager.h"
 #include "../../Manager/Camera/FollowVec/FollowVecCamera.h"
-#include "../../Manager/Input/InputManager.h"
 #include "../../Manager/Sound/SoundManager.h"
 #include "../../Manager/Font/FontManager.h"
 
@@ -18,156 +17,65 @@
 #include "../../Object/Point/Point.h"
 
 
-GameScene::GameScene() :
+GameScene::GameScene(const int& num, const Input::KEYPAD_NO* no) :
 	SceneBase(),
 	focusFlg(false),
-	time(0.0f)
+	time(0.0f),
+	num(num),
+	no{no[0], no[1], no[2], no[3]}
 {
 	App::GetIns().SetDrawDebug(true);
 }
 
-void GameScene::SubPostLoad(void)
+	void GameScene::SubPostLoad(void)
 {
+	DevideScreen(num);
+
 	//Snd::GetIns().ChangeScene("Game");
 	AddActor(new Stage());
 
-	carInsRef = new CarBase();
-	AddActor(carInsRef);
+	for (int i = 0; i < num; i++) {
+		carInsRef[i] = new CarBase(no[i], Vector3());
+		AddActor(carInsRef[i]);
+	}
 
 	AddActor(new Point());
 }
 
 void GameScene::SubPostInit(void)
 {
-	//SoundManager::GetIns().Play("Battle");
-
 	time = 0;
 }
 
 void GameScene::SubPreUpdate(void)
 {
-	//if (Net::GetIns().GetState() == Net::NetState::None) { return; }
-
-	//while (auto dataPtr = Net::GetIns().GetMsgData<MsgDataGameTime>()) {
-	//	time = dataPtr->time;
-
-	//	SceneManager::GetIns().SetClearTime(time);
-
-	//	delete dataPtr;
-	//}
-
-	//while (auto dataPtr = Net::GetIns().GetMsgData<MsgDataSystemInform>(MSG_SENDER_ID::None, true)) {
-	//	SceneManager::GetIns().PushScene(std::make_unique<GamePause>(dataPtr->header.senderId));
-	//	delete dataPtr;
-	//}
-	//// 切断 の受信
-	//while (auto dataPtr = Net::GetIns().GetMsgData<MsgDataConnectInform>()) {
-
-	//	if (dataPtr->inform == MsgDataConnectInform::INFORM_TYPE::Disconnect) {
-	//		Net::GetIns().Disconnection();
-	//		SceneManager::GetIns().JumpSceneFade(SCENE_ID::Lobby);
-	//	}
-
-	//	delete dataPtr;
-	//}
 }
 
 void GameScene::SubPostUpdate(void)
 {
-	Vector3 pos = Vector3();
-
-#pragma region 遷移判定（ポーズも含む）
-	// ポーズ判定
-	//if (Key::GetIns().GetInfo(KEY_TYPE::PAUSE).down) {
-
-	//	//Net::GetIns().EventInformSend(MsgDataSystemInform::INFORM_TYPE::PushGamePause);
-	//	//EffectManager::GetIns()->PauseEffect();
-	//	//SceneManager::GetIns().PushScene(std::make_unique<GamePause>(Net::GetIns().GetSenderId()));
-	//	return;
-	//}
-
-	//// ゲームクリア判定
-	//if (bossInsRef->GetIsDeath()) {
-
-	//	// 同期
-	//	if (Net::GetIns().GetState() != Net::NetState::None && Net::GetIns().IsHost()) { Net::GetIns().Send(MsgDataGameTime(time)); }
-	//	SceneManager::GetIns().SetClearTime(time);
-
-
-	//	// シーン切り替え時に前シーンのエフェクトを残さない
-	//	if (EffectManager::GetIns() != nullptr) { EffectManager::GetIns()->StopEffectAll(); }
-
-	//	switch (SceneManager::GetIns().GetSelectBossType())
-	//	{
-	//	case BOSS_TYPE::Tomato:
-	//		SceneManager::GetIns().ChangeSceneFade(SCENE_ID::Clear, FADE_TYPE::DEFAULT, 90, 0xe33434, 0x000000);
-	//		break;
-	//	case BOSS_TYPE::Grape:
-	//		SceneManager::GetIns().ChangeSceneFade(SCENE_ID::Clear, FADE_TYPE::DEFAULT, 90, 0x9338e8, 0x000000);
-	//		break;
-	//	case BOSS_TYPE::Banana:
-	//		SceneManager::GetIns().ChangeSceneFade(SCENE_ID::Clear, FADE_TYPE::DEFAULT, 90, 0xfcf80a, 0x000000);
-	//		break;
-	//	default:
-	//		break;
-	//	}
-	//	return;
-	//}
-
-	//// ゲームオーバー判定
-	//if (ObjSerch<PlayerManager>(objects)->IsPlayerAllDeath()) {
-
-	//	// シーン切り替え時に前シーンのエフェクトを残さない
-	//	if (EffectManager::GetIns() != nullptr) { EffectManager::GetIns()->StopEffectAll(); }
-
-	//	SceneManager::GetIns().ChangeSceneFade(SCENE_ID::GameOver, FADE_TYPE::DEFAULT, 90, 0xffffff, 0x000000);
-	//	return;
-	//}
-
-#if _DEBUG
-	// シーンを再読み込み
-	//if (Key::GetIns().GetInfo(KEY_TYPE::DEBUG_RELOAD).down) {
-	//	SceneManager::GetIns().ChangeSceneFade(SCENE_ID::Game);
-
-	//	// シーン切り替え時に前シーンのエフェクトを残さない
-	//	if (EffectManager::GetIns() != nullptr) { EffectManager::GetIns()->StopEffectAll(); }
-
-	//	return;
-	//}
-#endif // _DEBUG
-
-	//EffectManager::GetIns()->UpdateEffect();
-	//EffectManager::GetIns()->ReceptionUpdate();
-	//UpdateEffekseer3D();
-
-#pragma endregion
-
 #pragma region 時間計測
 
 	// 時間更新
-	time += 1 / App::FRAME_PAR_SECOND;
-
-	//// 同期
-	//if (Net::GetIns().GetState() != Net::NetState::None&&Net::GetIns().IsHost()) {
-	//	if ((char)time % MULTI_TIME_SEND_COUNT == 0) { Net::GetIns().Send(MsgDataGameTime(time)); }
-	//}
+	time += App::GetPassTime();
 #pragma endregion
 }
 
 void GameScene::SubUiDraw(void)
 {
-	DrawString(0, 0, std::to_string(time).c_str(), 0xffffff);
 }
 
 void GameScene::SubPostRelease(void)
 {
-	//Net::GetIns().ReceptionDataReset();
-	carInsRef = nullptr;
+	for (int i = 0; i < 3; i++) {
+		carInsRef[i] = nullptr;
+	}
 }
 
 
 void GameScene::CreateCamera(void)
 {
-	camera.emplace_back(new FollowVecCamera(&carInsRef->GetTrans().pos, &carInsRef->GetMoveVec()));
-	camera.emplace_back(new FollowVecCamera(&carInsRef->GetTrans().pos, &carInsRef->GetMoveVec()));
+	for (auto car : carInsRef) {
+		if (car == nullptr) return;
+		camera.emplace_back(new FollowVecCamera(&car->GetTrans().pos, &car->GetMoveVec()));
+	}
 }

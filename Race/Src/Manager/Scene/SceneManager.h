@@ -11,6 +11,7 @@
 #include "Fade/FadeDefine.h"
 
 //#include "../../Manager/Net/SenderID_Define.h"
+#include "../../Manager/Input/InputManager.h"
 
 class SceneBase;
 
@@ -95,6 +96,12 @@ public:
 	bool IsTransition(void)const {
 		return !requests.empty() || loadingScene != nullptr || fade != nullptr || isWaitFadeOut;
 	}
+
+	// コントローラーのセット
+	void SetKeypadNo(const Input::KEYPAD_NO& no, const int& num) { tmpNo[num] = no; }
+
+	// プレイヤー人数のセット
+	void SetPlayerNum(const int& num) { tmpNum = num; }
 
 #pragma endregion
 
@@ -250,6 +257,8 @@ private:
 
 #pragma endregion
 
+	Input::KEYPAD_NO tmpNo[4];
+	int tmpNum;
 };
 
 using SCENE_ID = SceneManager::SCENE_ID;

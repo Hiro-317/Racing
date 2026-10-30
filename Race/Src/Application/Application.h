@@ -53,6 +53,8 @@ public:
 	int GetScreenSizeXHalf(void){ return ScreenSizeXHalf; }
 	int GetScreenSizeYHalf(void){ return ScreenSizeYHalf; }
 
+	static float GetPassTime(void);
+
 private:
 	// デフォルトコンストラクタをprivateにして、
 	// 外部から生成できない様にする

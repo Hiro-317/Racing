@@ -16,6 +16,11 @@
 
 Application* Application::ins = nullptr;
 
+float Application::GetPassTime(void)
+{
+	return (1.0f / (float)FRAME_PAR_SECOND) * TimeScale::Get();
+}
+
 // コンストラクタ
 Application::Application(void) :
 	isInitFail(false),
@@ -43,7 +48,7 @@ void Application::Init(void)
 
 	// ウィンドウ関連
 	SetScreenSize(DEFAULT_SIZE_X, DEFAULT_SIZE_Y);
-	SetGraphMode(ScreenSizeX, ScreenSizeY, 32);	// サイズ変更
+	SetGraphMode(DEFAULT_SIZE_X, DEFAULT_SIZE_Y, 32);	// サイズ変更
 	ChangeWindowMode(false);
 #ifdef _DEBUG
 	ChangeWindowMode(true);
@@ -126,7 +131,7 @@ void Application::Run(void)
 		Snd::GetIns().Update();
 
 		// デバッグ表示切替
-		//if (Input::GetIns().GetInfo(KEY_TYPE::DEBUG_DRAW_SWITCH).down) { DrawDebugSwitch(); }
+		if (Input::GetIns().GetPriorityKey(COMMAND::DEBUG).keyTrgDown) { DrawDebugSwitch(); }
 
 		// フレームレート計算
 		fps->CalcFrameRate();

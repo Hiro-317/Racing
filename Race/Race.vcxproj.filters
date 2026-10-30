@@ -56,6 +56,7 @@
     <ClCompile Include="Src\Manager\Camera\FollowVec\FollowVecCamera.cpp" />
     <ClCompile Include="Src\Object\Stage\Stage.cpp" />
     <ClCompile Include="Src\Object\Point\Point.cpp" />
+    <ClCompile Include="Src\Scenes\TitleScene\TitleScene.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Src\Application\Application.h" />
@@ -133,6 +134,7 @@
     <ClInclude Include="Src\Manager\Camera\FollowVec\FollowVecCamera.h" />
     <ClInclude Include="Src\Object\Stage\Stage.h" />
     <ClInclude Include="Src\Object\Point\Point.h" />
+    <ClInclude Include="Src\Scenes\TitleScene\TitleScene.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Src\Shader\Water\WaterPS.hlsl" />

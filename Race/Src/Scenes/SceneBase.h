@@ -61,10 +61,10 @@ public:
 	CollisionManager* GetCollisionManager(void)const { return collision; }
 
 	// カメラを取得する。カメラを使用しない場合はnullptrを返す。
-	CameraBase* GetCamera(void)const { return camera.back(); }
+	CameraBase* GetCamera(void)const { return camera.empty() ? nullptr : camera.back(); }
 
 	// ポストエフェクトを追加
-	void AddPostEffect(PostEffectBase* postEffect);
+	void AddPostEffect(PostEffectBase* postEffect, int num);
 
 	// 指定した種類のポストエフェクトを削除
 	template<class T = PostEffectBase>
@@ -157,11 +157,12 @@ private:
 	CollisionManager* collision;
 
 	// ポストエフェクト配列
-	std::vector<PostEffectBase*> postEffects;
+	std::vector<PostEffectBase*> postEffects[4];
 
 	// ポストエフェクト用のスクリーンハンドル
 	int mainScreen;
-	int tempScreen[2];
+	int tempScreen[4];
+	int devideNum;
 
 	// スカイボックス
 	SkyBox* skyBox;
@@ -170,7 +171,6 @@ private:
 	void ActorsDraw(const std::vector<ActorBase*>& actors, ACTOR_DRAW_TYPE drawType);
 
 	void ActorsColliderDebugDraw(const std::vector<ActorBase*>& actors);
-
 protected:
 
 	// カメラ
@@ -181,4 +181,8 @@ protected:
 
 	// Actor格納用配列
 	std::vector<ActorBase*> actors;
+
+	// 画面分割用サイズ変更(num = 1,2,4)
+	void DevideScreen(const int& num);
+
 };

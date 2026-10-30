@@ -13,6 +13,7 @@ Controller::~Controller(void)
 void Controller::Init(void)
 {
 	anyoneTrgDown = anyoneTrg = anyone = false;
+	
 }
 
 void Controller::Update(void)
@@ -46,6 +47,82 @@ Vector3 Controller::GetDirectionXZAKeyL(void)
 Vector3 Controller::GetDirectionXZAKeyR(void)
 {
 	return Vector3(GetDirectionXZAKey(analogKeyRX, analogKeyRY));
+}
+
+float Controller::GetLTrigger(void)
+{
+	auto type = GetJPadDType();
+
+	auto d = GetJPadDInputState();
+	auto x = GetJPadXInputState();
+
+	switch (type) {
+	case Controller::JOYPAD_TYPE::OTHER:
+		break;
+
+	case Controller::JOYPAD_TYPE::XBOX_360:
+	case Controller::JOYPAD_TYPE::XBOX_ONE:
+
+		//   Y
+		// X   B
+		//   A
+
+		return x.LeftTrigger;
+		break;
+
+	case Controller::JOYPAD_TYPE::DUAL_SHOCK_3:
+	case Controller::JOYPAD_TYPE::DUAL_SHOCK_4:
+	case Controller::JOYPAD_TYPE::DUAL_SENSE:
+
+		//   ¢
+		//    Z
+		//   ~
+
+		float res;
+		res =  d.Rx + 1000.0f;
+		res = res / 2000.0f * 255.0f;
+		return res;
+		break;
+	}
+	return 0.0f;
+}
+
+float Controller::GetRTrigger(void)
+{
+	auto type = GetJPadDType();
+
+	auto d = GetJPadDInputState();
+	auto x = GetJPadXInputState();
+
+	switch (type) {
+	case Controller::JOYPAD_TYPE::OTHER:
+		break;
+
+	case Controller::JOYPAD_TYPE::XBOX_360:
+	case Controller::JOYPAD_TYPE::XBOX_ONE:
+
+		//   Y
+		// X   B
+		//   A
+
+		return x.RightTrigger;
+		break;
+
+	case Controller::JOYPAD_TYPE::DUAL_SHOCK_3:
+	case Controller::JOYPAD_TYPE::DUAL_SHOCK_4:
+	case Controller::JOYPAD_TYPE::DUAL_SENSE:
+
+		//   ¢
+		//    Z
+		//   ~
+
+		float res;
+		res = d.Ry + 1000.0f;
+		res = res / 2000.0f * 255.0f;
+		return res;
+		break;
+	}
+	return 0.0f;
 }
 
 Vector3 Controller::GetDirectionXZAKey(int aKeyX, int aKeyY)
@@ -223,10 +300,10 @@ bool Controller::GetJPadInputState(int key)
 			return  d.Buttons[5] == 128;
 			break;
 		case XINPUT_BUTTON_LEFT_SHOULDER:
-			return  d.Buttons[6] == 128;
+			return  d.Rx > -1000;
 			break;
 		case XINPUT_BUTTON_RIGHT_SHOULDER:
-			return  d.Buttons[7] == 128;
+			return  d.Ry > -1000;
 			break;
 		case XINPUT_BUTTON_LEFT_THUMB:
 			return  d.Buttons[10] == 128;

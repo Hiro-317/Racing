@@ -11,7 +11,7 @@
 
 #include "../../Scenes/SceneBase.h"
 
-//#include "../Title/TitleScene.h"
+#include "../../Scenes/TitleScene/TitleScene.h"
 //#include "../Lobby/LobbyScene.h"
 //#include "../Lobby/MultiLobbyScene.h"
 //#include "../BossSelect/BossSelectScene.h"
@@ -57,7 +57,7 @@ void SceneManager::Init(void)
 	Init3D();
 
 	// 最初のタイトルシーンは予約を経由せず、この初期化処理内で読み込みを開始する
-	StartLoad(CreateScene(SCENE_ID::Game), LOAD_COMMIT::Jump);
+	StartLoad(CreateScene(SCENE_ID::Title), LOAD_COMMIT::Jump);
 }
 
 void SceneManager::Release(void)
@@ -135,7 +135,7 @@ void SceneManager::Draw(void)
 	}
 
 	// フェードは必ず最前面へ描画する
-	//if (fade != nullptr) { fade->Draw(); }
+	if (fade != nullptr) { fade->Draw(); }
 
 	// ロード中はシーンの上へLoading画面を描画する
 	if (loadingScene != nullptr) { Loading::GetInstance()->Draw(); }
@@ -533,7 +533,7 @@ std::unique_ptr<SceneBase> SceneManager::CreateScene(SCENE_ID scene)const
 {
 	switch (scene) {
 
-	//case SCENE_ID::Title: { return std::make_unique<TitleScene>(); }
+	case SCENE_ID::Title: { return std::make_unique<TitleScene>(); }
 
 	//case SCENE_ID::Lobby: { return std::make_unique<LobbyScene>(); }
 
@@ -541,7 +541,7 @@ std::unique_ptr<SceneBase> SceneManager::CreateScene(SCENE_ID scene)const
 
 	//case SCENE_ID::BossSelect: { return std::make_unique<BossSelectScene>(); }
 
-	case SCENE_ID::Game: { return std::make_unique<GameScene>(); }
+ 	case SCENE_ID::Game: { return std::make_unique<GameScene>(tmpNum, &tmpNo[0]); }
 
 	//case SCENE_ID::Clear: { return std::make_unique<ClearScene>(); }
 

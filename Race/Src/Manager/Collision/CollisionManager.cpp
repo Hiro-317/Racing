@@ -417,6 +417,8 @@ void CollisionManager::Check(void)
 	// ‡AƒGƒlƒ~[Œn ~ ƒXƒe[ƒWŒn
 	Matching(COLLIDER_GROUP::Enemy, COLLIDER_GROUP::Stage);
 
+	// ‡BƒvƒŒƒCƒ„[Œn ~ ƒvƒŒƒCƒ„[[Œn
+	Matching(COLLIDER_GROUP::Player, COLLIDER_GROUP::Player);
 
 	// ‡BƒvƒŒƒCƒ„[Œn ~ ƒGƒlƒ~[Œn
 	Matching(COLLIDER_GROUP::Player, COLLIDER_GROUP::Enemy);
@@ -614,9 +616,9 @@ bool CollisionManager::IsHit(ColliderBase* a, ColliderBase* b, CollisionResult& 
 	if (aShape == COLLIDER_SHAPE::None || bShape == COLLIDER_SHAPE::None) { return false; }
 
 	// “¯ˆêƒOƒ‹[ƒv‚É‘®‚·‚é“¯ˆêƒ^ƒO“¯Žm‚Í”»’è‚µ‚È‚¢
-	if (a->GetTag() == b->GetTag()) {
-		if (TAG_TO_GROUP_LIST.contains(a->GetTag())) { return false; }
-	}
+	//if (a->GetTag() == b->GetTag()) {
+	//	if (TAG_TO_GROUP_LIST.contains(a->GetTag())) { return false; }
+	//}
 
 	// AABB‚É‚æ‚éŽG‚È”»’è
 	const ColliderBase::AABB aAABB = a->GetAABB();

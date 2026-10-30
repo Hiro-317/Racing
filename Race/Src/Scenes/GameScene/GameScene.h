@@ -3,12 +3,14 @@
 #include"../SceneBase.h"
 
 #include "../../Object/Car/CarBase.h"
+#include "../../Manager/Input/InputManager.h"
 
 
 class GameScene : public SceneBase
 {
 public:
-	GameScene();
+
+	GameScene(const int& num, const Input::KEYPAD_NO* no);
 	~GameScene()override = default;
 
 private:
@@ -39,5 +41,8 @@ private:
 	// マルチで時間をどのくらいの間隔で同期するか（秒数）
 	const char MULTI_TIME_SEND_COUNT = 5;
 
-	CarBase* carInsRef;
+	CarBase* carInsRef[4];
+
+	const int& num;
+	const Input::KEYPAD_NO no[4];
 };

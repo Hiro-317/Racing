@@ -26,9 +26,13 @@ public:
 	// アナログキーの入力受付しきい値(0.0～1.0)
 	static constexpr float THRESHOLD = 0.05f;
 
-	// アナログキーの入力値\を取得
+	// アナログキーの入力値を取得
 	Vector3 GetDirectionXZAKeyL(void);
 	Vector3 GetDirectionXZAKeyR(void);
+
+	// トリガーの生データ取得
+	float GetLTrigger(void);
+	float GetRTrigger(void);
 
 	JOYPAD_TYPE GetJPadType(void) { return GetJPadDType(); }
 

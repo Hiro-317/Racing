@@ -74,6 +74,7 @@
     <ClCompile Include="Src\Object\ActorBase\ActorBase.cpp" />
     <ClCompile Include="Src\Object\Common\AnimationController\AnimationController.cpp" />
     <ClCompile Include="Src\Object\Common\DataLoad\ParameterLoad.cpp" />
+    <ClCompile Include="Src\Scenes\TitleScene\TitleScene.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Src\Application\Application.h" />
@@ -151,6 +152,7 @@
     <ClInclude Include="Src\Object\Common\DebugObject\DebugObjectBase.h" />
     <ClInclude Include="Src\Object\Common\DebugObject\SphereDebugObject.h" />
     <ClInclude Include="Src\Object\Common\Transform\Transform.h" />
+    <ClInclude Include="Src\Scenes\TitleScene\TitleScene.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Src\Shader\Default\DefaultPS.hlsl">

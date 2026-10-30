@@ -46,11 +46,7 @@ void SceneBase::Load(void)
 	SubPreLoad();
 
 	// 画面揺れを適用するため、一度このスクリーンへ3D描画をまとめる
-	mainScreen = MakeScreen(App::GetIns().GetScreenSizeXHalf(), App::GetIns().GetScreenSizeY(), true);
-	App::GetIns().SetScreenSize(App::GetIns().GetScreenSizeXHalf(), App::GetIns().GetScreenSizeY());
-	if (mainScreen < 0) { throw std::runtime_error("SceneBaseのメインスクリーン生成に失敗しました"); }
-	tempScreen[0] = MakeScreen(App::GetIns().GetScreenSizeX(), App::GetIns().GetScreenSizeY(), true);
-	tempScreen[1] = MakeScreen(App::GetIns().GetScreenSizeX(), App::GetIns().GetScreenSizeY(), true);
+	DevideScreen(1);
 
 	// シーンごとに独立した当たり判定管理クラスを生成する
 	if (UseCollisionManager()) { collision = new CollisionManager(); }
@@ -76,7 +72,7 @@ void SceneBase::Init(void)
 	SubPreInit();
 
 	// カメラ初期化
-	if (camera.back() != nullptr) { for(auto cam : camera) cam->Init(); }
+	if (!camera.empty()) { for(auto cam : camera)  if(cam != nullptr) cam->Init(); }
 
 	// スカイボックス初期化
 	if (skyBox != nullptr) { skyBox->Init(); }
@@ -102,7 +98,7 @@ void SceneBase::Update(void)
 	SubPreUpdate();
 
 	// カメラ情報をDxLibへ反映
-	if (camera.back() != nullptr) { for (auto cam : camera) cam->Apply(); }
+	if (!camera.empty()) { for (auto cam : camera) if (cam != nullptr) cam->Apply(); }
 
 	// オブジェクト全ての更新処理
 	for (ActorBase* actor : actors) { actor->Update(); }
@@ -114,13 +110,15 @@ void SceneBase::Update(void)
 	SubPostUpdate();
 
 	// カメラ更新
-	if (camera.back() != nullptr) { for (auto cam : camera) cam->Update(); }
+	if (!camera.empty()) { for (auto cam : camera) if (cam != nullptr) cam->Update(); }
 
 	// スカイボックス更新
 	if (skyBox != nullptr) { skyBox->Update(); }
 
 	// ポストエフェクト更新
-	for (PostEffectBase* postEffect : postEffects) { postEffect->Update(); }
+	for (int i = 0; i < devideNum; i++) {
+		for (PostEffectBase* postEffect : postEffects[i]) { postEffect->Update(); }
+	}
 }
 
 void SceneBase::Draw(void)
@@ -129,13 +127,13 @@ void SceneBase::Draw(void)
 
 #pragma region 画面揺れ用スクリーンへ描画
 
-	for (int i = 0; i < camera.size(); i++) {
+	for (int i = 0; i < devideNum; i++) {
 
 		SetDrawScreen(mainScreen);
 		ClearDrawScreen();
 
 		// カメラ情報をDxLibへ反映
-		if (camera.at(i) != nullptr) { camera.at(i)->Apply(); }
+		if (camera.size() > i && camera.at(i) != nullptr) { camera.at(i)->Apply(); }
 
 #pragma endregion
 
@@ -171,7 +169,7 @@ void SceneBase::Draw(void)
 		// tempScreen[0] → tempScreen[1] → tempScreen[0]...
 		int tempIndex = 0;
 
-		for (PostEffectBase* postEffect : postEffects) {
+		for (PostEffectBase* postEffect : postEffects[i]) {
 			if (postEffect == nullptr) { continue; }
 
 			const int dstScreen = tempScreen[tempIndex];
@@ -193,14 +191,14 @@ void SceneBase::Draw(void)
 
 		// PostEffectが0個ならmainScreen、
 		// 1個以上なら最後に生成されたtempScreenが入っている
-		DrawGraph(App::GetIns().GetScreenSizeX()*i, 0, srcScreen, true);
+		DrawGraph(App::GetIns().GetScreenSizeX() * (i % 2), App::GetIns().GetScreenSizeY() * (i / 2), srcScreen, true);
 
 #pragma region UI描画
 
 		ActorsDraw(actors, ACTOR_DRAW_TYPE::Ui);
 		SubUiDraw();
 
-		if (camera.back() != nullptr) { camera.back()->DrawDebug(); }
+		if (camera.size() > i && camera.at(i) != nullptr) { camera.at(i)->DrawDebug(); }
 
 #pragma endregion
 	}
@@ -215,12 +213,14 @@ void SceneBase::Release(void)
 	SubPreRelease();
 
 	// 全てのポストエフェクトを解放
-	for (PostEffectBase*& postEffect : postEffects) {
-		postEffect->Release();
-		delete postEffect;
-		postEffect = nullptr;
+	for (int i = 0; i < devideNum; i++) {
+		for (PostEffectBase*& postEffect : postEffects[i]) {
+			postEffect->Release();
+			delete postEffect;
+			postEffect = nullptr;
+		}
+		postEffects[i].clear();
 	}
-	postEffects.clear();
 
 	// 全てのオブジェクトを解放
 	for (ActorBase*& actor : actors) {
@@ -245,14 +245,13 @@ void SceneBase::Release(void)
 	}
 
 	// カメラ解放
-	if (camera.back() != nullptr) {
-		for (auto cam : camera) {
-			cam->Release();
-			delete cam;
-			cam = nullptr;
-		}
-		camera.clear();
+	for (auto& cam : camera) {
+		if (cam == nullptr) continue;	
+		cam->Release();
+		delete cam;
+		cam = nullptr;
 	}
+	camera.clear();
 
 	// 画面演出用のスクリーン解放
 	if (mainScreen >= 0) {
@@ -271,13 +270,13 @@ void SceneBase::Release(void)
 	state = STATE::Released;
 }
 
-void SceneBase::AddPostEffect(PostEffectBase* postEffect)
+void SceneBase::AddPostEffect(PostEffectBase* postEffect, int num = 0)
 {
 	if (postEffect == nullptr) { return; }
 
 	postEffect->Init();
 
-	postEffects.emplace_back(postEffect);
+	postEffects[num].emplace_back(postEffect);
 }
 
 void SceneBase::AddActor(ActorBase* newActor)
@@ -322,4 +321,36 @@ void SceneBase::ActorsColliderDebugDraw(const std::vector<ActorBase*>& actors)
 
 		ActorsColliderDebugDraw(actor->GetChildActors());
 	}
+}
+
+void SceneBase::DevideScreen(const int& num)
+{
+	DeleteGraph(mainScreen);
+	for (int i = 0; i < devideNum; i++) {
+		DeleteGraph(tempScreen[i]);
+	}
+
+	if (num == 1) {
+		App::GetIns().SetScreenSize(App::DEFAULT_SIZE_X, App::DEFAULT_SIZE_Y);
+		mainScreen = MakeScreen(App::GetIns().GetScreenSizeX(), App::GetIns().GetScreenSizeY(), true);
+		if (mainScreen < 0) { throw std::runtime_error("SceneBaseのメインスクリーン生成に失敗しました"); }
+		tempScreen[0] = MakeScreen(App::GetIns().GetScreenSizeX(), App::GetIns().GetScreenSizeY(), true);
+	}
+	else if (num == 2) {
+		App::GetIns().SetScreenSize(App::DEFAULT_SIZE_X_HALF, App::DEFAULT_SIZE_Y);
+		mainScreen = MakeScreen(App::GetIns().GetScreenSizeX(), App::GetIns().GetScreenSizeY(), true);
+		if (mainScreen < 0) { throw std::runtime_error("SceneBaseのメインスクリーン生成に失敗しました"); }
+		tempScreen[0] = MakeScreen(App::GetIns().GetScreenSizeX(), App::GetIns().GetScreenSizeY(), true);
+		tempScreen[1] = MakeScreen(App::GetIns().GetScreenSizeX(), App::GetIns().GetScreenSizeY(), true);
+	}
+	else {
+		App::GetIns().SetScreenSize(App::DEFAULT_SIZE_X_HALF, App::DEFAULT_SIZE_Y_HALF);
+		mainScreen = MakeScreen(App::GetIns().GetScreenSizeX(), App::GetIns().GetScreenSizeY(), true);
+		if (mainScreen < 0) { throw std::runtime_error("SceneBaseのメインスクリーン生成に失敗しました"); }
+		tempScreen[0] = MakeScreen(App::GetIns().GetScreenSizeX(), App::GetIns().GetScreenSizeY(), true);
+		tempScreen[1] = MakeScreen(App::GetIns().GetScreenSizeX(), App::GetIns().GetScreenSizeY(), true);
+		tempScreen[2] = MakeScreen(App::GetIns().GetScreenSizeX(), App::GetIns().GetScreenSizeY(), true);
+		tempScreen[3] = MakeScreen(App::GetIns().GetScreenSizeX(), App::GetIns().GetScreenSizeY(), true);
+	}
+	devideNum = num;
 }
