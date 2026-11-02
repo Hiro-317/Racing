@@ -127,13 +127,13 @@ void SceneBase::Draw(void)
 
 #pragma region 画面揺れ用スクリーンへ描画
 
-	for (int i = 0; i < devideNum; i++) {
+	for (camNo = 0; camNo < devideNum; camNo++) {
 
 		SetDrawScreen(mainScreen);
 		ClearDrawScreen();
 
 		// カメラ情報をDxLibへ反映
-		if (camera.size() > i && camera.at(i) != nullptr) { camera.at(i)->Apply(); }
+		if (camera.size() > camNo && camera.at(camNo) != nullptr) { camera.at(camNo)->Apply(); }
 
 #pragma endregion
 
@@ -169,7 +169,7 @@ void SceneBase::Draw(void)
 		// tempScreen[0] → tempScreen[1] → tempScreen[0]...
 		int tempIndex = 0;
 
-		for (PostEffectBase* postEffect : postEffects[i]) {
+		for (PostEffectBase* postEffect : postEffects[camNo]) {
 			if (postEffect == nullptr) { continue; }
 
 			const int dstScreen = tempScreen[tempIndex];
@@ -187,18 +187,18 @@ void SceneBase::Draw(void)
 
 #pragma endregion
 
-		SetDrawScreen(DX_SCREEN_BACK);
-
-		// PostEffectが0個ならmainScreen、
-		// 1個以上なら最後に生成されたtempScreenが入っている
-		DrawGraph(App::GetIns().GetScreenSizeX() * (i % 2), App::GetIns().GetScreenSizeY() * (i / 2), srcScreen, true);
-
 #pragma region UI描画
 
 		ActorsDraw(actors, ACTOR_DRAW_TYPE::Ui);
 		SubUiDraw();
 
-		if (camera.size() > i && camera.at(i) != nullptr) { camera.at(i)->DrawDebug(); }
+		if (camera.size() > camNo && camera.at(camNo) != nullptr) { camera.at(camNo)->DrawDebug(); }
+
+		SetDrawScreen(DX_SCREEN_BACK);
+
+		// PostEffectが0個ならmainScreen、
+		// 1個以上なら最後に生成されたtempScreenが入っている
+		DrawGraph(App::GetIns().GetScreenSizeX() * (camNo % 2), App::GetIns().GetScreenSizeY() * (camNo / 2), srcScreen, true);
 
 #pragma endregion
 	}

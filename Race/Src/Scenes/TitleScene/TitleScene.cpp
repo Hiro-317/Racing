@@ -34,10 +34,16 @@ void TitleScene::SubPostInit(void)
 void TitleScene::SubPostUpdate(void)
 {
 	if (!flg) {
-		if (Input::GetIns().GetPriorityKey(COMMAND::LEFT).keyTrgDown || Input::GetIns().GetPriorityKey(COMMAND::RIGHT).keyTrgDown) {
+		if (Input::GetIns().GetPriorityKey(COMMAND::LEFT).keyTrgDown) {
+			num--;
+			if (num < 1) {
+				num = 1;
+			}
+		}
+		if (Input::GetIns().GetPriorityKey(COMMAND::RIGHT).keyTrgDown) {
 			num++;
 			if (num > 4) {
-				num = 1;
+				num = 4;
 			}
 		}
 		if (Input::GetIns().GetPriorityKey(COMMAND::DECIDE).keyTrgDown) {
@@ -45,31 +51,19 @@ void TitleScene::SubPostUpdate(void)
 		}
 	}
 	else {
-		if (num == 1) {
-			if (Input::GetIns().GetPriorityAnyoneTrgDown()) {
-				tmpNo[0] = Input::GetIns().GetMostPriority();
+		if (Input::GetIns().GetPriorityAnyoneTrgDown()) {
+			tmpNo[tmpNum] = Input::GetIns().GetMostPriority();
+		}
+		if (Input::GetIns().GetKey(COMMAND::DECIDE, tmpNo[tmpNum]).keyTrgDown) {
+			if (tmpNum < num - 1) {
+				tmpNum++;
 			}
-			if (Input::GetIns().GetKey(COMMAND::DECIDE, tmpNo[0]).keyTrgDown) {
-				SceneManager::GetIns().SetKeypadNo(tmpNo[0], 0);
+			else {
+				for (int i = 0; i < num; i++) {
+					SceneManager::GetIns().SetKeypadNo(tmpNo[i], i);
+				}
 				SceneManager::GetIns().SetPlayerNum(num);
 				SceneManager::GetIns().ChangeSceneFade(SCENE_ID::Game);
-			}
-		}
-		else {
-			if (Input::GetIns().GetPriorityAnyoneTrgDown()) {
-				tmpNo[tmpNum] = Input::GetIns().GetMostPriority();
-			}
-			if (Input::GetIns().GetKey(COMMAND::DECIDE, tmpNo[tmpNum]).keyTrgDown) {
-				if (tmpNum < num) {
-					tmpNum++;
-				}
-				else {
-					for (int i = 0; i < tmpNum; i++) {
-						SceneManager::GetIns().SetKeypadNo(tmpNo[i], i);
-					}
-					SceneManager::GetIns().SetPlayerNum(num);
-					SceneManager::GetIns().ChangeSceneFade(SCENE_ID::Game);
-				}
 			}
 		}
 	}
@@ -77,8 +71,8 @@ void TitleScene::SubPostUpdate(void)
 
 void TitleScene::SubUiDraw(void)
 {
-	DrawFormatString(10, 10, 0xffffff, "タイトルゥ", SetFontSize(30));
-	DrawFormatString(10, 40, 0xffffff, "%d人ですぅ", num);
+	DrawFormatString(10, 10, 0xffffff, "タイトル", SetFontSize(30));
+	DrawFormatString(10, 40, 0xffffff, "%d人です", num);
 	std::string tmp{};
 	if (tmpNo[tmpNum] == Input::KEYPAD_NO::KEY){
 		tmp = "キーボード";
@@ -95,7 +89,7 @@ void TitleScene::SubUiDraw(void)
 	if (tmpNo[tmpNum] == Input::KEYPAD_NO::PAD4){
 		tmp = "PAD4";
 	}
-	DrawFormatString(10, 70, 0xffffff, (tmp + "deth").c_str());
+	DrawFormatString(10, 70, 0xffffff, (tmp + "です").c_str());
 	SetFontSize(16);
 }
 

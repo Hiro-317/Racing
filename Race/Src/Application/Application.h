@@ -8,9 +8,10 @@ class FPS;
 class Application
 {
 public:
+
 	// 全体スクリーンサイズ
-	static constexpr int DEFAULT_SIZE_X = 1440;	// スクリーン横幅;
-	static constexpr int DEFAULT_SIZE_Y = 810;	// スクリーン横幅;
+	static constexpr int DEFAULT_SIZE_X = 1920;	// スクリーン横幅;
+	static constexpr int DEFAULT_SIZE_Y = 1080;	// スクリーン横幅;
 	static constexpr int DEFAULT_SIZE_X_HALF = DEFAULT_SIZE_X / 2;	// スクリーン横幅;
 	static constexpr int DEFAULT_SIZE_Y_HALF = DEFAULT_SIZE_Y / 2;	// スクリーン横幅;
 

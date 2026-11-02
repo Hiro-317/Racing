@@ -1,17 +1,21 @@
 #pragma once
 #include <algorithm>
+#include <functional>
 
 #include "../ActorBase/ActorBase.h"
 #include "../../Application/Application.h"
 
 #include "../../Manager/Input/InputManager.h"
 
+
+class Meter;
+
 class CarBase : public ActorBase {
 	
 public:
 
-	CarBase(const Input::KEYPAD_NO& no, const Vector3& pos);
-	~CarBase(void);
+	CarBase(const Input::KEYPAD_NO& keypadNo, const Vector3& pos, const int pNo, const std::function<int(void)> camNo);
+	~CarBase(void) = default;
 
 	void Load(void) override;
 
@@ -47,10 +51,8 @@ private:
 	// 0~-1
 	float Brake(void);
 
-	// 針の長さ
-	static constexpr int NEEDLE_LENGTH = 140;
-	// 数字のみ書く場所の広さ
-	static constexpr int BLANK_LENGTH = 130;
+	// タコメーターの最大スケール
+	static constexpr float MAX_SCALE = 10000.0f;
 
 	// アイドリング回転数
 	static constexpr float MIN_RPM = 1000.0f;
@@ -101,18 +103,6 @@ private:
 	// タイヤ半径
 	static constexpr float TIRE_SIZE = 0.203f;
 
-	// タコメーターの位置
-	const Vector2 TACHOMETER_POS = Vector2(App::GetIns().GetScreenSizeXHalf(), App::GetIns().GetScreenSizeY() - 100);
-	// タコメーターの最大スケール
-	static constexpr float MAX_SCALE = 10000.0f;
-
-	// 針の0時の角度(ラジアン)
-	const float NEEDLE_MIN_RAD = Deg2Rad(205.0f);
-	// 針のスケール最大時の角度(ラジアン)
-	const float NEEDLE_MAX_RAD = Deg2Rad(-25.0f);
-	// 針移動の偏差
-	const float SLOP = (NEEDLE_MAX_RAD - NEEDLE_MIN_RAD) / MAX_SCALE;
-
 	// 車重
 	static constexpr float CAR_WEIGHT = 1389.0f;
 	// CD値
@@ -128,9 +118,6 @@ private:
 
 	// エンジン稼働状態
 	bool engineFlg;
-
-	// 針先の位置
-	Vector2 needlePos;
 
 	// 回転数
 	float rpm;
@@ -180,5 +167,11 @@ private:
 	float yawSpeed;
 
 	// この車の操作パッド
-	const Input::KEYPAD_NO& KeypadNo;
+	const Input::KEYPAD_NO& keypadNo;
+
+	// 中心で描画されるカメラ
+	const std::function<int(void)> camNo;
+
+	// 何Pか
+	const int pNo;
 };

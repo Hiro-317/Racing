@@ -162,6 +162,8 @@ private:
 	// ポストエフェクト用のスクリーンハンドル
 	int mainScreen;
 	int tempScreen[4];
+
+	// 分割数
 	int devideNum;
 
 	// スカイボックス
@@ -171,6 +173,9 @@ private:
 	void ActorsDraw(const std::vector<ActorBase*>& actors, ACTOR_DRAW_TYPE drawType);
 
 	void ActorsColliderDebugDraw(const std::vector<ActorBase*>& actors);
+
+	int camNo; 
+
 protected:
 
 	// カメラ
@@ -185,4 +190,5 @@ protected:
 	// 画面分割用サイズ変更(num = 1,2,4)
 	void DevideScreen(const int& num);
 
+	int GetCamNo(void) { return camNo; }
 };

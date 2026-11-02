@@ -3,16 +3,19 @@
 
 #include "../Common/Collider/CapsuleCollider.h"
 
+#include "Meter.h"
 
-CarBase::CarBase(const Input::KEYPAD_NO& no, const Vector3& pos) :
+
+CarBase::CarBase(const Input::KEYPAD_NO& keypadNo, const Vector3& pos, const int pNo, const std::function<int(void)> camNo) :
 	ActorBase(),
 	engineFlg(false),
 	rpm(),
-	needlePos(TACHOMETER_POS.x + NEEDLE_LENGTH * cosf(NEEDLE_MIN_RAD), TACHOMETER_POS.y + NEEDLE_LENGTH * -sinf(NEEDLE_MIN_RAD)),
 	nowGear(0),
 	grip(1.0f),
 	driftAmount(0.0f),
-	KeypadNo(no)
+	keypadNo(keypadNo),
+	camNo(camNo),
+	pNo(pNo)
 {
 	// この車体のアイドリング時の最低速度
 	idleSpeed = (MIN_RPM * 3.6f * 2.0f * DX_PI_F * TIRE_SIZE) / (GEAR_RATIO[0] * FINAL_GEAR_RATIO * 60.0f);
@@ -20,10 +23,6 @@ CarBase::CarBase(const Input::KEYPAD_NO& no, const Vector3& pos) :
 	moveVec = Vector3::Zonly(1.0f);
 
 	trans.pos = pos;
-}
-
-CarBase::~CarBase(void)
-{
 }
 
 void CarBase::Load(void)
@@ -38,13 +37,14 @@ void CarBase::OnCollision(COLLIDER_TAG ownTag, const ColliderBase& other, const 
 
 void CarBase::SubInit(void)
 {
+	AddChildActor(new Meter(MAX_SCALE, RED_ZONE, speed, rpm, nowGear, pNo, camNo));
 }
 
 void CarBase::SubUpdate(void)
 {
 	// ステア角度の保持
 	prevSteer = nowSteer;
-	nowSteer = Input::GetIns().GetAKeyLClamp(KeypadNo).x;
+	nowSteer = Input::GetIns().GetAKeyLClamp(keypadNo).x;
 
 	// エンジンオフなら
 	if (!engineFlg) {
@@ -59,7 +59,7 @@ void CarBase::SubUpdate(void)
 			rpm = 0.0f;
 		}
 		// ブレーキ踏みながらキーで
-		if (Input::GetIns().GetKey(Input::COMMAND::ACTION, KeypadNo).keyTrgDown && Input::GetIns().GetKey(Input::COMMAND::SIDE, KeypadNo).keyNew) {
+		if (Input::GetIns().GetKey(Input::COMMAND::ACTION, keypadNo).keyTrgDown && Input::GetIns().GetKey(Input::COMMAND::SIDE, keypadNo).keyNew) {
 
 			// アクセルオンで最低回転数にもっていく
 			engineFlg = true;
@@ -73,7 +73,7 @@ void CarBase::SubUpdate(void)
 			// ギアを上げた際最低回転数下回らないなら
 			if (rpm * (GEAR_RATIO[nowGear + 1] / GEAR_RATIO[nowGear]) >= MIN_RPM) {
 				// 下ボタン押すか最高回転数に行ったら
-				if (Input::GetIns().GetKey(Input::COMMAND::DOWN, KeypadNo).keyTrgDown) {
+				if (Input::GetIns().GetKey(Input::COMMAND::DOWN, keypadNo).keyTrgDown || rpm >= MAX_RPM) {
 					// ギアを上げ回転数を落とす
 					rpm = rpm * (GEAR_RATIO[nowGear + 1] / GEAR_RATIO[nowGear]);
 					nowGear++;
@@ -85,7 +85,7 @@ void CarBase::SubUpdate(void)
 			// ギアを下げた際最高回転数上回らないなら
 			if (rpm * (GEAR_RATIO[nowGear - 1] / GEAR_RATIO[nowGear]) <= MAX_RPM) {
 				// 上を押すか最低回転数に行ったら
-				if (Input::GetIns().GetKey(Input::COMMAND::UP, KeypadNo).keyTrgDown) {
+				if (Input::GetIns().GetKey(Input::COMMAND::UP, keypadNo).keyTrgDown || rpm < MIN_RPM) {
 					// ギアを落とし回転数を上げる
 					rpm = rpm * (GEAR_RATIO[nowGear - 1] / GEAR_RATIO[nowGear]);
 					nowGear--;
@@ -96,7 +96,7 @@ void CarBase::SubUpdate(void)
 		GetTorque();
 
 		// ブレーキ踏んでいて
-		if (Brake() != 0.0f || Input::GetIns().GetKey(Input::COMMAND::SIDE, KeypadNo).keyNew) {
+		if (Brake() != 0.0f || Input::GetIns().GetKey(Input::COMMAND::SIDE, keypadNo).keyNew) {
 			// 速度がゼロで
 			if (speed == 0.0f) {
 				// アクセルを踏んでいるとき
@@ -134,7 +134,7 @@ void CarBase::SubUpdate(void)
 			// 速度が出ているとき
 			else {
 				// エンジンブレーキとブレーキで速度を落としそこから回転数を出す
-				if (Input::GetIns().GetKey(COMMAND::SIDE, KeypadNo).keyNew) speed -= 1.5f;
+				if (Input::GetIns().GetKey(COMMAND::SIDE, keypadNo).keyNew) speed -= 0.5f;
 				speed += 0.25f * Brake();
 				speed += EngineBrake() * App::GetPassTime();
 				rpm = (speed * GEAR_RATIO[nowGear] * FINAL_GEAR_RATIO * 60.0f) / (3.6f * 2.0f * DX_PI_F * TIRE_SIZE);
@@ -197,10 +197,6 @@ void CarBase::SubUpdate(void)
 			}
 		}
 	}
-	// ラジアン205～-25までで回転数に応じ針を動かす
-	float rad = SLOP * rpm + NEEDLE_MIN_RAD;
-	// その針先の位置
-	needlePos = Vector2(TACHOMETER_POS.x + NEEDLE_LENGTH * cosf(rad), TACHOMETER_POS.y + NEEDLE_LENGTH * -sinf(rad));
 
 	float temp = nowSteer - prevSteer;
 	nowSteer = prevSteer + temp * 0.05f;
@@ -243,87 +239,7 @@ void CarBase::SubUpdate(void)
 
 void CarBase::SubDraw(void)
 {
-	// 点線の範囲
-	//for (int i = 0; i <= (int)MAX_SCALE / 100; i++) {
-	//	// 間隔は100回転ずつで
-	//	float rad = SLOP * (i * 100) + NEEDLE_MIN_RAD;
-	//	// 何も書かない根元の位置
-	//	Vector2 brank = Vector2(TACHOMETER_POS.x + BLANK_LENGTH * cosf(rad), TACHOMETER_POS.y + BLANK_LENGTH * -sinf(rad));
-
-	//	// 1000回転ずつに
-	//	if (i % 10 == 0) {
-	//		// 線先の位置
-	//		Vector2 line = Vector2(TACHOMETER_POS.x + (NEEDLE_LENGTH + 3.0f) * cosf(rad), TACHOMETER_POS.y + (NEEDLE_LENGTH + 3.0f) * -sinf(rad));
-	//		// 根本少し内側に数字
-	//		Vector2 number = Vector2(TACHOMETER_POS.x + (BLANK_LENGTH - 15.0f) * cosf(rad), TACHOMETER_POS.y + (BLANK_LENGTH - 15.0f) * -sinf(rad));
-	//		DrawFormatString((int)number.x - 5, (int)number.y - 5, 0xffffff, "%d", i / 10);
-	//		// レッドゾーン以下なら太い白線
-	//		if (i < RED_ZONE) {
-	//			DrawLineAA(line.x, line.y, brank.x, brank.y, 0xffffff, 3.0f);
-	//		}
-	//		// レッドゾーン以上なら太い赤線
-	//		else {
-	//			DrawLineAA(line.x, line.y, brank.x, brank.y, 0xff0000, 3.0f);
-	//		}
-	//	}
-	//	// 1000回転を抜いた500回転ずつに
-	//	else if (i % 5 == 0) {
-	//		// 線先の位置
-	//		Vector2 line = Vector2(TACHOMETER_POS.x + NEEDLE_LENGTH * cosf(rad), TACHOMETER_POS.y + NEEDLE_LENGTH * -sinf(rad));
-	//		// レッドゾーン以下なら少し太い白線
-	//		if (i < RED_ZONE) {
-	//			DrawLineAA(line.x, line.y, brank.x, brank.y, 0xffffff, 2.0f);
-	//		}
-	//		// レッドゾーン以上なら少し太い赤線
-	//		else {
-	//			DrawLineAA(line.x, line.y, brank.x, brank.y, 0xff0000, 2.0f);
-	//		}
-	//	}
-	//	// それ以外の100回転ずつに
-	//	else {
-	//		// 線先の位置
-	//		Vector2 line = Vector2(TACHOMETER_POS.x + (NEEDLE_LENGTH - 3.0f) * cosf(rad), TACHOMETER_POS.y + (NEEDLE_LENGTH - 3.0f) * -sinf(rad));
-	//		// レッドゾーン以下なら細い白線
-	//		if (i < RED_ZONE) {
-	//			DrawLineAA(line.x, line.y, brank.x, brank.y, 0xffffff);
-	//		}
-	//		// レッドゾーン以上なら細い赤線
-	//		else {
-	//			DrawLineAA(line.x, line.y, brank.x, brank.y, 0xff0000);
-	//		}
-	//	}
-	//}
-	//// 針の描画
-	//DrawLineAA(TACHOMETER_POS.x, TACHOMETER_POS.y, needlePos.x, needlePos.y, 0xff0000, 5.0f);
-	//// レッドライン
-	//DrawCircleAA(TACHOMETER_POS.x, TACHOMETER_POS.y, NEEDLE_LENGTH / 2.0f + 3.0f, 32, 0xff0000);
-	//// ディスプレイ
-	//DrawCircleAA(TACHOMETER_POS.x, TACHOMETER_POS.y, NEEDLE_LENGTH / 2.0f, 32, 0x000000);
-	//// 速度表示のためフォントサイズ拡大
-	//SetFontSize(40);
-	//// 速度を10のあまりにして
-	//int s = static_cast<int>(speed) % 10;
-	//// 下1桁描画
-	//DrawFormatString((int)TACHOMETER_POS.x + 12, (int)TACHOMETER_POS.y - 20, 0xffffff, "%d", s);
-	//// 10で割り2桁目3桁目の2桁にしそれが1以上なら
-	//if ((s = static_cast<int>(speed) / 10) >= 1) {
-	//	// 二桁目描画
-	//	DrawFormatString((int)TACHOMETER_POS.x - 12, (int)TACHOMETER_POS.y - 20, 0xffffff, "%d", s % 10);
-	//}
-	//// 100で割り3桁目のみにしそれが１以上なら
-	//if ((s = static_cast<int>(speed) / 100) >= 1) {
-	//	// 三桁目描画
-	//	DrawFormatString((int)TACHOMETER_POS.x - 36, (int)TACHOMETER_POS.y - 20, 0xffffff, "%d", s);
-	//}
-	//// 今のギア数
-	//DrawBoxAA(TACHOMETER_POS.x - NEEDLE_LENGTH * 3.0f / 2.0f - 10.0f, TACHOMETER_POS.y - 20.0f, TACHOMETER_POS.x - NEEDLE_LENGTH * 3.0f / 2.0f + 30.0f, TACHOMETER_POS.y + 20.0f, 0xffffff, false, 2.0f);
-	//DrawFormatString((int)(TACHOMETER_POS.x - NEEDLE_LENGTH * 3.0f / 2.0f), (int)(TACHOMETER_POS.y - 20.0f), 0xffffff, "%d", nowGear + 1);
-	//// 変えたフォントサイズを戻す
-	//SetFontSize(16);
-
-
-	// ここからはデータロガー
-	
+	// ここからはデータロガー	
 	if (App::GetIns().IsDrawDebug()) {
 		// 現在の回転数
 		DrawFormatString(100, 20, 0xffffff, "%.2f", rpm);
@@ -398,24 +314,26 @@ float CarBase::RollingResistance(void)
 
 float CarBase::Accel(void)
 {
-	if (KeypadNo == Input::KEYPAD_NO::KEY) {
-		if (Input::GetIns().GetAKeyLClamp(KeypadNo).z > 0.0f) {
+	if (keypadNo == Input::KEYPAD_NO::KEY) {
+		if (Input::GetIns().GetAKeyLClamp(keypadNo).z > 0.0f) {
 			return 1.0f;
 		}
 	}
 	else {
-		return Input::GetIns().GetRTrigger(KeypadNo) / 255.0f;
+		return Input::GetIns().GetRTrigger(keypadNo) / 255.0f;
 	}
+	return 0.0f;
 }
 
 float CarBase::Brake(void)
 {
-	if (KeypadNo == Input::KEYPAD_NO::KEY) {
-		if (Input::GetIns().GetAKeyLClamp(KeypadNo).z < 0.0f) {
+	if (keypadNo == Input::KEYPAD_NO::KEY) {
+		if (Input::GetIns().GetAKeyLClamp(keypadNo).z < 0.0f) {
 			return -1.0f;
 		}
 	}
 	else {
-		return -Input::GetIns().GetLTrigger(KeypadNo) / 255.0f;
+		return -Input::GetIns().GetLTrigger(keypadNo) / 255.0f;
 	}
+	return 0.0f;
 }

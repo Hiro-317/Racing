@@ -52,6 +52,7 @@
     <ClCompile Include="Src\Manager\Shader\ShaderResourceManager.cpp" />
     <ClCompile Include="Src\Manager\TimeScale\TimeScale.cpp" />
     <ClCompile Include="Src\Object\Car\CarBase.cpp" />
+    <ClCompile Include="Src\Object\Car\Meter.cpp" />
     <ClCompile Include="Src\Object\Common\Collider\ColliderBase.cpp" />
     <ClCompile Include="Src\Object\Common\Collider\MeshCollider.cpp" />
     <ClCompile Include="Src\Object\Common\Shader\DefaultShader.cpp" />
@@ -118,6 +119,7 @@
     <ClInclude Include="Src\Manager\TimeScale\TimeScale.h" />
     <ClInclude Include="Src\Object\ActorBase\ActorDrawTypeDefine.h" />
     <ClInclude Include="Src\Object\Car\CarBase.h" />
+    <ClInclude Include="Src\Object\Car\Meter.h" />
     <ClInclude Include="Src\Object\Common\Collider\MeshCollider.h" />
     <ClInclude Include="Src\Object\Common\Shader\DefaultShader.h" />
     <ClInclude Include="Src\Object\Common\Shader\RimLightShader.h" />

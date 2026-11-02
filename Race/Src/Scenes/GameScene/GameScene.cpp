@@ -35,7 +35,7 @@ GameScene::GameScene(const int& num, const Input::KEYPAD_NO* no) :
 	AddActor(new Stage());
 
 	for (int i = 0; i < num; i++) {
-		carInsRef[i] = new CarBase(no[i], Vector3());
+		carInsRef[i] = new CarBase(no[i], Vector3(200.0f * (i % 2), 0.0f, -200.0f * i), i, [&]() { return SceneBase::GetCamNo(); });
 		AddActor(carInsRef[i]);
 	}
 
