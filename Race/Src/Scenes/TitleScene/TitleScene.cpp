@@ -21,7 +21,6 @@ TitleScene::TitleScene() :
 
 void TitleScene::SubPostLoad(void)
 {
-	DevideScreen(1);
 	num = 1;
 	flg = false;
 	tmpNum = 0;
@@ -66,6 +65,9 @@ void TitleScene::SubPostUpdate(void)
 				SceneManager::GetIns().ChangeSceneFade(SCENE_ID::Game);
 			}
 		}
+	}
+	if (Input::GetIns().GetPriorityKey(COMMAND::PAUSE).keyTrgDown) {
+		SceneManager::GetIns().ChangeSceneFade(SCENE_ID::End);
 	}
 }
 

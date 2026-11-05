@@ -2,7 +2,7 @@
 
 #include"../SceneBase.h"
 
-#include "../../Object/Car/CarBase.h"
+#include "../../Object/Car/CarBase/CarBase.h"
 #include "../../Manager/Input/InputManager.h"
 
 
@@ -31,6 +31,8 @@ private:
 	void CreateCamera(void)override;
 
 	bool UseSkyBox(void)const override { return true; }
+
+	int DevideNum(void)const override { return num; }
 
 	// カメラ状態変更フラグ
 	bool focusFlg;

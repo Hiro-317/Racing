@@ -1,5 +1,0 @@
-やることリスト
-✓InputManagerの書き換え
-・車の挙動
-・Managerにプレイヤーを渡して配列化（複数人用に）
-・UpdateはManagerのみ

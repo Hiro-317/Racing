@@ -1,9 +1,7 @@
 ﻿#include "CarBase.h"
 #include <algorithm>
 
-#include "../Common/Collider/CapsuleCollider.h"
-
-#include "Meter.h"
+#include "../../Common/Collider/CapsuleCollider.h"
 
 
 CarBase::CarBase(const Input::KEYPAD_NO& keypadNo, const Vector3& pos, const int pNo, const std::function<int(void)> camNo) :
@@ -17,9 +15,6 @@ CarBase::CarBase(const Input::KEYPAD_NO& keypadNo, const Vector3& pos, const int
 	camNo(camNo),
 	pNo(pNo)
 {
-	// この車体のアイドリング時の最低速度
-	idleSpeed = (MIN_RPM * 3.6f * 2.0f * DX_PI_F * TIRE_SIZE) / (GEAR_RATIO[0] * FINAL_GEAR_RATIO * 60.0f);
-
 	moveVec = Vector3::Zonly(1.0f);
 
 	trans.pos = pos;
@@ -27,17 +22,11 @@ CarBase::CarBase(const Input::KEYPAD_NO& keypadNo, const Vector3& pos, const int
 
 void CarBase::Load(void)
 {
-	trans.LoadModel("Car/damball");
 	AddCollider(new CapsuleCollider(COLLIDER_TAG::Player, Vector3(0.0f, 80.0f, 150.0f), Vector3(0.0f, 80.0f, -150.0f), 80.0f));
 }
 
 void CarBase::OnCollision(COLLIDER_TAG ownTag, const ColliderBase& other, const CollisionResult& result)
 {
-}
-
-void CarBase::SubInit(void)
-{
-	AddChildActor(new Meter(MAX_SCALE, RED_ZONE, speed, rpm, nowGear, pNo, camNo));
 }
 
 void CarBase::SubUpdate(void)
@@ -69,13 +58,13 @@ void CarBase::SubUpdate(void)
 	// エンジンオンなら
 	else {
 		// 今オーバートップ未満なら
-		if (nowGear < GEAR_NUM - 1) {
+		if (nowGear < param.GEAR_NUM - 1) {
 			// ギアを上げた際最低回転数下回らないなら
-			if (rpm * (GEAR_RATIO[nowGear + 1] / GEAR_RATIO[nowGear]) >= MIN_RPM) {
+			if (rpm * (param.GEAR_RATIO[nowGear + 1] / param.GEAR_RATIO[nowGear]) >= MIN_RPM) {
 				// 下ボタン押すか最高回転数に行ったら
-				if (Input::GetIns().GetKey(Input::COMMAND::DOWN, keypadNo).keyTrgDown || rpm >= MAX_RPM) {
+				if (Input::GetIns().GetKey(Input::COMMAND::DOWN, keypadNo).keyTrgDown || rpm >= param.MAX_RPM) {
 					// ギアを上げ回転数を落とす
-					rpm = rpm * (GEAR_RATIO[nowGear + 1] / GEAR_RATIO[nowGear]);
+					rpm = rpm * (param.GEAR_RATIO[nowGear + 1] / param.GEAR_RATIO[nowGear]);
 					nowGear++;
 				}
 			}
@@ -83,11 +72,11 @@ void CarBase::SubUpdate(void)
 		// 今セカンドギア以上なら
 		if (nowGear > 0) {
 			// ギアを下げた際最高回転数上回らないなら
-			if (rpm * (GEAR_RATIO[nowGear - 1] / GEAR_RATIO[nowGear]) <= MAX_RPM) {
+			if (rpm * (param.GEAR_RATIO[nowGear - 1] / param.GEAR_RATIO[nowGear]) <= param.MAX_RPM) {
 				// 上を押すか最低回転数に行ったら
 				if (Input::GetIns().GetKey(Input::COMMAND::UP, keypadNo).keyTrgDown || rpm < MIN_RPM) {
 					// ギアを落とし回転数を上げる
-					rpm = rpm * (GEAR_RATIO[nowGear - 1] / GEAR_RATIO[nowGear]);
+					rpm = rpm * (param.GEAR_RATIO[nowGear - 1] / param.GEAR_RATIO[nowGear]);
 					nowGear--;
 				}
 			}
@@ -104,9 +93,9 @@ void CarBase::SubUpdate(void)
 					// フューエルカットが働いてないなら
 					if (!fuelCut) {
 						// 回転数を上げ
-						rpm += UP_RPM * Input::GetIns().GetPriorityAKeyLClamp().z;
+						rpm += UP_RPM * Accel();
 						// ローンチの回転数に行ったら
-						if (rpm > MAX_TORQUE_RPM) {
+						if (rpm > param.MAX_TORQUE_RPM) {
 							// フューエルカットをかける
 							fuelCut = true;
 						}
@@ -135,9 +124,9 @@ void CarBase::SubUpdate(void)
 			else {
 				// エンジンブレーキとブレーキで速度を落としそこから回転数を出す
 				if (Input::GetIns().GetKey(COMMAND::SIDE, keypadNo).keyNew) speed -= 0.5f;
-				speed += 0.25f * Brake();
+				speed += 0.35f * Brake();
 				speed += EngineBrake() * App::GetPassTime();
-				rpm = (speed * GEAR_RATIO[nowGear] * FINAL_GEAR_RATIO * 60.0f) / (3.6f * 2.0f * DX_PI_F * TIRE_SIZE);
+				rpm = (speed * param.GEAR_RATIO[nowGear] * param.FINAL_GEAR_RATIO * 60.0f) / (3.6f * 2.0f * DX_PI_F * param.TIRE_SIZE);
 				// 速度がゼロ以下になったら
 				if (speed <= 0.0f) {
 					// 速度をゼロにする
@@ -149,14 +138,14 @@ void CarBase::SubUpdate(void)
 		}
 		// ブレーキ踏んでおらず最低速度を下回っているとき
 		else if (idleSpeed > speed) {
-			// その差分クラッチとし最低半クラを10%として
-			float clatch = (1.0f - ((idleSpeed - speed) / idleSpeed)) + 0.10f;
+			// その差分クラッチとし最低半クラを25%として
+			float clatch = (1.0f - ((idleSpeed - speed) / idleSpeed)) + 0.25f;
 			clatch =  std::clamp(clatch, 0.0f, 1.0f);
 
 			// 加速
 			speed += Acceleration(clatch) * App::GetPassTime();
 			// 速度からエンジン回転数を出し
-			float spRpm = (speed * GEAR_RATIO[nowGear] * FINAL_GEAR_RATIO * 60.0f) / (3.6f * 2.0f * DX_PI_F * TIRE_SIZE);
+			float spRpm = (speed * param.GEAR_RATIO[nowGear] * param.FINAL_GEAR_RATIO * 60.0f) / (3.6f * 2.0f * DX_PI_F * param.TIRE_SIZE);
 			// 速度の方は全クラッチつながっているときの回転数になるから
 			// エンジン回転数を1-クラッチ率、速度からの方をクラッチ率で足す
 			rpm = rpm * (1.0f - clatch) + spRpm * clatch;
@@ -168,9 +157,9 @@ void CarBase::SubUpdate(void)
 				// 加速
 				speed += Acceleration(Accel()) * App::GetPassTime();
 				// 回転数を速度から出す
-				rpm = (speed * GEAR_RATIO[nowGear] * FINAL_GEAR_RATIO * 60.0f) / (3.6f * 2.0f * DX_PI_F * TIRE_SIZE);
+				rpm = (speed * param.GEAR_RATIO[nowGear] * param.FINAL_GEAR_RATIO * 60.0f) / (3.6f * 2.0f * DX_PI_F * param.TIRE_SIZE);
 				// レブリミットにかかったら
-				if (rpm > MAX_RPM) {
+				if (rpm > param.MAX_RPM) {
 					// フューエルカットをかける
 					fuelCut = true;
 				}
@@ -180,10 +169,10 @@ void CarBase::SubUpdate(void)
 				// エンブレかけて
 				speed += EngineBrake() * App::GetPassTime();
 				// 回転数を速度から出す
-				rpm = (speed * GEAR_RATIO[nowGear] * FINAL_GEAR_RATIO * 60.0f) / (3.6f * 2.0f * DX_PI_F * TIRE_SIZE);
+				rpm = (speed * param.GEAR_RATIO[nowGear] * param.FINAL_GEAR_RATIO * 60.0f) / (3.6f * 2.0f * DX_PI_F * param.TIRE_SIZE);
 				// フューエルカットがかかってるなら
 				if (fuelCut) {
-					if (rpm < MAX_RPM) {
+					if (rpm < param.MAX_RPM) {
 						// フューエルカットを落とす
 						fuelCut = false;
 					}
@@ -241,6 +230,11 @@ void CarBase::SubDraw(void)
 {
 	// ここからはデータロガー	
 	if (App::GetIns().IsDrawDebug()) {
+
+		if (pNo != camNo()) {
+			return;
+		}
+
 		// 現在の回転数
 		DrawFormatString(100, 20, 0xffffff, "%.2f", rpm);
 		// 現在のトルクと最高トルクとその回転数
@@ -271,45 +265,45 @@ void CarBase::SubRelease(void)
 void CarBase::GetTorque(void)
 {
 	// 最大トルク回転数からの距離
-	float diff = rpm - MAX_TORQUE_RPM;
+	float diff = rpm - param.MAX_TORQUE_RPM;
 
 	// 最大トルクより低回転か、高回転かで幅を切り替える
-	float width = (diff < 0.0f) ? RISE_WIDTH : FALL_WIDTH;
+	float width = (diff < 0.0f) ? param.RISE_WIDTH : param.FALL_WIDTH;
 
 	width = (std::max)(width, 1.0f);
 
 	// 最大トルクを頂点とする非対称曲線
 	float x = diff / width;
 
-	torque = MAX_TORQUE * std::exp(-0.5f * x * x);
+	torque = param.MAX_TORQUE * std::exp(-0.5f * x * x);
 }
 
 float CarBase::Acceleration(float c)
 {
 	// エンジンパワーをトルク、ギア比、損失率、クラッチ率(アクセル開度)、タイヤサイズで出す
-	float ep = (torque * GEAR_RATIO[nowGear] * FINAL_GEAR_RATIO * LOST_RATIO * c) / TIRE_SIZE;
+	float ep = (torque * param.GEAR_RATIO[nowGear] * param.FINAL_GEAR_RATIO * LOST_RATIO * c) / param.TIRE_SIZE;
 	// エンジンパワーから抵抗を引いた分を車重で割って時速に戻す
-	return (ep - AirResistance() - RollingResistance()) / CAR_WEIGHT * 3.6f;
+	return (ep - AirResistance() - RollingResistance()) / param.CAR_WEIGHT * 3.6f;
 }
 
 float CarBase::EngineBrake(void)
 {
 	// エンジンブレーキ力を回転数、ギア比、エンブレ係数、タイヤサイズで出す
-	float ep = (rpm * GEAR_RATIO[nowGear] * FINAL_GEAR_RATIO * ENGINE_BRAKE) / (TIRE_SIZE);
+	float ep = (rpm * param.GEAR_RATIO[nowGear] * param.FINAL_GEAR_RATIO * ENGINE_BRAKE) / (param.TIRE_SIZE);
 	// エンジンブレーキ力に抵抗を足し車重で割って時速に戻す
-	return -(ep + AirResistance() + RollingResistance()) / CAR_WEIGHT * 3.6f;
+	return -(ep + AirResistance() + RollingResistance()) / param.CAR_WEIGHT * 3.6f;
 }
 
 float CarBase::AirResistance(void)
 {
 	// 空気抵抗を空気密度、CD値、前面投影面積、速度で出す
-	return AIR_DENSITY * CD * FPA * (speed / 3.6f) * (speed / 3.6f) * 0.5f;
+	return AIR_DENSITY * param.CD * param.FPA * (speed / 3.6f) * (speed / 3.6f) * 0.5f;
 }
 
 float CarBase::RollingResistance(void)
 {
 	// 転がり抵抗を出す
-	return RR * 9.81f * CAR_WEIGHT;
+	return param.RR * 9.81f * param.CAR_WEIGHT;
 }
 
 float CarBase::Accel(void)

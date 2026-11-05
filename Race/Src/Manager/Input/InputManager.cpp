@@ -47,10 +47,12 @@ void InputManager::CommandLoad(void)
 	// 上キー
 	SetCommand(COMMAND::UP, KEY_INPUT_UP, KEYPAD_NO::KEY);
 	SetCommand(COMMAND::UP, XINPUT_BUTTON_DPAD_UP, KEYPAD_NO::PAD1);
+	SetCommand(COMMAND::UP, PAD_INPUT_L, KEYPAD_NO::PAD1);
 
 	// 下キー
 	SetCommand(COMMAND::DOWN, KEY_INPUT_DOWN, KEYPAD_NO::KEY);
 	SetCommand(COMMAND::DOWN, XINPUT_BUTTON_DPAD_DOWN, KEYPAD_NO::PAD1);
+	SetCommand(COMMAND::DOWN, PAD_INPUT_R, KEYPAD_NO::PAD1);
 
 	// ポーズキー
 	SetCommand(COMMAND::PAUSE, KEY_INPUT_ESCAPE, KEYPAD_NO::KEY);
@@ -66,7 +68,7 @@ void InputManager::CommandLoad(void)
 	SetCommand(COMMAND::DEBUG, MOUSE_INPUT_MIDDLE, KEYPAD_NO::MOUSE);
 	SetCommand(COMMAND::DEBUG, KEY_INPUT_RCONTROL, KEYPAD_NO::KEY);
 	SetCommand(COMMAND::DEBUG, KEY_INPUT_TAB, KEYPAD_NO::KEY);
-	SetCommand(COMMAND::DEBUG, PAD_INPUT_L, KEYPAD_NO::PAD1);
+	SetCommand(COMMAND::DEBUG, XINPUT_BUTTON_START, KEYPAD_NO::PAD1);
 
 }
 
@@ -199,9 +201,9 @@ Vector3 InputManager::GetAKeyRClamp(const KEYPAD_NO& no)
 		//　中心からの差分をとる
 		Vector3 nowPos = Vector3();
 		nowPos = Vector3(mouse->GetMousePos());
-		Vector3 diffPos = Vector3::XZonly(nowPos.x - App::GetIns().GetScreenSizeXHalf(), nowPos.y - App::GetIns().GetScreenSizeYHalf());
+		Vector3 diffPos = Vector3::XZonly(nowPos.x - App::DEFAULT_SIZE_X_HALF, nowPos.y - App::DEFAULT_SIZE_Y_HALF);
 		// -1～1になるようスクリーンの半分で割ってあげて返す
-		return Vector3::XZonly(diffPos.x / App::GetIns().GetScreenSizeXHalf(), diffPos.y / App::GetIns().GetScreenSizeYHalf());
+		return Vector3::XZonly(diffPos.x / App::DEFAULT_SIZE_X_HALF, diffPos.y / App::DEFAULT_SIZE_Y_HALF);
 		break;
 	}
 	default:

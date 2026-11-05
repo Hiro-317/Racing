@@ -1,18 +1,18 @@
 #pragma once
 #include <functional>
 
-#include "../../Common/Vector2.h"
-#include "../../Application/Application.h"
+#include "../../../Common/Vector2.h"
+#include "../../../Application/Application.h"
 
-#include "../ActorBase/ActorBase.h"
+#include "../../ActorBase/ActorBase.h"
 
 
-class Meter : public ActorBase {
+class DigitalMeter : public ActorBase {
 
 public:
 	
-	Meter(const float& MAX_SCALE, const int& RED_ZONE, const float& speed, const float& rpm, const int& gear, const int& pNo, const std::function<int(void)>& camNo);
-	~Meter() = default;
+	DigitalMeter(const float& MAX_SCALE, const int& RED_ZONE, const float& speed, const float& rpm, const int& gear, const int& pNo, const std::function<int(void)>& camNo);
+	~DigitalMeter() = default;
 
 	void Load() override;
 
@@ -49,7 +49,7 @@ private:
 	static constexpr int BLANK_LENGTH = 90;
 
 	// タコメーターの位置
-	const Vector2 TACHOMETER_POS = Vector2(App::GetIns().GetScreenSizeXHalf(), App::GetIns().GetScreenSizeY() - 100);
+	const Vector2 METER_POS = Vector2(App::GetIns().GetScreenSizeXHalf(), App::GetIns().GetScreenSizeY() - 100);
 
 	// 針の0時の角度(ラジアン)
 	const float NEEDLE_MIN_RAD = Deg2Rad(205.0f);
@@ -64,6 +64,4 @@ private:
 
 	// 針先の位置
 	Vector2 needlePos;
-
-	int time;
 };

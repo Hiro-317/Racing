@@ -18,6 +18,7 @@
 #include "../../Scenes/GameScene/GameScene.h"
 //#include "../Clear/ClearScene.h"
 //#include"../GameOver/GameOver.h"
+#include "../../Scenes/EndScene/EndScene.h"
 
 #include "Fade/Default/DefaultFadeScene.h"
 
@@ -547,6 +548,8 @@ std::unique_ptr<SceneBase> SceneManager::CreateScene(SCENE_ID scene)const
 
 	//case SCENE_ID::GameOver: { return std::make_unique<GameOver>(); }
 
+	case SCENE_ID::End: { return std::make_unique<EndScene>(); }
+
 	default: { return nullptr; }
 	}
 }
@@ -570,7 +573,7 @@ void SceneManager::SetCurrentCamera(void) const
 	if (scenes.empty()) { return; }
 
 	// 末尾から先頭へ確認し、カメラを使用しているシーンを探す
-	for (int index = scenes.size() - 1; index >= 0; index--) {
+	for (int index = (int)scenes.size() - 1; index >= 0; index--) {
 
 		// カメラのインスタンスのポインターを取得
 		CameraBase* cameraIns = scenes.at(index)->GetCamera();

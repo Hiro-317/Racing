@@ -29,7 +29,7 @@
     <ClCompile Include="Src\Object\ActorBase\ActorBase.cpp" />
     <ClCompile Include="Src\Manager\Scene\Fade\Default\DefaultFadeScene.cpp" />
     <ClCompile Include="Src\Manager\Scene\Fade\FadeSceneBase.cpp" />
-    <ClCompile Include="Src\Object\Car\CarBase.cpp" />
+    <ClCompile Include="Src\Object\Car\CarBase\CarBase.cpp" />
     <ClCompile Include="Src\Manager\Car\CarManager.cpp" />
     <ClCompile Include="Src\Manager\Input\Controller\Controller.cpp" />
     <ClCompile Include="Src\Manager\Input\InputBase.cpp" />
@@ -57,7 +57,11 @@
     <ClCompile Include="Src\Object\Stage\Stage.cpp" />
     <ClCompile Include="Src\Object\Point\Point.cpp" />
     <ClCompile Include="Src\Scenes\TitleScene\TitleScene.cpp" />
-    <ClCompile Include="Src\Object\Car\Meter.cpp" />
+    <ClCompile Include="Src\Object\Car\Meter\DigitalMeter.cpp" />
+    <ClCompile Include="Src\Scenes\EndScene\EndScene.cpp" />
+    <ClCompile Include="Src\Object\Car\Damball\Damball.cpp" />
+    <ClCompile Include="Src\Object\Car\Rally\Rally.cpp" />
+    <ClCompile Include="Src\Object\Car\Meter\AnalogMeter.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Src\Application\Application.h" />
@@ -108,7 +112,7 @@
     <ClInclude Include="Src\Manager\Scene\Fade\FadeDefine.h" />
     <ClInclude Include="Src\Manager\Scene\Fade\FadeSceneBase.h" />
     <ClInclude Include="Src\Scenes\ActorUseDefine.h" />
-    <ClInclude Include="Src\Object\Car\CarBase.h" />
+    <ClInclude Include="Src\Object\Car\CarBase\CarBase.h" />
     <ClInclude Include="Src\Manager\Car\CarManager.h" />
     <ClInclude Include="Src\Manager\Input\Controller\Controller.h" />
     <ClInclude Include="Src\Manager\Input\InputBase.h" />
@@ -136,7 +140,11 @@
     <ClInclude Include="Src\Object\Stage\Stage.h" />
     <ClInclude Include="Src\Object\Point\Point.h" />
     <ClInclude Include="Src\Scenes\TitleScene\TitleScene.h" />
-    <ClInclude Include="Src\Object\Car\Meter.h" />
+    <ClInclude Include="Src\Object\Car\Meter\DigitalMeter.h" />
+    <ClInclude Include="Src\Scenes\EndScene\EndScene.h" />
+    <ClInclude Include="Src\Object\Car\Damball\Damball.h" />
+    <ClInclude Include="Src\Object\Car\Rally\Rally.h" />
+    <ClInclude Include="Src\Object\Car\Meter\AnalogMeter.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Src\Shader\Water\WaterPS.hlsl" />

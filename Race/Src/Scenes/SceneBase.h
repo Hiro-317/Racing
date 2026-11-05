@@ -150,6 +150,9 @@ protected:
 
 private:
 
+	int SCREEN_SIZE_X;
+	int SCREEN_SIZE_Y;
+
 	// 二重Load / 二重Releaseを防止する「状態」
 	STATE state;
 
@@ -174,7 +177,7 @@ private:
 
 	void ActorsColliderDebugDraw(const std::vector<ActorBase*>& actors);
 
-	int camNo; 
+	int camNo;
 
 protected:
 
@@ -187,8 +190,9 @@ protected:
 	// Actor格納用配列
 	std::vector<ActorBase*> actors;
 
-	// 画面分割用サイズ変更(num = 1,2,4)
+	// 画面分割用サイズ変更
 	void DevideScreen(const int& num);
+	virtual int DevideNum(void)const { return 1; }
 
 	int GetCamNo(void) { return camNo; }
 };

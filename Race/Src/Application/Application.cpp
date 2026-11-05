@@ -131,7 +131,11 @@ void Application::Run(void)
 		Snd::GetIns().Update();
 
 		// デバッグ表示切替
+#ifdef _DEBUG
+
 		if (Input::GetIns().GetPriorityKey(COMMAND::DEBUG).keyTrgDown) { DrawDebugSwitch(); }
+
+#endif // DEBUG
 
 		// フレームレート計算
 		fps->CalcFrameRate();

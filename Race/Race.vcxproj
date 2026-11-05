@@ -51,8 +51,11 @@
     <ClCompile Include="Src\Manager\Scene\Fade\FadeSceneBase.cpp" />
     <ClCompile Include="Src\Manager\Shader\ShaderResourceManager.cpp" />
     <ClCompile Include="Src\Manager\TimeScale\TimeScale.cpp" />
-    <ClCompile Include="Src\Object\Car\CarBase.cpp" />
-    <ClCompile Include="Src\Object\Car\Meter.cpp" />
+    <ClCompile Include="Src\Object\Car\CarBase\CarBase.cpp" />
+    <ClCompile Include="Src\Object\Car\Meter\AnalogMeter.cpp" />
+    <ClCompile Include="Src\Object\Car\Meter\DigitalMeter.cpp" />
+    <ClCompile Include="Src\Object\Car\Damball\Damball.cpp" />
+    <ClCompile Include="Src\Object\Car\Rally\Rally.cpp" />
     <ClCompile Include="Src\Object\Common\Collider\ColliderBase.cpp" />
     <ClCompile Include="Src\Object\Common\Collider\MeshCollider.cpp" />
     <ClCompile Include="Src\Object\Common\Shader\DefaultShader.cpp" />
@@ -64,6 +67,7 @@
     <ClCompile Include="Src\Object\Point\Point.cpp" />
     <ClCompile Include="Src\Object\SkyBox\SkyBox.cpp" />
     <ClCompile Include="Src\Object\Stage\Stage.cpp" />
+    <ClCompile Include="Src\Scenes\EndScene\EndScene.cpp" />
     <ClCompile Include="Src\Scenes\GameScene\GameScene.cpp" />
     <ClCompile Include="Src\Scenes\PostEffect\CRTPostEffect\CRTPostEffect.cpp" />
     <ClCompile Include="Src\Scenes\PostEffect\FocusLinesPostEffect\FocusLinesPostEffect.cpp" />
@@ -118,8 +122,11 @@
     <ClInclude Include="Src\Manager\Shader\ShaderTypeDefine.h" />
     <ClInclude Include="Src\Manager\TimeScale\TimeScale.h" />
     <ClInclude Include="Src\Object\ActorBase\ActorDrawTypeDefine.h" />
-    <ClInclude Include="Src\Object\Car\CarBase.h" />
-    <ClInclude Include="Src\Object\Car\Meter.h" />
+    <ClInclude Include="Src\Object\Car\CarBase\CarBase.h" />
+    <ClInclude Include="Src\Object\Car\Meter\AnalogMeter.h" />
+    <ClInclude Include="Src\Object\Car\Meter\DigitalMeter.h" />
+    <ClInclude Include="Src\Object\Car\Damball\Damball.h" />
+    <ClInclude Include="Src\Object\Car\Rally\Rally.h" />
     <ClInclude Include="Src\Object\Common\Collider\MeshCollider.h" />
     <ClInclude Include="Src\Object\Common\Shader\DefaultShader.h" />
     <ClInclude Include="Src\Object\Common\Shader\RimLightShader.h" />
@@ -129,6 +136,7 @@
     <ClInclude Include="Src\Object\Point\Point.h" />
     <ClInclude Include="Src\Object\SkyBox\SkyBox.h" />
     <ClInclude Include="Src\Object\Stage\Stage.h" />
+    <ClInclude Include="Src\Scenes\EndScene\EndScene.h" />
     <ClInclude Include="Src\Scenes\GameScene\GameScene.h" />
     <ClInclude Include="Src\Scenes\ActorUseDefine.h" />
     <ClInclude Include="Src\Scenes\PostEffect\CRTPostEffect\CRTPostEffect.h" />

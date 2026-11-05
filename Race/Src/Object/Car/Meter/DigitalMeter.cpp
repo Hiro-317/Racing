@@ -1,7 +1,7 @@
-#include "Meter.h"
+#include "DigitalMeter.h"
 
 
-Meter::Meter(const float& MAX_SCALE, const int& RED_ZONE, const float& speed, const float& rpm, const int& gear, const int& pNo, const std::function<int(void)>& camNo) :
+DigitalMeter::DigitalMeter(const float& MAX_SCALE, const int& RED_ZONE, const float& speed, const float& rpm, const int& gear, const int& pNo, const std::function<int(void)>& camNo) :
 	ActorBase(),
 	MAX_SCALE(MAX_SCALE),
 	RED_ZONE(RED_ZONE),
@@ -10,12 +10,12 @@ Meter::Meter(const float& MAX_SCALE, const int& RED_ZONE, const float& speed, co
 	gear(gear),
 	camNo(camNo),
 	pNo(pNo),
-	needlePos(TACHOMETER_POS.x + NEEDLE_LENGTH * cosf(NEEDLE_MIN_RAD), TACHOMETER_POS.y + NEEDLE_LENGTH * -sinf(NEEDLE_MIN_RAD)),
+	needlePos(METER_POS.x + NEEDLE_LENGTH * cosf(NEEDLE_MIN_RAD), METER_POS.y + NEEDLE_LENGTH * -sinf(NEEDLE_MIN_RAD)),
 	SLOP((NEEDLE_MAX_RAD - NEEDLE_MIN_RAD) / MAX_SCALE)
 {
 }
 
-void Meter::Load()
+void DigitalMeter::Load()
 {
 	SetDrawType(ACTOR_DRAW_TYPE::Ui);
 
@@ -25,12 +25,12 @@ void Meter::Load()
 	ClearDrawScreen();
 
 	// レッドライン
-	DrawCircleAA(METER_SIZE / 2, METER_SIZE / 2, NEEDLE_LENGTH / 2.5f + 3.0f, 32, 0xff0000);
+	DrawCircleAA((float)METER_SIZE / 2.0f, (float)METER_SIZE / 2.0f, NEEDLE_LENGTH / 2.5f + 3.0f, 32, 0xff0000);
 	// ディスプレイ
-	DrawCircleAA(METER_SIZE / 2, METER_SIZE / 2, NEEDLE_LENGTH / 2.5f, 32, 0x000000);
+	DrawCircleAA((float)METER_SIZE / 2.0f, (float)METER_SIZE / 2.0f, NEEDLE_LENGTH / 2.5f, 32, 0x000000);
 	// ギア数ディスプレイ
-	DrawBoxAA(METER_SIZE / 2 - NEEDLE_LENGTH * 3.0f / 2.0f - 10.0f, METER_SIZE / 2 - 20.0f, METER_SIZE / 2 - NEEDLE_LENGTH * 3.0f / 2.0f + 30.0f, METER_SIZE / 2 + 20.0f, 0x000000, true);
-	DrawBoxAA(METER_SIZE / 2 - NEEDLE_LENGTH * 3.0f / 2.0f - 10.0f, METER_SIZE / 2 - 20.0f, METER_SIZE / 2 - NEEDLE_LENGTH * 3.0f / 2.0f + 30.0f, METER_SIZE / 2 + 20.0f, 0xffffff, false, 2.0f);
+	DrawBoxAA((float)METER_SIZE / 2.0f - NEEDLE_LENGTH * 3.0f / 2.0f - 10.0f, (float)METER_SIZE / 2.0f - 20.0f, (float)METER_SIZE / 2.0f - NEEDLE_LENGTH * 3.0f / 2.0f + 30.0f, (float)METER_SIZE / 2.0f + 20.0f, 0x000000, true);
+	DrawBoxAA((float)METER_SIZE / 2.0f - NEEDLE_LENGTH * 3.0f / 2.0f - 10.0f, (float)METER_SIZE / 2.0f - 20.0f, (float)METER_SIZE / 2.0f - NEEDLE_LENGTH * 3.0f / 2.0f + 30.0f, (float)METER_SIZE / 2.0f + 20.0f, 0xffffff, false, 2.0f);
 
 	// 後ろの描画
 	imageBack = MakeScreen(METER_SIZE, METER_SIZE, TRUE);
@@ -92,56 +92,54 @@ void Meter::Load()
 	SetDrawScreen(DX_SCREEN_BACK);
 }
 
-void Meter::SubInit(void)
+void DigitalMeter::SubInit(void)
 {
 }
 
-void Meter::SubUpdate(void)
+void DigitalMeter::SubUpdate(void)
 {
 	// ラジアン205～-25までで回転数に応じ針を動かす
 	float rad = SLOP * rpm + NEEDLE_MIN_RAD;
 	// その針先の位置
-	needlePos = Vector2(TACHOMETER_POS.x + NEEDLE_LENGTH * cosf(rad), TACHOMETER_POS.y + NEEDLE_LENGTH * -sinf(rad));
-
-	time++;
+	needlePos = Vector2(METER_POS.x + NEEDLE_LENGTH * cosf(rad), METER_POS.y + NEEDLE_LENGTH * -sinf(rad));
 }
 
-void Meter::SubDraw(void)
+void DigitalMeter::SubDraw(void)
 {
 	if (pNo != camNo()) { 
 		return; 
 	}
 
-	DrawRotaGraph(TACHOMETER_POS.x, TACHOMETER_POS.y, 1.0, 0.0, imageBack, true);
+	DrawRotaGraph((int)METER_POS.x, (int)METER_POS.y, 1.0, 0.0, imageBack, true);
 
 	// 針の描画
-	DrawLineAA(TACHOMETER_POS.x, TACHOMETER_POS.y, needlePos.x, needlePos.y, 0xff0000, 5.0f);
+	DrawLineAA(METER_POS.x, METER_POS.y, needlePos.x, needlePos.y, 0xff0000, 5.0f);
 
-	DrawRotaGraph(TACHOMETER_POS.x, TACHOMETER_POS.y, 1.0, 0.0, imageFront, true);
+	DrawRotaGraph((int)METER_POS.x, (int)METER_POS.y, 1.0, 0.0, imageFront, true);
 
 	// 速度表示のためフォントサイズ拡大
 	SetFontSize(30);
 	// 速度を10のあまりにして
 	int s = static_cast<int>(speed) % 10;
 	// 下1桁描画
-	DrawFormatString((int)TACHOMETER_POS.x + 12, (int)TACHOMETER_POS.y - 15, 0xffffff, "%d", s);
+	DrawFormatString((int)METER_POS.x + 12, (int)METER_POS.y - 15, 0xffffff, "%d", s);
 	// 10で割り2桁目3桁目の2桁にしそれが1以上なら
 	if ((s = static_cast<int>(speed) / 10) >= 1) {
 		// 二桁目描画
-		DrawFormatString((int)TACHOMETER_POS.x - 8, (int)TACHOMETER_POS.y - 15, 0xffffff, "%d", s % 10);
+		DrawFormatString((int)METER_POS.x - 8, (int)METER_POS.y - 15, 0xffffff, "%d", s % 10);
 	}
 	// 100で割り3桁目のみにしそれが１以上なら
 	if ((s = static_cast<int>(speed) / 100) >= 1) {
 		// 三桁目描画
-		DrawFormatString((int)TACHOMETER_POS.x - 28, (int)TACHOMETER_POS.y - 15, 0xffffff, "%d", s);
+		DrawFormatString((int)METER_POS.x - 28, (int)METER_POS.y - 15, 0xffffff, "%d", s);
 	}
 	// 今のギア数
-	DrawFormatString((int)(TACHOMETER_POS.x - NEEDLE_LENGTH * 3.0f / 2.0f), (int)(TACHOMETER_POS.y - 15.0f), 0xffffff, "%d", gear + 1);
+	DrawFormatString((int)(METER_POS.x - NEEDLE_LENGTH * 3.0f / 2.0f), (int)(METER_POS.y - 15.0f), 0xffffff, "%d", gear + 1);
 	// 変えたフォントサイズを戻す
 	SetFontSize(16);
 }
 
-void Meter::SubRelease(void)
+void DigitalMeter::SubRelease(void)
 {
 	DeleteGraph(imageBack);
 	DeleteGraph(imageFront);

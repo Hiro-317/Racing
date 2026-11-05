@@ -56,6 +56,7 @@ public:
 		Game,
 		Clear,
 		GameOver,
+		End,
 	};
 
 	// XV

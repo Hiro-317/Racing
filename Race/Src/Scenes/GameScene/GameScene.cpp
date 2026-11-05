@@ -15,6 +15,8 @@
 
 #include "../../Object/Stage/Stage.h"
 #include "../../Object/Point/Point.h"
+#include "../../Object/Car/Damball/Damball.h"
+#include "../../Object/Car/Rally/Rally.h"
 
 
 GameScene::GameScene(const int& num, const Input::KEYPAD_NO* no) :
@@ -22,20 +24,26 @@ GameScene::GameScene(const int& num, const Input::KEYPAD_NO* no) :
 	focusFlg(false),
 	time(0.0f),
 	num(num),
-	no{no[0], no[1], no[2], no[3]}
+	no{ no[0], no[1], no[2], no[3] }
 {
+#ifdef _DEBUG
+
 	App::GetIns().SetDrawDebug(true);
+#endif // _DEBUG
 }
 
 	void GameScene::SubPostLoad(void)
 {
-	DevideScreen(num);
-
 	//Snd::GetIns().ChangeScene("Game");
 	AddActor(new Stage());
 
 	for (int i = 0; i < num; i++) {
-		carInsRef[i] = new CarBase(no[i], Vector3(200.0f * (i % 2), 0.0f, -200.0f * i), i, [&]() { return SceneBase::GetCamNo(); });
+		if (i % 2 == 0) {
+			carInsRef[i] = new Damball(no[i], Vector3(200.0f * (i % 2), 0.0f, -200.0f * i), i, [&]() { return SceneBase::GetCamNo(); });
+		}
+		else {
+			carInsRef[i] = new Rally(no[i], Vector3(200.0f * (i % 2), 0.0f, -200.0f * i), i, [&]() { return SceneBase::GetCamNo(); });
+		}
 		AddActor(carInsRef[i]);
 	}
 
@@ -49,6 +57,9 @@ void GameScene::SubPostInit(void)
 
 void GameScene::SubPreUpdate(void)
 {
+	if (Input::GetIns().GetPriorityKey(COMMAND::PAUSE).keyTrgDown) {
+		SceneManager::GetIns().ChangeSceneFade(SCENE_ID::Title);
+	}
 }
 
 void GameScene::SubPostUpdate(void)

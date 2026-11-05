@@ -26,6 +26,8 @@ private:
 
 	bool UseSkyBox(void)const override { return false; }
 
+	int DevideNum(void)const override { return 1; }
+
 	// カメラ状態変更フラグ
 	bool focusFlg;
 
