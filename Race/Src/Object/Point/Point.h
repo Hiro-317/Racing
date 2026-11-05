@@ -2,11 +2,14 @@
 
 #include "../ActorBase/ActorBase.h"
 
+#include "Goal.h"
+
+
 class Point : public ActorBase {
 
 public:
 
-	Point(void);
+	Point(Goal* goalInsRef);
 	~Point(void) = default;
 
 	void Load(void) override;
@@ -15,5 +18,12 @@ public:
 
 private:
 
-	float hitNum;
+	void SubInit(void)override;
+	void SubDraw(void)override;
+
+	Transform subTrans;
+
+	bool hitNo[4];
+
+	Goal* goalInsRef;
 };

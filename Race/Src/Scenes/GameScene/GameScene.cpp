@@ -14,9 +14,10 @@
 #include "../../Manager/Scene/SceneManager.h"
 
 #include "../../Object/Stage/Stage.h"
-#include "../../Object/Point/Point.h"
+
 #include "../../Object/Car/Damball/Damball.h"
 #include "../../Object/Car/Rally/Rally.h"
+#include "../../Object/Point/Point.h"
 
 
 GameScene::GameScene(const int& num, const Input::KEYPAD_NO* no) :
@@ -47,7 +48,9 @@ GameScene::GameScene(const int& num, const Input::KEYPAD_NO* no) :
 		AddActor(carInsRef[i]);
 	}
 
-	AddActor(new Point());
+	goalInsRef = new Goal(1);
+	AddActor(goalInsRef);
+	AddActor(new Point(goalInsRef));
 }
 
 void GameScene::SubPostInit(void)

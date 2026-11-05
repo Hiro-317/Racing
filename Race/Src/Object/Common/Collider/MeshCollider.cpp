@@ -4,6 +4,8 @@
 #include <cfloat>
 #include <numeric>
 
+#include "../../ActorBase/ActorBase.h"
+
 MeshCollider::Triangle::Triangle(void) :
 	p0(),
 	p1(),
@@ -297,7 +299,7 @@ Vector3 MeshCollider::ToWorldPoint(
 	const Vector3& localPoint
 )const
 {
-	const Transform& transform = GetTransform();
+	const Transform& transform = GetActor()->GetTrans();
 
 	Vector3 scaled = localPoint * transform.scale;
 	Vector3 rotated = scaled.TransMat(GetRotationMat());
@@ -309,7 +311,7 @@ Vector3 MeshCollider::ToLocalPoint(
 	const Vector3& worldPoint
 )const
 {
-	const Transform& transform = GetTransform();
+	const Transform& transform = GetActor()->GetTrans();
 
 	const MATRIX inverseAngle =
 		MInverse(GetRotationMat());

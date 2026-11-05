@@ -12,6 +12,8 @@
 
 #include "ColliderTagDefine.h"
 
+class ActorBase;
+
 
 // 衝突結果構造体
 struct CollisionResult
@@ -70,17 +72,8 @@ public:
 
 #pragma region 初期設定
 
-	// モデル制御情報セット
-	void SetTransformPtr(Transform* ptr);
-
-	// 動的フラグの参照先をセット
-	void SetDynamicFlgPtr(const bool* ptr);
-
-	// 押し出しフラグの参照先をセット
-	void SetPushFlgPtr(const bool* ptr);
-
-	// 押し出し時の重さの参照先をセット
-	void SetPushWeightPtr(const unsigned char* ptr);
+	// 参照先アクター設定
+	void SetActor(ActorBase* owner) { this->owner = owner; }
 
 	// 当たり判定通知用関数セット
 	void SetOnCollisionFunc(std::function<void(COLLIDER_TAG, const ColliderBase&, const CollisionResult&)> OnCollisionFunc);
@@ -92,6 +85,9 @@ public:
 
 
 #pragma region ゲット関数
+
+	// 参照先アクター
+	ActorBase* GetActor(void)const { return owner; }
 
 	// コライダー座標
 	Vector3 GetPos(void) const;
@@ -108,20 +104,8 @@ public:
 	// コライダー回転を適用したベクトルを取得
 	Vector3 VTrans(const Vector3& v) const;
 
-	// モデル制御情報を直接取得
-	const Transform& GetTransform(void) const;
-
-	// 動的オブジェクトか否か
-	bool GetDynamicFlg(void) const;
-
 	// 当たり判定フラグ
 	bool GetJudgeFlg(void) const;
-
-	// 押し出しのフラグ
-	bool GetPushFlg(void) const;
-
-	// 押し出し時の重さ
-	unsigned char GetPushWeight(void) const;
 
 	// 当たり判定のタイプ
 	COLLIDER_TAG GetTag(void) const;
@@ -144,8 +128,8 @@ public:
 #pragma region セット関数
 
 	// モデル制御情報の座標情報を書き換える
-	void SetTransformPos(const Vector3& pos);
-	void SetTransformPosAdd(const Vector3& vec);
+	void SetPos(const Vector3& pos);
+	void SetPosAdd(const Vector3& vec);
 
 	// 当たり判定フラグセット
 	void SetJudgeFlg(bool flg);
@@ -155,13 +139,8 @@ public:
 
 private:
 
-	// モデル制御情報
-	Transform* trans;
-
-	// オブジェクト側から直接参照する情報
-	const bool* dynamicFlg;
-	const bool* pushFlg;
-	const unsigned char* pushWeight;
+	// 参照先
+	ActorBase* owner;
 
 	// 相対座標
 	Vector3 pos;

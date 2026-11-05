@@ -23,6 +23,8 @@ public:
 
 	void OnCollision(COLLIDER_TAG ownTag, const ColliderBase& other, const CollisionResult& result) override;
 
+	const int GetPlayerNo(void) { return pNo; }
+
 protected:
 
 	void SubUpdate(void) override;

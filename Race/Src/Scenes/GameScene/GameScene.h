@@ -3,6 +3,7 @@
 #include"../SceneBase.h"
 
 #include "../../Object/Car/CarBase/CarBase.h"
+#include "../../Object/Point/Goal.h"
 #include "../../Manager/Input/InputManager.h"
 
 
@@ -44,6 +45,7 @@ private:
 	const char MULTI_TIME_SEND_COUNT = 5;
 
 	CarBase* carInsRef[4];
+	Goal* goalInsRef;
 
 	const int& num;
 	const Input::KEYPAD_NO no[4];

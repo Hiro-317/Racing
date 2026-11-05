@@ -244,10 +244,7 @@ void ActorBase::VelocityUpdate(bool	deceleration)
 
 void ActorBase::AddCollider(ColliderBase* newCollider)
 {
-	newCollider->SetTransformPtr(&trans);
-	newCollider->SetDynamicFlgPtr(&dynamicFlg);
-	newCollider->SetPushFlgPtr(&pushFlg);
-	newCollider->SetPushWeightPtr(&pushWeight);
+	newCollider->SetActor(this);
 	newCollider->SetOnCollisionFunc([this](COLLIDER_TAG ownTag, const ColliderBase& other, const CollisionResult& result) { this->OnCollision(ownTag, other, result); });
 	newCollider->SetOnGroundedFunc([this](COLLIDER_TAG ownTag, const ColliderBase& other) { this->OnGrounded(ownTag, other); });
 	colliders.emplace_back(newCollider);

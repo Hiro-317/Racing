@@ -64,6 +64,7 @@
     <ClCompile Include="Src\Object\Common\Shader\TestShader.cpp" />
     <ClCompile Include="Src\Object\Common\Shader\WaterShader.cpp" />
     <ClCompile Include="Src\Object\Common\Transform\Transform.cpp" />
+    <ClCompile Include="Src\Object\Point\Goal.cpp" />
     <ClCompile Include="Src\Object\Point\Point.cpp" />
     <ClCompile Include="Src\Object\SkyBox\SkyBox.cpp" />
     <ClCompile Include="Src\Object\Stage\Stage.cpp" />
@@ -133,6 +134,7 @@
     <ClInclude Include="Src\Object\Common\Shader\ShaderBase.h" />
     <ClInclude Include="Src\Object\Common\Shader\TestShader.h" />
     <ClInclude Include="Src\Object\Common\Shader\WaterShader.h" />
+    <ClInclude Include="Src\Object\Point\Goal.h" />
     <ClInclude Include="Src\Object\Point\Point.h" />
     <ClInclude Include="Src\Object\SkyBox\SkyBox.h" />
     <ClInclude Include="Src\Object\Stage\Stage.h" />
