@@ -604,9 +604,9 @@ void SceneManager::Init3D(void)
 
 #pragma region ÉtÉHÉOê›íË
 
-	SetFogEnable(true);
-	SetFogColor(200, 200, 200);
-	SetFogStartEnd(5000.0f, 10000.0f);
+	SetFogEnable(false);
+	//SetFogColor(200, 200, 200);
+	//SetFogStartEnd(5000.0f, 10000.0f);
 
 #pragma endregion
 

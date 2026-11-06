@@ -87,7 +87,7 @@ void InputManager::Init(void){
 	mouse->SetMouseLock(false);
 
 	// ƒpƒbƒhŽæ“¾
-	for (int num = static_cast<int>(KEYPAD_NO::PAD1); num < static_cast<int>(KEYPAD_NO::PAD4); num++) {
+	for (int num = static_cast<int>(KEYPAD_NO::PAD1); num <= static_cast<int>(KEYPAD_NO::PAD4); num++) {
 
 		pads.emplace_back(new Controller(num + 1));
 		pads.back()->Init();

@@ -19,6 +19,7 @@ void Point::Load(void)
 	trans.pos = Vector3(850.0f, 0.0f, 10000.0f);
 	subTrans.pos = Vector3(-850.0f, 0.0f, 10000.0f);
 	trans.scale = Vector3(3.0f);
+	subTrans.scale = Vector3(3.0f);
 	AddCollider(new BoxCollider(COLLIDER_TAG::Enemy, Vector3(1700.0f, 1500.0f, 30.0f), Vector3::Xonly(-850.0f)));
 	SetPushFlg(false);
 }
