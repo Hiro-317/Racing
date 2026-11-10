@@ -54,5 +54,5 @@ void Rally::Load(void) {
 
 void Rally::SubInit(void)
 {
-	AddChildActor(new AnalogMeter(TACO_MAX_SCALE, SPEED_MAX_SCALE, RED_ZONE, speed, rpm, nowGear, pNo, camNo));
+	AddChildActor(new AnalogMeter(TACO_MAX_SCALE, SPEED_MAX_SCALE, EVERY_SPEED, RED_ZONE, speed, rpm, nowGear, pNo, camNo));
 }

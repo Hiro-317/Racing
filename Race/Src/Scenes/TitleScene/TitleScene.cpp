@@ -10,19 +10,26 @@
 #include "../../Manager/Sound/SoundManager.h"
 #include "../../Manager/Font/FontManager.h"
 
+#include "../../Object/Car/CarFactory/CarTypeDefine.h"
+
 #include "../../Manager/Scene/SceneManager.h"
 
 
 TitleScene::TitleScene() :
 	SceneBase()
 {
+#ifdef _DEBUG
+
 	App::GetIns().SetDrawDebug(true);
+#endif // _DEBUG
+
 }
 
 void TitleScene::SubPostLoad(void)
 {
 	num = 1;
 	flg = false;
+	Flg = false;
 	tmpNum = 0;
 }
 
@@ -53,6 +60,18 @@ void TitleScene::SubPostUpdate(void)
 		if (Input::GetIns().GetPriorityAnyoneTrgDown()) {
 			tmpNo[tmpNum] = Input::GetIns().GetMostPriority();
 		}
+		if (Input::GetIns().GetPriorityKey(COMMAND::LEFT).keyTrgDown) {
+			tmpType[tmpNum]--;
+			if (tmpType[tmpNum] < 0) {
+				tmpType[tmpNum] = 0;
+			}
+		}
+		if (Input::GetIns().GetPriorityKey(COMMAND::RIGHT).keyTrgDown) {
+			tmpType[tmpNum]++;
+			if (tmpType[tmpNum] > (int)CAR_TYPE::MAX - 1) {
+				tmpType[tmpNum] = (int)CAR_TYPE::MAX - 1;
+			}
+		}
 		if (Input::GetIns().GetKey(COMMAND::DECIDE, tmpNo[tmpNum]).keyTrgDown) {
 			if (tmpNum < num - 1) {
 				tmpNum++;
@@ -60,6 +79,7 @@ void TitleScene::SubPostUpdate(void)
 			else {
 				for (int i = 0; i < num; i++) {
 					SceneManager::GetIns().SetKeypadNo(tmpNo[i], i);
+					SceneManager::GetIns().SetCarType((CAR_TYPE)tmpType[i], i);
 				}
 				SceneManager::GetIns().SetPlayerNum(num);
 				SceneManager::GetIns().ChangeSceneFade(SCENE_ID::Game);
@@ -92,6 +112,20 @@ void TitleScene::SubUiDraw(void)
 		tmp = "PAD4";
 	}
 	DrawFormatString(10, 70, 0xffffff, (tmp + "です").c_str());
+
+	if (tmpType[tmpNum] == (int)CAR_TYPE::SUPER){
+		tmp = "スーパーカー";
+	}
+	if (tmpType[tmpNum] == (int)CAR_TYPE::RALLY){
+		tmp = "ラリーカー";
+	}
+	if (tmpType[tmpNum] == (int)CAR_TYPE::HASHIRIYA){
+		tmp = "走り屋";
+	}
+	if (tmpType[tmpNum] == (int)CAR_TYPE::SPORTS){
+		tmp = "スポーツカー";
+	}
+	DrawFormatString(10, 100, 0xffffff, (tmp + "です").c_str());
 	SetFontSize(16);
 }
 

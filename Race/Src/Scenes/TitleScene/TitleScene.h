@@ -39,6 +39,7 @@ private:
 
 	// l”
 	int num;
+	int tmpType[4];
 
 	bool flg;
 	bool Flg;

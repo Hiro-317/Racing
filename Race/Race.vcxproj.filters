@@ -30,7 +30,6 @@
     <ClCompile Include="Src\Manager\Scene\Fade\Default\DefaultFadeScene.cpp" />
     <ClCompile Include="Src\Manager\Scene\Fade\FadeSceneBase.cpp" />
     <ClCompile Include="Src\Object\Car\CarBase\CarBase.cpp" />
-    <ClCompile Include="Src\Manager\Car\CarManager.cpp" />
     <ClCompile Include="Src\Manager\Input\Controller\Controller.cpp" />
     <ClCompile Include="Src\Manager\Input\InputBase.cpp" />
     <ClCompile Include="Src\Manager\Input\InputManager.cpp" />
@@ -63,6 +62,9 @@
     <ClCompile Include="Src\Object\Car\Rally\Rally.cpp" />
     <ClCompile Include="Src\Object\Car\Meter\AnalogMeter.cpp" />
     <ClCompile Include="Src\Object\Point\Goal.cpp" />
+    <ClCompile Include="Src\Object\Car\Kanjo\Kanjo.cpp" />
+    <ClCompile Include="Src\Object\Car\Sport\Sport.cpp" />
+    <ClCompile Include="Src\Object\Car\CarFactory\CarTypeDefine.h" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Src\Application\Application.h" />
@@ -114,7 +116,7 @@
     <ClInclude Include="Src\Manager\Scene\Fade\FadeSceneBase.h" />
     <ClInclude Include="Src\Scenes\ActorUseDefine.h" />
     <ClInclude Include="Src\Object\Car\CarBase\CarBase.h" />
-    <ClInclude Include="Src\Manager\Car\CarManager.h" />
+    <ClInclude Include="Src\Object\Car\CarFactory\CarFactory.h" />
     <ClInclude Include="Src\Manager\Input\Controller\Controller.h" />
     <ClInclude Include="Src\Manager\Input\InputBase.h" />
     <ClInclude Include="Src\Manager\Input\InputManager.h" />
@@ -147,6 +149,8 @@
     <ClInclude Include="Src\Object\Car\Rally\Rally.h" />
     <ClInclude Include="Src\Object\Car\Meter\AnalogMeter.h" />
     <ClInclude Include="Src\Object\Point\Goal.h" />
+    <ClInclude Include="Src\Object\Car\Kanjo\Kanjo.h" />
+    <ClInclude Include="Src\Object\Car\Sport\Sport.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Src\Shader\Water\WaterPS.hlsl" />

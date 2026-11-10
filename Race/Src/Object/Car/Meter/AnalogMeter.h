@@ -11,7 +11,7 @@ class AnalogMeter : public ActorBase {
 
 public:
 
-	AnalogMeter(const float& TACO_MAX_SCALE, const float& SPEED_MAX_SCALE, const int& RED_ZONE, const float& speed, const float& rpm, const int& gear, const int& pNo, const std::function<int(void)>& camNo);
+	AnalogMeter(const float& TACO_MAX_SCALE, const float& SPEED_MAX_SCALE, const int& EVERY_SPEED, const int& RED_ZONE, const float& speed, const float& rpm, const int& gear, const int& pNo, const std::function<int(void)>& camNo);
 	~AnalogMeter() = default;
 
 	void Load() override;
@@ -22,6 +22,8 @@ private:
 	const float& TACO_MAX_SCALE;
 	// スピードメーターの最大スケール
 	const float& SPEED_MAX_SCALE;
+	// スピードメーターの数字刻み
+	const int& EVERY_SPEED;
 
 	// タコメーターのレッドゾーン
 	const int& RED_ZONE;

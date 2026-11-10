@@ -542,7 +542,7 @@ std::unique_ptr<SceneBase> SceneManager::CreateScene(SCENE_ID scene)const
 
 	//case SCENE_ID::BossSelect: { return std::make_unique<BossSelectScene>(); }
 
- 	case SCENE_ID::Game: { return std::make_unique<GameScene>(tmpNum, &tmpNo[0]); }
+ 	case SCENE_ID::Game: { return std::make_unique<GameScene>(tmpNum, &tmpNo[0], &tmpType[0]); }
 
 	//case SCENE_ID::Clear: { return std::make_unique<ClearScene>(); }
 

@@ -92,7 +92,6 @@ private:
 
 	// i‚ŞŒü‚«
 	Vector3 moveVec;
-	Vector3 forward;
 
 	// Ô‘Ì‰¡•ûŒü‚Ì‘¬“x
 	float sideSpeed;

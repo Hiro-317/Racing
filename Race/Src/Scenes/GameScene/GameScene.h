@@ -2,16 +2,18 @@
 
 #include"../SceneBase.h"
 
-#include "../../Object/Car/CarBase/CarBase.h"
-#include "../../Object/Point/Goal.h"
 #include "../../Manager/Input/InputManager.h"
+#include "../../Object/Car/CarFactory/CarTypeDefine.h"
 
+
+class CarBase;
+class Goal;
 
 class GameScene : public SceneBase
 {
 public:
 
-	GameScene(const int& num, const Input::KEYPAD_NO* no);
+	GameScene(const int& num, const Input::KEYPAD_NO* no, const CAR_TYPE* type);
 	~GameScene()override = default;
 
 private:
@@ -24,8 +26,6 @@ private:
 	void SubPreUpdate(void)override;
 	// 更新（後）
 	void SubPostUpdate(void)override;
-
-	void SubUiDraw(void)override;
 
 	void SubPostRelease(void)override;
 
@@ -44,9 +44,10 @@ private:
 	// マルチで時間をどのくらいの間隔で同期するか（秒数）
 	const char MULTI_TIME_SEND_COUNT = 5;
 
-	CarBase* carInsRef[4];
 	Goal* goalInsRef;
+	std::vector<CarBase*> cars;
 
 	const int& num;
-	const Input::KEYPAD_NO no[4];
+	const Input::KEYPAD_NO* no;
+	const CAR_TYPE* type;
 };

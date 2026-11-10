@@ -188,27 +188,25 @@ void CarBase::SubUpdate(void)
 	}
 
 	float temp = nowSteer - prevSteer;
-	nowSteer = prevSteer + temp * 0.05f;
+	nowSteer = prevSteer + temp * 0.25f;
 
 	// 旋回によって生じる横速度の目標値
-	float targetSideSpeed = -nowSteer * fabsf(speed) * 0.03f;
+	float targetSideSpeed = nowSteer * fabsf(speed) * 0.1f;
 
 	// 横速度を目標値に近づける
-	float sideResponse = grip * 5.0f;
-	float response = 1.0f - expf(-sideResponse * App::GetPassTime());
-	sideSpeed += (targetSideSpeed - sideSpeed) * sideResponse * App::GetPassTime();
+	sideSpeed += (targetSideSpeed - sideSpeed) * App::GetPassTime();
 
-	float targetYawSpeed = nowSteer * 2.0f;
+	if (speed != 0.0f) {
+		float targetYawSpeed = nowSteer * 2.0f;
 
-	// 回転速度を滑らかに変化させる
-	yawSpeed += (targetYawSpeed - yawSpeed) * 5.0f * App::GetPassTime();
+		// 回転速度を滑らかに変化させる
+		yawSpeed += (targetYawSpeed - yawSpeed) * 5.0f * App::GetPassTime();
 
-	trans.AddAngle(Vector3::Yonly(yawSpeed * App::GetPassTime()));
+		trans.AddAngle(Vector3::Yonly(yawSpeed * App::GetPassTime()));
+	}
 
 	MATRIX rot = trans.rotation.ToMatrix();
 	float yaw = atan2f(rot.m[0][2], rot.m[2][2]);
-
-	forward = Vector3(-sinf(yaw), 0.0f, cosf(yaw));
 
 	Vector3 forward = Vector3(-sinf(yaw), 0.0f, cosf(yaw));
 	Vector3 right = Vector3(cosf(yaw), 0.0f, sinf(yaw));
@@ -217,13 +215,21 @@ void CarBase::SubUpdate(void)
 
 	trans.pos += moveVec;
 
+	float cameraSideFactor = std::clamp(fabsf(speed) / 20.0f, 0.0f, 1.0f);
+
+	moveVec = forward * speed + right * sideSpeed * cameraSideFactor;
+
 	// ここからデータロガー
 	//
 	// 最高トルク
+#ifdef _DEBUG
+
 	if (torqueMax < torque) { torqueMax = torque; torqueMaxRpm = rpm; }
 	// 最高馬力
 	hoursepower = (torque * rpm) / 9550.0f;
 	if (hoursepowerMax < hoursepower) { hoursepowerMax = hoursepower; hoursepowerMaxRpm = rpm; }
+
+#endif // _DEBUG
 }
 
 void CarBase::SubDraw(void)
@@ -252,7 +258,6 @@ void CarBase::SubDraw(void)
 		DrawFormatString(700, 40, 0xffffff, "%.5f", yawSpeed);
 		DrawFormatString(700, 60, 0xffffff, "%.5f", trans.rotation.y);
 		DrawFormatString(700, 80, 0xffffff, "%.2f : %.2f : %.2f", moveVec.x, moveVec.y, moveVec.z);
-		DrawFormatString(700, 100, 0xffffff, "%.2f : %.2f : %.2f", forward.x, forward.y, forward.z);
 
 		//DrawSphere3D((trans.pos + moveVec * 100.0f).ToVECTOR(), 200.0f, 32, 0xffffff, 0xfffffff, true);
 	}

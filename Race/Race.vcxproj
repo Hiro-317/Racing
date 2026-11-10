@@ -37,7 +37,7 @@
     <ClCompile Include="Src\Manager\Camera\FollowYaw\FollowYawCamera.cpp" />
     <ClCompile Include="Src\Manager\Camera\Free\FreeCamera.cpp" />
     <ClCompile Include="Src\Manager\Camera\MultifuncCamera\MultifuncCamera.cpp" />
-    <ClCompile Include="Src\Manager\Car\CarManager.cpp" />
+    <ClCompile Include="Src\Object\Car\CarFactory\CarTypeDefine.h" />
     <ClCompile Include="Src\Manager\Collision\CollisionManager.cpp" />
     <ClCompile Include="Src\Manager\Font\FontManager.cpp" />
     <ClCompile Include="Src\Manager\FPS\FPS.cpp" />
@@ -52,10 +52,12 @@
     <ClCompile Include="Src\Manager\Shader\ShaderResourceManager.cpp" />
     <ClCompile Include="Src\Manager\TimeScale\TimeScale.cpp" />
     <ClCompile Include="Src\Object\Car\CarBase\CarBase.cpp" />
+    <ClCompile Include="Src\Object\Car\Kanjo\Kanjo.cpp" />
     <ClCompile Include="Src\Object\Car\Meter\AnalogMeter.cpp" />
     <ClCompile Include="Src\Object\Car\Meter\DigitalMeter.cpp" />
     <ClCompile Include="Src\Object\Car\Damball\Damball.cpp" />
     <ClCompile Include="Src\Object\Car\Rally\Rally.cpp" />
+    <ClCompile Include="Src\Object\Car\Sport\Sport.cpp" />
     <ClCompile Include="Src\Object\Common\Collider\ColliderBase.cpp" />
     <ClCompile Include="Src\Object\Common\Collider\MeshCollider.cpp" />
     <ClCompile Include="Src\Object\Common\Shader\DefaultShader.cpp" />
@@ -105,7 +107,7 @@
     <ClInclude Include="Src\Manager\Camera\FollowYaw\FollowYawCamera.h" />
     <ClInclude Include="Src\Manager\Camera\Free\FreeCamera.h" />
     <ClInclude Include="Src\Manager\Camera\MultifuncCamera\MultifuncCamera.h" />
-    <ClInclude Include="Src\Manager\Car\CarManager.h" />
+    <ClInclude Include="Src\Object\Car\CarFactory\CarFactory.h" />
     <ClInclude Include="Src\Manager\Collision\ChunkStDefine.h" />
     <ClInclude Include="Src\Manager\Collision\CollisionManager.h" />
     <ClInclude Include="Src\Manager\Font\FontManager.h" />
@@ -124,10 +126,12 @@
     <ClInclude Include="Src\Manager\TimeScale\TimeScale.h" />
     <ClInclude Include="Src\Object\ActorBase\ActorDrawTypeDefine.h" />
     <ClInclude Include="Src\Object\Car\CarBase\CarBase.h" />
+    <ClInclude Include="Src\Object\Car\Kanjo\Kanjo.h" />
     <ClInclude Include="Src\Object\Car\Meter\AnalogMeter.h" />
     <ClInclude Include="Src\Object\Car\Meter\DigitalMeter.h" />
     <ClInclude Include="Src\Object\Car\Damball\Damball.h" />
     <ClInclude Include="Src\Object\Car\Rally\Rally.h" />
+    <ClInclude Include="Src\Object\Car\Sport\Sport.h" />
     <ClInclude Include="Src\Object\Common\Collider\MeshCollider.h" />
     <ClInclude Include="Src\Object\Common\Shader\DefaultShader.h" />
     <ClInclude Include="Src\Object\Common\Shader\RimLightShader.h" />

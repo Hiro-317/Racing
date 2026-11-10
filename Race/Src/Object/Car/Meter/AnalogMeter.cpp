@@ -1,10 +1,11 @@
 #include "AnalogMeter.h"
 
 
-AnalogMeter::AnalogMeter(const float& TACO_MAX_SCALE, const float& SPEED_MAX_SCALE, const int& RED_ZONE, const float& speed, const float& rpm, const int& gear, const int& pNo, const std::function<int(void)>& camNo) :
+AnalogMeter::AnalogMeter(const float& TACO_MAX_SCALE, const float& SPEED_MAX_SCALE, const int& EVERY_SPEED, const int& RED_ZONE, const float& speed, const float& rpm, const int& gear, const int& pNo, const std::function<int(void)>& camNo) :
 	ActorBase(),
 	TACO_MAX_SCALE(TACO_MAX_SCALE),
 	SPEED_MAX_SCALE(SPEED_MAX_SCALE),
+	EVERY_SPEED(EVERY_SPEED),
 	RED_ZONE(RED_ZONE),
 	speed(speed),
 	rpm(rpm),
@@ -91,13 +92,13 @@ void AnalogMeter::Load()
 	}
 
 	// 点線の範囲
-	for (int i = 0; i <= (int)SPEED_MAX_SCALE / 10; i++) {
-		// 間隔は10kmずつで
-		float rad = SPEED_SLOP * (i * 10) + NEEDLE_MIN_RAD;
+	for (int i = 0; i <= (int)SPEED_MAX_SCALE / ((EVERY_SPEED / 2) * 10); i++) {
+		// 間隔は指定速度の半分ずつで
+		float rad = SPEED_SLOP * (i * ((EVERY_SPEED / 2) * 10)) + NEEDLE_MIN_RAD;
 		// 何も書かない根元の位置
 		Vector2 brank = Vector2(METER_SIZE * 2 / 3 + BLANK_LENGTH * cosf(rad), METER_SIZE / 2 + BLANK_LENGTH * -sinf(rad));
 
-		// 20kmずつに
+		// 指定速度ずつに
 		if (i % 2 == 0) {
 			// 線先の位置
 			Vector2 line = Vector2(METER_SIZE * 2 / 3 + (NEEDLE_LENGTH + 3.0f) * cosf(rad), METER_SIZE / 2 + (NEEDLE_LENGTH + 3.0f) * -sinf(rad));
@@ -105,11 +106,11 @@ void AnalogMeter::Load()
 			SetFontSize(10);
 			Vector2 number = Vector2(METER_SIZE * 2 / 3 + (BLANK_LENGTH - 17.5f) * cosf(rad), METER_SIZE / 2 + (BLANK_LENGTH - 17.5f) * -sinf(rad));
 			SetFontSize(16);
-			DrawFormatString((int)number.x - 11, (int)number.y - 7, 0xffffff, "%d", i * 10);
+			DrawFormatString((int)number.x - 11, (int)number.y - 7, 0xffffff, "%d", i * ((EVERY_SPEED / 2) * 10));
 			// 太い白線
 			DrawLineAA(line.x, line.y, brank.x, brank.y, 0xffffff, 3.0f);
 		}
-		// 20kmを抜いた10kmずつに
+		// 指定速度の半分ずつに
 		else {
 			// 線先の位置
 			Vector2 line = Vector2(METER_SIZE * 2 / 3 + (NEEDLE_LENGTH - 3.0f) * cosf(rad), METER_SIZE / 2 + (NEEDLE_LENGTH - 3.0f) * -sinf(rad));

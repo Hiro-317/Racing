@@ -15,17 +15,19 @@
 
 #include "../../Object/Stage/Stage.h"
 
-#include "../../Object/Car/Damball/Damball.h"
-#include "../../Object/Car/Rally/Rally.h"
+#include "../../Object/Car/CarFactory/CarFactory.h"
+
 #include "../../Object/Point/Point.h"
+#include "../../Object/Point/Goal.h"
 
 
-GameScene::GameScene(const int& num, const Input::KEYPAD_NO* no) :
+GameScene::GameScene(const int& num, const Input::KEYPAD_NO* no, const CAR_TYPE* type) :
 	SceneBase(),
 	focusFlg(false),
 	time(0.0f),
 	num(num),
-	no{ no[0], no[1], no[2], no[3] }
+	no(no),
+	type(type)
 {
 #ifdef _DEBUG
 
@@ -38,14 +40,10 @@ GameScene::GameScene(const int& num, const Input::KEYPAD_NO* no) :
 	//Snd::GetIns().ChangeScene("Game");
 	AddActor(new Stage());
 
-	for (int i = 0; i < num; i++) {
-		if (i % 2 == 0) {
-			carInsRef[i] = new Damball(no[i], Vector3(200.0f * (i % 2), 0.0f, -200.0f * i), i, [&]() { return SceneBase::GetCamNo(); });
-		}
-		else {
-			carInsRef[i] = new Rally(no[i], Vector3(200.0f * (i % 2), 0.0f, -200.0f * i), i, [&]() { return SceneBase::GetCamNo(); });
-		}
-		AddActor(carInsRef[i]);
+	cars = CarFactory(type, num, no, [&]() { return SceneBase::GetCamNo(); });
+
+	for (int i = 0; i < (int)cars.size(); i++) {
+		AddActor(cars.at(i));
 	}
 
 	goalInsRef = new Goal(1);
@@ -71,24 +69,22 @@ void GameScene::SubPostUpdate(void)
 
 	// ŽžŠÔXV
 	time += App::GetPassTime();
-#pragma endregion
-}
 
-void GameScene::SubUiDraw(void)
-{
+#pragma endregion
 }
 
 void GameScene::SubPostRelease(void)
 {
-	for (int i = 0; i < 3; i++) {
-		carInsRef[i] = nullptr;
+	for (int i = 0; i < (int)cars.size(); i++) {
+		cars.at(i) = nullptr;
 	}
+	goalInsRef = nullptr;
 }
 
 
 void GameScene::CreateCamera(void)
 {
-	for (auto car : carInsRef) {
+	for (auto car : cars) {
 		if (car == nullptr) return;
 		camera.emplace_back(new FollowVecCamera(&car->GetTrans().pos, &car->GetMoveVec()));
 	}
