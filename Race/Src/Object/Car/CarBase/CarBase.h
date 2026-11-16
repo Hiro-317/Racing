@@ -119,6 +119,16 @@ private:
 	static constexpr float COUNTER_STEER_DAMPING = 4.0f;
 	// カウンターステアによってグリップを回復させる速さ(1/秒)
 	static constexpr float COUNTER_STEER_GRIP_RECOVERY = 8.0f;
+	// カウンターステアの効果が弱まり始める滑り角(ラジアン、約35度)
+	static constexpr float COUNTER_STEER_FADE_START = 0.610865f;
+	// カウンターステアでは立て直せなくなる滑り角(ラジアン、約70度)
+	static constexpr float COUNTER_STEER_FADE_END = 1.221730f;
+	// 横向きになった後、惰性回転を収束させる追加減衰率(1/秒)
+	static constexpr float POST_LIMIT_SPIN_DAMPING = 1.2f;
+	// 一度失速したスピン状態を解除する滑り角(ラジアン、約5度)
+	static constexpr float SPIN_RESET_ANGLE = 0.087266f;
+	// スピン状態を解除できる回転速度(ラジアン/秒)
+	static constexpr float SPIN_RESET_YAW_SPEED = 0.15f;
 	// 横滑りによって失う速度の割合(1/秒)
 	static constexpr float SLIP_SPEED_LOSS = 0.8f;
 	// スピン回転によって追加で失う速度の割合(1/秒)
@@ -163,6 +173,8 @@ private:
 	float yawSpeed;
 	// グリップ限界を超えたときのスピン回転速度
 	float spinYawSpeed;
+	// 横向きまで回ってタイヤからの追加回転力が抜けた状態
+	bool spinTorqueReleased;
 
 protected:
 
