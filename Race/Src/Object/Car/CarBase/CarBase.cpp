@@ -228,7 +228,7 @@ void CarBase::SubUpdate(void)
 	// 高速旋回中は移動方向の追従を遅らせ、車体だけが先に旋回することでリアを外側へ滑らせる。
 	UpdateRearGrip(speed, nowSteer, steerChange, throttleInput, brakeInput, handBrake);
 	const Vector3 currentDirection = moveVec.LengthSq() > 0.0f ? moveVec.Normalized() : forward;
-	ApplySlipDynamics(forward, currentDirection);
+	ApplySlipDynamics(forward, currentDirection, nowSteer);
 	const float directionBlend = 1.0f - std::exp(-grip * App::GetPassTime());
 	Vector3 nextDirection = currentDirection + (forward - currentDirection) * directionBlend;
 	if (nextDirection.LengthSq() == 0.0f) { nextDirection = forward; }
@@ -401,7 +401,7 @@ void CarBase::UpdateRearGrip(float currentSpeed, float steerInput, float steerCh
 	grip = REAR_GRIP_MAX + (REAR_GRIP_MIN - REAR_GRIP_MAX) * driftAmount;
 }
 
-void CarBase::ApplySlipDynamics(const Vector3& forward, const Vector3& moveDirection)
+void CarBase::ApplySlipDynamics(const Vector3& forward, const Vector3& moveDirection, float steerInput)
 {
 	// 内積と外積から、車体前方に対する移動方向の符号付き角度を求める
 	const float directionDot = std::clamp(forward.Dot(moveDirection), -1.0f, 1.0f);
@@ -418,10 +418,26 @@ void CarBase::ApplySlipDynamics(const Vector3& forward, const Vector3& moveDirec
 		1.0f
 	);
 
-	// 滑っている側へ回転を加え、入力を戻した後はフレーム時間に沿って減衰させる
-	const float spinDirection = slipAngle >= 0.0f ? 1.0f : -1.0f;
-	spinYawSpeed += spinDirection * SPIN_ACCELERATION * spinRate * App::GetPassTime();
-	spinYawSpeed /= 1.0f + SPIN_DAMPING * App::GetPassTime();
+	// スピン開始後は現在の回転方向を維持し、角度が180度を超えた際の符号反転を防ぐ
+	const float spinDirection = fabsf(spinYawSpeed) > 0.001f ?
+		(spinYawSpeed >= 0.0f ? 1.0f : -1.0f) :
+		(slipAngle >= 0.0f ? 1.0f : -1.0f);
+
+	// 滑り方向と逆のステアだけをカウンターとして0～1へ変換する
+	const float counterSteerRate = std::clamp(-steerInput * spinDirection, 0.0f, 1.0f);
+
+	// カウンターを当てない場合は滑っている側へ回転を育て、一回転するスピンへ移行させる
+	spinYawSpeed += spinDirection * SPIN_ACCELERATION * spinRate *
+		(1.0f - counterSteerRate) * App::GetPassTime();
+
+	// カウンター中は現在のスピン回転を直接弱め、追加の減衰で車体を収束させる
+	if (spinYawSpeed * spinDirection > 0.0f) {
+		const float counterBrake = COUNTER_STEER_BRAKE * counterSteerRate * App::GetPassTime();
+		const float brakeAmount = (std::min)(fabsf(spinYawSpeed), counterBrake);
+		spinYawSpeed -= spinDirection * brakeAmount;
+	}
+	const float spinDamping = SPIN_DAMPING + COUNTER_STEER_DAMPING * counterSteerRate;
+	spinYawSpeed /= 1.0f + spinDamping * App::GetPassTime();
 	trans.AddAngle(Vector3::Yonly(spinYawSpeed * App::GetPassTime()));
 
 	// 横滑りとスピン中のタイヤ抵抗で速度を失わせ、アクセル全開でも加速し続ける状態を防ぐ

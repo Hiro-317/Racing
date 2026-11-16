@@ -68,7 +68,8 @@ private:
 	/// </summary>
 	/// <param name="forward">車体の前方向</param>
 	/// <param name="moveDirection">現在の移動方向</param>
-	void ApplySlipDynamics(const Vector3& forward, const Vector3& moveDirection);
+	/// <param name="steerInput">現在のステア入力(-1～1)</param>
+	void ApplySlipDynamics(const Vector3& forward, const Vector3& moveDirection, float steerInput);
 
 	// 空ぶかしで上がる回転数
 	static constexpr float UP_RPM = 125.0f;
@@ -104,14 +105,18 @@ private:
 	static constexpr float BRAKE_TURN_IN = 0.35f;
 	// サイドブレーキ中に車体を振り出す割合
 	static constexpr float HANDBRAKE_TURN_IN = 0.65f;
-	// スピンが始まる車体と移動方向の角度差(ラジアン、約25度)
-	static constexpr float SPIN_START_ANGLE = 0.436332f;
+	// スピンが始まる車体と移動方向の角度差(ラジアン、約20度)
+	static constexpr float SPIN_START_ANGLE = 0.349066f;
 	// スピン判定が最大になる角度差(ラジアン、90度)
 	static constexpr float SPIN_FULL_ANGLE = 1.570796f;
 	// 限界を超えたときに加えるスピン加速度(ラジアン/秒^2)
-	static constexpr float SPIN_ACCELERATION = 4.0f;
+	static constexpr float SPIN_ACCELERATION = 6.0f;
 	// スピン回転が自然に収まる減衰率(1/秒)
-	static constexpr float SPIN_DAMPING = 1.8f;
+	static constexpr float SPIN_DAMPING = 0.9f;
+	// カウンターステアでスピン回転を止める強さ(ラジアン/秒^2)
+	static constexpr float COUNTER_STEER_BRAKE = 8.0f;
+	// カウンターステア中に追加する回転減衰率(1/秒)
+	static constexpr float COUNTER_STEER_DAMPING = 4.0f;
 	// 横滑りによって失う速度の割合(1/秒)
 	static constexpr float SLIP_SPEED_LOSS = 0.8f;
 	// スピン回転によって追加で失う速度の割合(1/秒)
