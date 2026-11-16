@@ -383,13 +383,14 @@ void CarBase::ApplySlipDynamics(const Vector3& forward, const Vector3& moveDirec
 	const float slipAngle = atan2f(directionCross, directionDot);
 	const float absSlipAngle = fabsf(slipAngle);
 
-	// 25度を超えた分だけスピン判定を強め、90度で最大にする
+	// 25度を超えた実際の滑り角だけでスピン判定を強め、90度で最大にする
+	// 車速由来のdriftAmountは使わず、減速中でも角度差が残っていればスピンへ移行させる
 	const float spinAngleRange = SPIN_FULL_ANGLE - SPIN_START_ANGLE;
 	const float spinRate = std::clamp(
 		(absSlipAngle - SPIN_START_ANGLE) / spinAngleRange,
 		0.0f,
 		1.0f
-	) * driftAmount;
+	);
 
 	// 滑っている側へ回転を加え、入力を戻した後はフレーム時間に沿って減衰させる
 	const float spinDirection = slipAngle >= 0.0f ? 1.0f : -1.0f;
