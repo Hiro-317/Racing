@@ -25,67 +25,51 @@ InputManager& InputManager::GetIns(void)
 // パッドはintの被りに注意して
 void InputManager::CommandLoad(void)
 {
-	// ラン
-	SetCommand(COMMAND::RUN, KEY_INPUT_LSHIFT, KEYPAD_NO::KEY);
-	SetCommand(COMMAND::RUN, PAD_INPUT_R, KEYPAD_NO::PAD1);
+	// サイドブレーキ
+	SetCommand(COMMAND::SIDE, KEY_INPUT_LSHIFT, KEYPAD_NO::KEY);
+	SetCommand(COMMAND::SIDE, XINPUT_BUTTON_X, KEYPAD_NO::PAD1);
 
-	// コンボ
-	SetCommand(COMMAND::COMBO, MOUSE_INPUT_LEFT, KEYPAD_NO::MOUSE);
-	SetCommand(COMMAND::COMBO, XINPUT_BUTTON_Y, KEYPAD_NO::PAD1);
-
-	// 攻撃
-	SetCommand(COMMAND::ATTACK, MOUSE_INPUT_RIGHT, KEYPAD_NO::MOUSE);
-	SetCommand(COMMAND::ATTACK, XINPUT_BUTTON_B, KEYPAD_NO::PAD1);
-
-	// 回避
-	SetCommand(COMMAND::DODGE, KEY_INPUT_SPACE, KEYPAD_NO::KEY);
-	SetCommand(COMMAND::DODGE, XINPUT_BUTTON_A, KEYPAD_NO::PAD1);
-
-	// ロックオン
-	SetCommand(COMMAND::LOCK_ON, MOUSE_INPUT_MIDDLE, KEYPAD_NO::MOUSE);
-	SetCommand(COMMAND::LOCK_ON, KEY_INPUT_RCONTROL, KEYPAD_NO::KEY);
-	SetCommand(COMMAND::LOCK_ON, KEY_INPUT_TAB, KEYPAD_NO::KEY);
-	SetCommand(COMMAND::LOCK_ON, PAD_INPUT_L, KEYPAD_NO::PAD1);
-
-	// 使う
-	SetCommand(COMMAND::USE, KEY_INPUT_F, KEYPAD_NO::KEY);
-	SetCommand(COMMAND::USE, XINPUT_BUTTON_X, KEYPAD_NO::PAD1);
+	// 決定
+	SetCommand(COMMAND::DECIDE, KEY_INPUT_SPACE, KEYPAD_NO::KEY);
+	SetCommand(COMMAND::DECIDE, XINPUT_BUTTON_A, KEYPAD_NO::PAD1);
+	// イグニッション
+	SetCommand(COMMAND::ACTION, KEY_INPUT_F, KEYPAD_NO::KEY);
+	SetCommand(COMMAND::ACTION, XINPUT_BUTTON_Y, KEYPAD_NO::PAD1);
 
 	// 左キー
-	SetCommand(COMMAND::LEFT, KEY_INPUT_Q, KEYPAD_NO::KEY);
 	SetCommand(COMMAND::LEFT, KEY_INPUT_LEFT, KEYPAD_NO::KEY);
 	SetCommand(COMMAND::LEFT, XINPUT_BUTTON_DPAD_LEFT, KEYPAD_NO::PAD1);
 
 	// 右キー
-	SetCommand(COMMAND::RIGHT, KEY_INPUT_E, KEYPAD_NO::KEY);
 	SetCommand(COMMAND::RIGHT, KEY_INPUT_RIGHT, KEYPAD_NO::KEY);
 	SetCommand(COMMAND::RIGHT, XINPUT_BUTTON_DPAD_RIGHT, KEYPAD_NO::PAD1);
 
 	// 上キー
-	SetCommand(COMMAND::UP, KEY_INPUT_W, KEYPAD_NO::KEY);
 	SetCommand(COMMAND::UP, KEY_INPUT_UP, KEYPAD_NO::KEY);
 	SetCommand(COMMAND::UP, XINPUT_BUTTON_DPAD_UP, KEYPAD_NO::PAD1);
+	SetCommand(COMMAND::UP, PAD_INPUT_L, KEYPAD_NO::PAD1);
 
 	// 下キー
-	SetCommand(COMMAND::DOWN, KEY_INPUT_S, KEYPAD_NO::KEY);
 	SetCommand(COMMAND::DOWN, KEY_INPUT_DOWN, KEYPAD_NO::KEY);
 	SetCommand(COMMAND::DOWN, XINPUT_BUTTON_DPAD_DOWN, KEYPAD_NO::PAD1);
+	SetCommand(COMMAND::DOWN, PAD_INPUT_R, KEYPAD_NO::PAD1);
 
 	// ポーズキー
 	SetCommand(COMMAND::PAUSE, KEY_INPUT_ESCAPE, KEYPAD_NO::KEY);
 	SetCommand(COMMAND::PAUSE, XINPUT_BUTTON_BACK, KEYPAD_NO::PAD1);
 	SetCommand(COMMAND::PAUSE, XINPUT_BUTTON_START, KEYPAD_NO::PAD1);
 
-	// 決定キー
-	SetCommand(COMMAND::DECIDE, MOUSE_INPUT_LEFT, KEYPAD_NO::MOUSE);
-	SetCommand(COMMAND::DECIDE, KEY_INPUT_SPACE, KEYPAD_NO::KEY);
-	SetCommand(COMMAND::DECIDE, KEY_INPUT_RETURN, KEYPAD_NO::KEY);
-	SetCommand(COMMAND::DECIDE, XINPUT_BUTTON_A, KEYPAD_NO::PAD1);
-
 	// キャンセルキー
 	SetCommand(COMMAND::CANCEL, MOUSE_INPUT_RIGHT, KEYPAD_NO::MOUSE);
 	SetCommand(COMMAND::CANCEL, KEY_INPUT_ESCAPE, KEYPAD_NO::KEY);
 	SetCommand(COMMAND::CANCEL, XINPUT_BUTTON_B, KEYPAD_NO::PAD1);
+
+	// デバッグ
+	SetCommand(COMMAND::DEBUG, MOUSE_INPUT_MIDDLE, KEYPAD_NO::MOUSE);
+	SetCommand(COMMAND::DEBUG, KEY_INPUT_RCONTROL, KEYPAD_NO::KEY);
+	SetCommand(COMMAND::DEBUG, KEY_INPUT_TAB, KEYPAD_NO::KEY);
+	SetCommand(COMMAND::DEBUG, XINPUT_BUTTON_START, KEYPAD_NO::PAD1);
+
 }
 
 // 初期化
@@ -103,13 +87,14 @@ void InputManager::Init(void){
 	mouse->SetMouseLock(false);
 
 	// パッド取得
-	for (int num = static_cast<int>(KEYPAD_NO::PAD1); num < static_cast<int>(KEYPAD_NO::PAD4); num++) {
+	for (int num = static_cast<int>(KEYPAD_NO::PAD1); num <= static_cast<int>(KEYPAD_NO::PAD4); num++) {
 
 		pads.emplace_back(new Controller(num + 1));
 		pads.back()->Init();
 	}
 
 	// デフォルトコマンド登録
+	DefinitelyKey();
 	CommandLoad();
 }
 
@@ -162,7 +147,7 @@ void InputManager::Update(void){
 	}
 }
 
-Vector3 InputManager::GetAKeyL(const KEYPAD_NO& no)
+Vector3 InputManager::GetAKeyLClamp(const KEYPAD_NO& no)
 {
 	switch (no)
 	{
@@ -199,7 +184,7 @@ Vector3 InputManager::GetAKeyL(const KEYPAD_NO& no)
 	}
 }
 
-Vector3 InputManager::GetAKeyR(const KEYPAD_NO& no)
+Vector3 InputManager::GetAKeyRClamp(const KEYPAD_NO& no)
 {
 	switch (no)
 	{
@@ -216,9 +201,9 @@ Vector3 InputManager::GetAKeyR(const KEYPAD_NO& no)
 		//　中心からの差分をとる
 		Vector3 nowPos = Vector3();
 		nowPos = Vector3(mouse->GetMousePos());
-		Vector3 diffPos = Vector3::XZonly(nowPos.x - Application::SCREEN_SIZE_X_HALF, nowPos.y - Application::SCREEN_SIZE_Y_HALF);
-		// 感度を掛けて返す
-		return diffPos * Mouse::MOUSE_SENSI;
+		Vector3 diffPos = Vector3::XZonly(nowPos.x - App::DEFAULT_SIZE_X_HALF, nowPos.y - App::DEFAULT_SIZE_Y_HALF);
+		// -1～1になるようスクリーンの半分で割ってあげて返す
+		return Vector3::XZonly(diffPos.x / App::DEFAULT_SIZE_X_HALF, diffPos.y / App::DEFAULT_SIZE_Y_HALF);
 		break;
 	}
 	default:
@@ -269,202 +254,42 @@ InputBase::Info InputManager::GetPriorityKey(const COMMAND& com)
 
 Vector3 InputManager::GetPriorityAKeyLNorm(void)
 {
-	return GetAKeyL(mostPriority).Normalized();
+	return GetAKeyLClamp(mostPriority).Normalized();
 }
 
 Vector3 InputManager::GetPriorityAKeyRNorm(void)
 {
-	return GetAKeyR(mostPriority).Normalized();
+	return GetAKeyRClamp(mostPriority).Normalized();
 }
 
-Vector3 InputManager::GetPriorityAKeyL(void)
+Vector3 InputManager::GetPriorityAKeyLClamp(void)
 {
-	return GetAKeyL(mostPriority);
+	return GetAKeyLClamp(mostPriority);
 }
 
-Vector3 InputManager::GetPriorityAKeyR(void)
+Vector3 InputManager::GetPriorityAKeyRClamp(void)
 {
-	return GetAKeyR(mostPriority);
+	return GetAKeyRClamp(mostPriority);
 }
 
-std::vector<InputBase::Info> InputManager::GetPriorityKey(const COMMAND& com, int& num)
+float InputManager::GetLTrigger(KEYPAD_NO no)
 {
-	// 返り値を格納する変数
-	std::vector<InputBase::Info> temp;
-
-	// 優先順に回す
-	for (int i = 0; i < num; i++) {
-		// 優先順確認
-		if (orderOfPriority.at(i)) {
-			// 各情報の取得
-			switch (i)
-			{
-			case static_cast<int>(KEYPAD_NO::PAD1):
-				temp.emplace_back(GetKey(com, KEYPAD_NO::PAD1));
-				break;
-			case static_cast<int>(KEYPAD_NO::PAD2):
-				temp.emplace_back(GetKey(com, KEYPAD_NO::PAD2));
-				break;
-			case static_cast<int>(KEYPAD_NO::PAD3):
-				temp.emplace_back(GetKey(com, KEYPAD_NO::PAD3));
-				break;
-			case static_cast<int>(KEYPAD_NO::PAD4):
-				temp.emplace_back(GetKey(com, KEYPAD_NO::PAD4));
-				break;
-			case static_cast<int>(KEYPAD_NO::KEY):
-				temp.emplace_back(GetKey(com, KEYPAD_NO::KEY));
-				break;
-			default:
-				break;
-			}
-		}
+	if (no == KEYPAD_NO::KEY) {
+		return 0.0f;
 	}
-	// 少なくてもそのまま
-	return temp;
+	else {
+		return pads.at(static_cast<int>(no))->GetLTrigger();
+	}
 }
 
-std::vector<Vector3> InputManager::GetPriorityAKeyLNorm(const COMMAND& com, int& num)
+float InputManager::GetRTrigger(KEYPAD_NO no)
 {
-	// 返り値を格納する変数
-	std::vector<Vector3> temp;
-
-	// 優先順に回す
-	for (int i = 0; i < num; i++) {
-		// 優先順確認
-		if (orderOfPriority.at(i)) {
-			// 各情報の取得
-			switch (i)
-			{
-			case static_cast<int>(KEYPAD_NO::PAD1):
-				temp.emplace_back(GetAKeyL(KEYPAD_NO::PAD1).Normalized());
-				break;
-			case static_cast<int>(KEYPAD_NO::PAD2):
-				temp.emplace_back(GetAKeyL(KEYPAD_NO::PAD2).Normalized());
-				break;
-			case static_cast<int>(KEYPAD_NO::PAD3):
-				temp.emplace_back(GetAKeyL(KEYPAD_NO::PAD3).Normalized());
-				break;
-			case static_cast<int>(KEYPAD_NO::PAD4):
-				temp.emplace_back(GetAKeyL(KEYPAD_NO::PAD4).Normalized());
-				break;
-			case static_cast<int>(KEYPAD_NO::KEY):
-				temp.emplace_back(GetAKeyL(KEYPAD_NO::KEY).Normalized());
-				break;
-			default:
-				break;
-			}
-		}
+	if (no == KEYPAD_NO::KEY) {
+		return 0.0f;
 	}
-	// 少なくてもそのまま
-	return temp;
-}
-
-std::vector<Vector3> InputManager::GetPriorityAKeyRNorm(const COMMAND& com, int& num)
-{
-	// 返り値を格納する変数
-	std::vector<Vector3> temp;
-
-	// 優先順に回す
-	for (int i = 0; i < num; i++) {
-		// 優先順確認
-		if (orderOfPriority.at(i)) {
-			// 各情報の取得
-			switch (i)
-			{
-			case static_cast<int>(KEYPAD_NO::PAD1):
-				temp.emplace_back(GetAKeyR(KEYPAD_NO::PAD1).Normalized());
-				break;
-			case static_cast<int>(KEYPAD_NO::PAD2):
-				temp.emplace_back(GetAKeyR(KEYPAD_NO::PAD2).Normalized());
-				break;
-			case static_cast<int>(KEYPAD_NO::PAD3):
-				temp.emplace_back(GetAKeyR(KEYPAD_NO::PAD3).Normalized());
-				break;
-			case static_cast<int>(KEYPAD_NO::PAD4):
-				temp.emplace_back(GetAKeyR(KEYPAD_NO::PAD4).Normalized());
-				break;
-			case static_cast<int>(KEYPAD_NO::KEY):
-				temp.emplace_back(GetAKeyR(KEYPAD_NO::KEY).Normalized());
-				break;
-			default:
-				break;
-			}
-		}
+	else {
+		return pads.at(static_cast<int>(no))->GetRTrigger();
 	}
-	// 少なくてもそのまま
-	return temp;
-}
-
-std::vector<Vector3> InputManager::GetPriorityAKeyL(const COMMAND& com, int& num)
-{
-	// 返り値を格納する変数
-	std::vector<Vector3> temp;
-
-	// 優先順に回す
-	for (int i = 0; i < num; i++) {
-		// 優先順確認
-		if (orderOfPriority.at(i)) {
-			// 各情報の取得
-			switch (i)
-			{
-			case static_cast<int>(KEYPAD_NO::PAD1):
-				temp.emplace_back(GetAKeyL(KEYPAD_NO::PAD1));
-				break;
-			case static_cast<int>(KEYPAD_NO::PAD2):
-				temp.emplace_back(GetAKeyL(KEYPAD_NO::PAD2));
-				break;
-			case static_cast<int>(KEYPAD_NO::PAD3):
-				temp.emplace_back(GetAKeyL(KEYPAD_NO::PAD3));
-				break;
-			case static_cast<int>(KEYPAD_NO::PAD4):
-				temp.emplace_back(GetAKeyL(KEYPAD_NO::PAD4));
-				break;
-			case static_cast<int>(KEYPAD_NO::KEY):
-				temp.emplace_back(GetAKeyL(KEYPAD_NO::KEY));
-				break;
-			default:
-				break;
-			}
-		}
-	}
-	// 少なくてもそのまま
-	return temp;
-}
-
-std::vector<Vector3> InputManager::GetPriorityAKeyR(const COMMAND& com, int& num)
-{
-	// 返り値を格納する変数
-	std::vector<Vector3> temp;
-
-	// 優先順に回す
-	for (int i = 0; i < num; i++) {
-		// 優先順確認
-		if (orderOfPriority.at(i)) {
-			// 各情報の取得
-			switch (i)
-			{
-			case static_cast<int>(KEYPAD_NO::PAD1):
-				temp.emplace_back(GetAKeyR(KEYPAD_NO::PAD1));
-				break;
-			case static_cast<int>(KEYPAD_NO::PAD2):
-				temp.emplace_back(GetAKeyR(KEYPAD_NO::PAD2));
-				break;
-			case static_cast<int>(KEYPAD_NO::PAD3):
-				temp.emplace_back(GetAKeyR(KEYPAD_NO::PAD3));
-				break;
-			case static_cast<int>(KEYPAD_NO::PAD4):
-				temp.emplace_back(GetAKeyR(KEYPAD_NO::PAD4));
-				break;
-			case static_cast<int>(KEYPAD_NO::KEY):
-				temp.emplace_back(GetAKeyR(KEYPAD_NO::KEY));
-				break;
-			default:
-				break;
-			}
-		}
-	}
-	// 少なくてもそのまま
-	return temp;
 }
 
 bool InputManager::GetPriorityAnyoneTrg(void)

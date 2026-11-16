@@ -31,7 +31,7 @@ SceneBase::SceneBase(void) :
 
 	skyBox(nullptr),
 
-	camera(nullptr),
+	camera(),
 
 	actors()
 {
@@ -42,14 +42,10 @@ void SceneBase::Load(void)
 	// 同じシーンへLoadが2回呼ばれた場合、モデルや画像の二重ロードにつながるため検出する
 	if (state != STATE::Created) { throw std::logic_error("SceneBase::Load()が不正な状態で呼ばれました"); }
 
+	DevideScreen(DevideNum());
+
 	// 派生先の読み込み（前）
 	SubPreLoad();
-
-	// 画面揺れを適用するため、一度このスクリーンへ3D描画をまとめる
-	mainScreen = MakeScreen(App::SCREEN_SIZE_X, App::SCREEN_SIZE_Y, true);
-	if (mainScreen < 0) { throw std::runtime_error("SceneBaseのメインスクリーン生成に失敗しました"); }
-	tempScreen[0] = MakeScreen(App::SCREEN_SIZE_X, App::SCREEN_SIZE_Y, true);
-	tempScreen[1] = MakeScreen(App::SCREEN_SIZE_X, App::SCREEN_SIZE_Y, true);
 
 	// シーンごとに独立した当たり判定管理クラスを生成する
 	if (UseCollisionManager()) { collision = new CollisionManager(); }
@@ -75,7 +71,7 @@ void SceneBase::Init(void)
 	SubPreInit();
 
 	// カメラ初期化
-	if (camera != nullptr) { camera->Init(); }
+	if (!camera.empty()) { for(auto cam : camera)  if(cam != nullptr) cam->Init(); }
 
 	// スカイボックス初期化
 	if (skyBox != nullptr) { skyBox->Init(); }
@@ -101,7 +97,7 @@ void SceneBase::Update(void)
 	SubPreUpdate();
 
 	// カメラ情報をDxLibへ反映
-	if (camera != nullptr) { camera->Apply(); }
+	if (!camera.empty()) { for (auto cam : camera) if (cam != nullptr) cam->Apply(); }
 
 	// オブジェクト全ての更新処理
 	for (ActorBase* actor : actors) { actor->Update(); }
@@ -113,13 +109,15 @@ void SceneBase::Update(void)
 	SubPostUpdate();
 
 	// カメラ更新
-	if (camera != nullptr) { camera->Update(); }
+	if (!camera.empty()) { for (auto cam : camera) if (cam != nullptr) cam->Update(); }
 
 	// スカイボックス更新
 	if (skyBox != nullptr) { skyBox->Update(); }
 
 	// ポストエフェクト更新
-	for (PostEffectBase* postEffect : postEffects) { postEffect->Update(); }
+	for (int i = 0; i < devideNum; i++) {
+		for (PostEffectBase* postEffect : postEffects[i]) { postEffect->Update(); }
+	}
 }
 
 void SceneBase::Draw(void)
@@ -128,78 +126,81 @@ void SceneBase::Draw(void)
 
 #pragma region 画面揺れ用スクリーンへ描画
 
-	SetDrawScreen(mainScreen);
-	ClearDrawScreen();
+	for (camNo = 0; camNo < devideNum; camNo++) {
 
-	// カメラ情報をDxLibへ反映
-	if (camera != nullptr) { camera->Apply(); }
+		SetDrawScreen(mainScreen);
+		ClearDrawScreen();
+
+		// カメラ情報をDxLibへ反映
+		if (camera.size() > camNo && camera.at(camNo) != nullptr) { camera.at(camNo)->Apply(); }
 
 #pragma endregion
 
 #pragma region メイン描画
 
-	// スカイボックス描画
-	if (skyBox != nullptr) { skyBox->Draw(); }
+		// スカイボックス描画
+		if (skyBox != nullptr) { skyBox->Draw(); }
 
-	// 通常描画
-	SubPreDraw();
-	ActorsDraw(actors, ACTOR_DRAW_TYPE::Normal);
-	SubPostDraw();
+		// 通常描画
+		SubPreDraw();
+		ActorsDraw(actors, ACTOR_DRAW_TYPE::Normal);
+		SubPostDraw();
 
-	// 半透明描画
-	SetDrawBlendMode(DX_BLENDMODE_ALPHA, 150);
-	ActorsDraw(actors, ACTOR_DRAW_TYPE::Alpha);
-	SubAlphaDraw();
+		// 半透明描画
+		SetDrawBlendMode(DX_BLENDMODE_ALPHA, 150);
+		ActorsDraw(actors, ACTOR_DRAW_TYPE::Alpha);
+		SubAlphaDraw();
 
-	ActorsColliderDebugDraw(actors);
+		ActorsColliderDebugDraw(actors);
 
-	// デバッグ用チャンク描画
-	//if (collision != nullptr && camera != nullptr) { collision->DrawChunkGrid(camera->GetPos()); }
+		// デバッグ用チャンク描画
+		//if (collision != nullptr && camera != nullptr) { collision->DrawChunkGrid(camera->GetPos()); }
 
-	SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
+		SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
 
 #pragma endregion
 
 #pragma region ポストエフェクト適用
 
-	// 最初の入力はシーン本体
-	int srcScreen = mainScreen;
+		// 最初の入力はシーン本体
+		int srcScreen = mainScreen;
 
-	// tempScreen[0] → tempScreen[1] → tempScreen[0]...
-	int tempIndex = 0;
+		// tempScreen[0] → tempScreen[1] → tempScreen[0]...
+		int tempIndex = 0;
 
-	for (PostEffectBase* postEffect : postEffects) {
-		if (postEffect == nullptr) { continue; }
+		for (PostEffectBase* postEffect : postEffects[camNo]) {
+			if (postEffect == nullptr) { continue; }
 
-		const int dstScreen = tempScreen[tempIndex];
+			const int dstScreen = tempScreen[tempIndex];
 
-		// srcScreenの内容にポストエフェクトを掛けて
-		// dstScreenへ描画
-		postEffect->Apply(srcScreen, dstScreen);
+			// srcScreenの内容にポストエフェクトを掛けて
+			// dstScreenへ描画
+			postEffect->Apply(srcScreen, dstScreen);
 
-		// 今生成した画面を次の入力にする
-		srcScreen = dstScreen;
+			// 今生成した画面を次の入力にする
+			srcScreen = dstScreen;
 
-		// 次は反対側の一時スクリーンを使用
-		tempIndex = 1 - tempIndex;
-	}
+			// 次は反対側の一時スクリーンを使用
+			tempIndex = 1 - tempIndex;
+		}
 
 #pragma endregion
-
-	SetDrawScreen(DX_SCREEN_BACK);
-
-	// PostEffectが0個ならmainScreen、
-	// 1個以上なら最後に生成されたtempScreenが入っている
-	DrawGraph(0, 0, srcScreen, true);
 
 #pragma region UI描画
 
-	ActorsDraw(actors, ACTOR_DRAW_TYPE::Ui);
-	SubUiDraw();
+		ActorsDraw(actors, ACTOR_DRAW_TYPE::Ui);
+		SubUiDraw();
 
-	if (camera != nullptr) { camera->DrawDebug(); }
+		if (camera.size() > camNo && camera.at(camNo) != nullptr) { camera.at(camNo)->DrawDebug(); }
+
+		SetDrawScreen(DX_SCREEN_BACK);
+
+		// PostEffectが0個ならmainScreen、
+		// 1個以上なら最後に生成されたtempScreenが入っている
+		DrawGraph(SCREEN_SIZE_X * (camNo % 2), SCREEN_SIZE_Y * (camNo / 2), srcScreen, true);
 
 #pragma endregion
+	}
 }
 
 void SceneBase::Release(void)
@@ -211,12 +212,14 @@ void SceneBase::Release(void)
 	SubPreRelease();
 
 	// 全てのポストエフェクトを解放
-	for (PostEffectBase*& postEffect : postEffects) {
-		postEffect->Release();
-		delete postEffect;
-		postEffect = nullptr;
+	for (int i = 0; i < devideNum; i++) {
+		for (PostEffectBase*& postEffect : postEffects[i]) {
+			postEffect->Release();
+			delete postEffect;
+			postEffect = nullptr;
+		}
+		postEffects[i].clear();
 	}
-	postEffects.clear();
 
 	// 全てのオブジェクトを解放
 	for (ActorBase*& actor : actors) {
@@ -241,11 +244,13 @@ void SceneBase::Release(void)
 	}
 
 	// カメラ解放
-	if (camera != nullptr) {
-		camera->Release();
-		delete camera;
-		camera = nullptr;
+	for (auto& cam : camera) {
+		if (cam == nullptr) continue;	
+		cam->Release();
+		delete cam;
+		cam = nullptr;
 	}
+	camera.clear();
 
 	// 画面演出用のスクリーン解放
 	if (mainScreen >= 0) {
@@ -264,13 +269,13 @@ void SceneBase::Release(void)
 	state = STATE::Released;
 }
 
-void SceneBase::AddPostEffect(PostEffectBase* postEffect)
+void SceneBase::AddPostEffect(PostEffectBase* postEffect, int num = 0)
 {
 	if (postEffect == nullptr) { return; }
 
 	postEffect->Init();
 
-	postEffects.emplace_back(postEffect);
+	postEffects[num].emplace_back(postEffect);
 }
 
 void SceneBase::AddActor(ActorBase* newActor)
@@ -315,4 +320,40 @@ void SceneBase::ActorsColliderDebugDraw(const std::vector<ActorBase*>& actors)
 
 		ActorsColliderDebugDraw(actor->GetChildActors());
 	}
+}
+
+void SceneBase::DevideScreen(const int& num)
+{
+	// 今のスクリーンを削除
+	DeleteGraph(mainScreen);
+	for (int i = 0; i < devideNum; i++) {
+		DeleteGraph(tempScreen[i]);
+	}
+
+	// 数に応じてこのシーンのサイズを変更
+	if (num == 1) {
+		SCREEN_SIZE_X = App::DEFAULT_SIZE_X;
+		SCREEN_SIZE_Y = App::DEFAULT_SIZE_Y;
+	}
+	else if (num == 2) {
+		SCREEN_SIZE_X = App::DEFAULT_SIZE_X_HALF;
+		SCREEN_SIZE_Y = App::DEFAULT_SIZE_Y;
+	}
+	else {
+		SCREEN_SIZE_X = App::DEFAULT_SIZE_X_HALF;
+		SCREEN_SIZE_Y = App::DEFAULT_SIZE_Y_HALF;
+	}
+
+	// 分割された後のサイズをアプリケーションにも保存
+	App::GetIns().SetScreenSize(SCREEN_SIZE_X, SCREEN_SIZE_Y);
+
+	// メインとシェーダー用スクリーンの再構築
+	mainScreen = MakeScreen(SCREEN_SIZE_X, SCREEN_SIZE_Y, true);
+	if (mainScreen < 0) { throw std::runtime_error("SceneBaseのメインスクリーン生成に失敗しました"); }
+	for (int i = 0; i < num; i++) {
+		tempScreen[i] = MakeScreen(SCREEN_SIZE_X, SCREEN_SIZE_Y, true);
+	}
+
+	// 分割数の保管
+	devideNum = num;
 }

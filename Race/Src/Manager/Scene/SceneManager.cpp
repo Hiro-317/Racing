@@ -11,13 +11,14 @@
 
 #include "../../Scenes/SceneBase.h"
 
-//#include "../Title/TitleScene.h"
+#include "../../Scenes/TitleScene/TitleScene.h"
 //#include "../Lobby/LobbyScene.h"
 //#include "../Lobby/MultiLobbyScene.h"
 //#include "../BossSelect/BossSelectScene.h"
 #include "../../Scenes/GameScene/GameScene.h"
 //#include "../Clear/ClearScene.h"
 //#include"../GameOver/GameOver.h"
+#include "../../Scenes/EndScene/EndScene.h"
 
 #include "Fade/Default/DefaultFadeScene.h"
 
@@ -57,7 +58,7 @@ void SceneManager::Init(void)
 	Init3D();
 
 	// 最初のタイトルシーンは予約を経由せず、この初期化処理内で読み込みを開始する
-	StartLoad(CreateScene(SCENE_ID::Game), LOAD_COMMIT::Jump);
+	StartLoad(CreateScene(SCENE_ID::Title), LOAD_COMMIT::Jump);
 }
 
 void SceneManager::Release(void)
@@ -135,7 +136,7 @@ void SceneManager::Draw(void)
 	}
 
 	// フェードは必ず最前面へ描画する
-	//if (fade != nullptr) { fade->Draw(); }
+	if (fade != nullptr) { fade->Draw(); }
 
 	// ロード中はシーンの上へLoading画面を描画する
 	if (loadingScene != nullptr) { Loading::GetInstance()->Draw(); }
@@ -533,7 +534,7 @@ std::unique_ptr<SceneBase> SceneManager::CreateScene(SCENE_ID scene)const
 {
 	switch (scene) {
 
-	//case SCENE_ID::Title: { return std::make_unique<TitleScene>(); }
+	case SCENE_ID::Title: { return std::make_unique<TitleScene>(); }
 
 	//case SCENE_ID::Lobby: { return std::make_unique<LobbyScene>(); }
 
@@ -541,11 +542,13 @@ std::unique_ptr<SceneBase> SceneManager::CreateScene(SCENE_ID scene)const
 
 	//case SCENE_ID::BossSelect: { return std::make_unique<BossSelectScene>(); }
 
-	case SCENE_ID::Game: { return std::make_unique<GameScene>(); }
+ 	case SCENE_ID::Game: { return std::make_unique<GameScene>(tmpNum, &tmpNo[0], &tmpType[0]); }
 
 	//case SCENE_ID::Clear: { return std::make_unique<ClearScene>(); }
 
 	//case SCENE_ID::GameOver: { return std::make_unique<GameOver>(); }
+
+	case SCENE_ID::End: { return std::make_unique<EndScene>(); }
 
 	default: { return nullptr; }
 	}
@@ -570,7 +573,7 @@ void SceneManager::SetCurrentCamera(void) const
 	if (scenes.empty()) { return; }
 
 	// 末尾から先頭へ確認し、カメラを使用しているシーンを探す
-	for (int index = scenes.size() - 1; index >= 0; index--) {
+	for (int index = (int)scenes.size() - 1; index >= 0; index--) {
 
 		// カメラのインスタンスのポインターを取得
 		CameraBase* cameraIns = scenes.at(index)->GetCamera();
@@ -601,9 +604,9 @@ void SceneManager::Init3D(void)
 
 #pragma region フォグ設定
 
-	SetFogEnable(true);
-	SetFogColor(200, 200, 200);
-	SetFogStartEnd(5000.0f, 10000.0f);
+	SetFogEnable(false);
+	//SetFogColor(200, 200, 200);
+	//SetFogStartEnd(5000.0f, 10000.0f);
 
 #pragma endregion
 

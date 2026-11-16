@@ -39,7 +39,7 @@ public:
 private:
 
 	// 進行方向を更新する最低速度の二乗
-	static constexpr float MIN_VELOCITY_SQ = 0.0001f;
+	static constexpr float MIN_VELOCITY_SQ = 0.01f;
 
 	// 追従対象の座標
 	const Vector3* targetPos;

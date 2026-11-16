@@ -22,19 +22,18 @@ public:
 
 		NON = -1,
 
-		RUN,
-		ATTACK,
-		COMBO,
-		DODGE,
-		LOCK_ON,
-		USE,
+		SIDE,
+		ACTION,
 		LEFT,
 		RIGHT,
 		UP,
 		DOWN,
+
 		PAUSE,
 		DECIDE,
 		CANCEL,
+
+		DEBUG,
 
 		MAX,
 	};
@@ -67,8 +66,8 @@ public:
 	void Update(void);
 
 	// 方向を取得
-	Vector3 GetAKeyL(const KEYPAD_NO& no);
-	Vector3  GetAKeyR(const KEYPAD_NO& no);
+	Vector3 GetAKeyLClamp(const KEYPAD_NO& no);
+	Vector3  GetAKeyRClamp(const KEYPAD_NO& no);
 
 	// 特定機種ののコマンドの状態を取得
 	// マウスはKEYで
@@ -78,14 +77,12 @@ public:
 	InputBase::Info GetPriorityKey(const COMMAND& com);
 	Vector3 GetPriorityAKeyLNorm(void);
 	Vector3 GetPriorityAKeyRNorm(void);
-	Vector3 GetPriorityAKeyL(void);
-	Vector3 GetPriorityAKeyR(void);
-	// 指定数(優先機種を0から)
-	std::vector<InputBase::Info> GetPriorityKey(const COMMAND& com, int& num);
-	std::vector<Vector3> GetPriorityAKeyLNorm(const COMMAND& com, int& num);
-	std::vector<Vector3> GetPriorityAKeyRNorm(const COMMAND& com, int& num);
-	std::vector<Vector3> GetPriorityAKeyL(const COMMAND& com, int& num);
-	std::vector<Vector3> GetPriorityAKeyR(const COMMAND& com, int& num);
+	Vector3 GetPriorityAKeyLClamp(void);
+	Vector3 GetPriorityAKeyRClamp(void);
+
+	// パッドのみのトリガー生取得
+	float GetLTrigger(KEYPAD_NO no);
+	float GetRTrigger(KEYPAD_NO no);
 
 	// 最優先されたタイプを取得
 	KEYPAD_NO GetMostPriority(void) { return mostPriority; }
@@ -95,6 +92,18 @@ public:
 	bool GetPriorityAnyoneTrg(void);
 	// (今のフレームで)最優先の物が今何か押したか
 	bool GetPriorityAnyoneTrgDown(void);
+
+	// 絶対に登録しておくキー(削除後も入る)
+	void DefinitelyKey(void) {
+		for (int i = 0; i < (int)KEYPAD_NO::PAD4; i++) {
+			pads[i]->Add(XINPUT_BUTTON_LEFT_SHOULDER);
+			pads[i]->Add(XINPUT_BUTTON_RIGHT_SHOULDER);
+		}
+		keyboard->Add(KEY_INPUT_W);
+		keyboard->Add(KEY_INPUT_A);
+		keyboard->Add(KEY_INPUT_S);
+		keyboard->Add(KEY_INPUT_D);
+	}
 
 	// キーの登録
 	// パッドは1のみでいいよ
@@ -207,6 +216,8 @@ public:
 		}
 		keyboard->Clear();
 		mouse->Clear();
+
+		DefinitelyKey();
 	}
 
 private:
@@ -252,3 +263,4 @@ private:
 };
 
 using Input = InputManager;
+using COMMAND = InputManager::COMMAND;

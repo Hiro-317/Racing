@@ -4,10 +4,6 @@
 void Keyboard::Init(void)
 {
 	anyoneTrgDown = anyoneTrg = anyone = false;
-	Add(KEY_INPUT_W);
-	Add(KEY_INPUT_A);
-	Add(KEY_INPUT_S);
-	Add(KEY_INPUT_D);
 }
 
 void Keyboard::Update(void)

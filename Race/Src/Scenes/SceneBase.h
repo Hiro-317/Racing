@@ -61,10 +61,10 @@ public:
 	CollisionManager* GetCollisionManager(void)const { return collision; }
 
 	// カメラを取得する。カメラを使用しない場合はnullptrを返す。
-	CameraBase* GetCamera(void)const { return camera; }
+	CameraBase* GetCamera(void)const { return camera.empty() ? nullptr : camera.back(); }
 
 	// ポストエフェクトを追加
-	void AddPostEffect(PostEffectBase* postEffect);
+	void AddPostEffect(PostEffectBase* postEffect, int num);
 
 	// 指定した種類のポストエフェクトを削除
 	template<class T = PostEffectBase>
@@ -150,6 +150,9 @@ protected:
 
 private:
 
+	int SCREEN_SIZE_X;
+	int SCREEN_SIZE_Y;
+
 	// 二重Load / 二重Releaseを防止する「状態」
 	STATE state;
 
@@ -157,11 +160,14 @@ private:
 	CollisionManager* collision;
 
 	// ポストエフェクト配列
-	std::vector<PostEffectBase*> postEffects;
+	std::vector<PostEffectBase*> postEffects[4];
 
 	// ポストエフェクト用のスクリーンハンドル
 	int mainScreen;
-	int tempScreen[2];
+	int tempScreen[4];
+
+	// 分割数
+	int devideNum;
 
 	// スカイボックス
 	SkyBox* skyBox;
@@ -171,14 +177,22 @@ private:
 
 	void ActorsColliderDebugDraw(const std::vector<ActorBase*>& actors);
 
+	int camNo;
+
 protected:
 
 	// カメラ
-	CameraBase* camera;
+	std::vector<CameraBase*> camera;
 
 	// カメラ生成
-	virtual void CreateCamera(void) { camera = nullptr; }
+	virtual void CreateCamera(void) { camera.clear(); }
 
 	// Actor格納用配列
 	std::vector<ActorBase*> actors;
+
+	// 画面分割用サイズ変更
+	void DevideScreen(const int& num);
+	virtual int DevideNum(void)const { return 1; }
+
+	int GetCamNo(void) { return camNo; }
 };

@@ -49,6 +49,9 @@ public:
 	// モデル制御情報構造体のゲット関数
 	const Transform& GetTrans(void)const { return trans; }
 
+	// 座標設定
+	void SetPos(const Vector3& pos) { trans.pos = pos; }
+
 	// 当たり判定の通知
 	virtual void OnCollision(COLLIDER_TAG ownTag, const ColliderBase& other, const CollisionResult& result) {}
 
@@ -64,6 +67,19 @@ public:
 
 	// コライダーすべてを取得
 	virtual std::vector<ColliderBase*> GetColliders(void)const;
+
+#pragma region オブジェクト挙動
+
+	// 移動するオブジェクトかの設定を取得
+	bool GetDynamicFlg(void)const { return dynamicFlg; }
+
+	// 押し出しの有効/無効
+	bool GetPushFlg(void)const { return pushFlg; }
+
+	// 押し出しの重みづけ
+	unsigned char GetPushWeight(void)const { return pushWeight; }
+
+#pragma endregion
 
 	// コライダーのデバッグ描画
 	void DrawColliderDebug(void)const;
@@ -238,9 +254,6 @@ protected:
 	bool GetJudgeFlg(void);
 	// 当たり判定の設定（true = 「判定する」、false = 「判定しない」）
 	void SetJudgeFlg(bool flg);
-
-	// 移動するオブジェクトかの設定を取得
-	bool GetDynamicFlg(void)const { return dynamicFlg; }
 	// 重力の設定の状態を取得
 	bool GetGravityFlg(void)const { return gravityFlg; }
 

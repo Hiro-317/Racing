@@ -8,9 +8,6 @@ class Mouse : public InputBase
 {
 public:
 
-	// マウス感度
-	static constexpr float MOUSE_SENSI = 0.0004f;
-
 	// コンストラクタ
 	Mouse(void);
 	// デストラクタ

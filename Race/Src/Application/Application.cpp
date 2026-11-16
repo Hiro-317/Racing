@@ -16,6 +16,11 @@
 
 Application* Application::ins = nullptr;
 
+float Application::GetPassTime(void)
+{
+	return (1.0f / (float)FRAME_PAR_SECOND) * TimeScale::Get();
+}
+
 // コンストラクタ
 Application::Application(void) :
 	isInitFail(false),
@@ -42,7 +47,8 @@ void Application::Init(void)
 	SetWindowIconID(123);
 
 	// ウィンドウ関連
-	SetGraphMode(SCREEN_SIZE_X, SCREEN_SIZE_Y, 32);	// サイズ変更
+	SetScreenSize(DEFAULT_SIZE_X, DEFAULT_SIZE_Y);
+	SetGraphMode(DEFAULT_SIZE_X, DEFAULT_SIZE_Y, 32);	// サイズ変更
 	ChangeWindowMode(false);
 #ifdef _DEBUG
 	ChangeWindowMode(true);
@@ -125,7 +131,11 @@ void Application::Run(void)
 		Snd::GetIns().Update();
 
 		// デバッグ表示切替
-		//if (Input::GetIns().GetInfo(KEY_TYPE::DEBUG_DRAW_SWITCH).down) { DrawDebugSwitch(); }
+#ifdef _DEBUG
+
+		if (Input::GetIns().GetPriorityKey(COMMAND::DEBUG).keyTrgDown) { DrawDebugSwitch(); }
+
+#endif // DEBUG
 
 		// フレームレート計算
 		fps->CalcFrameRate();
@@ -183,4 +193,12 @@ void Application::Release(void)
 	Effkseer_End();
 	// DxLib終了
 	if (DxLib_End() == -1) { isReleaseFail = true; }
+}
+
+void Application::SetScreenSize(int x, int y)
+{
+	ScreenSizeX = x;
+	ScreenSizeY = y;
+	ScreenSizeXHalf = ScreenSizeX / 2;
+	ScreenSizeYHalf = ScreenSizeY / 2;
 }

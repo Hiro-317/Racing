@@ -32,6 +32,8 @@ private:
 	void SubPostUpdate(void)override;
 	void SubUiDraw(void)override;
 
+	int DevideNum(void)const override { return 1; }
+
 	unsigned short fadeTime;
 	unsigned short fadeCounter;
 	STATE state;

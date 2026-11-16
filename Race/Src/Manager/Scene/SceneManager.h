@@ -11,6 +11,9 @@
 #include "Fade/FadeDefine.h"
 
 //#include "../../Manager/Net/SenderID_Define.h"
+#include "../../Manager/Input/InputManager.h"
+
+#include "../../Object/Car/CarFactory/CarTypeDefine.h"
 
 class SceneBase;
 
@@ -55,6 +58,7 @@ public:
 		Game,
 		Clear,
 		GameOver,
+		End,
 	};
 
 	// 更新
@@ -95,6 +99,15 @@ public:
 	bool IsTransition(void)const {
 		return !requests.empty() || loadingScene != nullptr || fade != nullptr || isWaitFadeOut;
 	}
+
+	// コントローラーのセット
+	void SetKeypadNo(const Input::KEYPAD_NO& no, const int& num) { tmpNo[num] = no; }
+
+	// プレイヤー人数のセット
+	void SetPlayerNum(const int& num) { tmpNum = num; }
+
+	// 車タイプのセット
+	void SetCarType(const CAR_TYPE& type, const int& num) { tmpType[num] = type; }
 
 #pragma endregion
 
@@ -250,6 +263,9 @@ private:
 
 #pragma endregion
 
+	Input::KEYPAD_NO tmpNo[4];
+	int tmpNum;
+	CAR_TYPE tmpType[4];
 };
 
 using SCENE_ID = SceneManager::SCENE_ID;
