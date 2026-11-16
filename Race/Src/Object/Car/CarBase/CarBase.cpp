@@ -409,7 +409,7 @@ void CarBase::ApplySlipDynamics(const Vector3& forward, const Vector3& moveDirec
 	const float slipAngle = atan2f(directionCross, directionDot);
 	const float absSlipAngle = fabsf(slipAngle);
 
-	// 25度を超えた実際の滑り角だけでスピン判定を強め、90度で最大にする
+	// 20度を超えた実際の滑り角だけでスピン判定を強め、90度で最大にする
 	// 車速由来のdriftAmountは使わず、減速中でも角度差が残っていればスピンへ移行させる
 	const float spinAngleRange = SPIN_FULL_ANGLE - SPIN_START_ANGLE;
 	const float spinRate = std::clamp(
@@ -425,6 +425,19 @@ void CarBase::ApplySlipDynamics(const Vector3& forward, const Vector3& moveDirec
 
 	// 滑り方向と逆のステアだけをカウンターとして0～1へ変換する
 	const float counterSteerRate = std::clamp(-steerInput * spinDirection, 0.0f, 1.0f);
+
+	// ステアを中央へ戻しただけではグリップを回復させず、実際の滑り角が残る間は低グリップを維持する
+	const float slipGripRate = std::clamp(absSlipAngle / SPIN_START_ANGLE, 0.0f, 1.0f);
+	const float slipGrip = REAR_GRIP_MAX + (REAR_GRIP_MIN - REAR_GRIP_MAX) * slipGripRate;
+	grip = (std::min)(grip, slipGrip);
+
+	// カウンターを当てた分だけグリップを戻し、移動方向と車体の向きを収束させる
+	const float gripRecovery = std::clamp(
+		counterSteerRate * COUNTER_STEER_GRIP_RECOVERY * App::GetPassTime(),
+		0.0f,
+		1.0f
+	);
+	grip += (REAR_GRIP_MAX - grip) * gripRecovery;
 
 	// カウンターを当てない場合は滑っている側へ回転を育て、一回転するスピンへ移行させる
 	spinYawSpeed += spinDirection * SPIN_ACCELERATION * spinRate *

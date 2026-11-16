@@ -117,6 +117,8 @@ private:
 	static constexpr float COUNTER_STEER_BRAKE = 8.0f;
 	// カウンターステア中に追加する回転減衰率(1/秒)
 	static constexpr float COUNTER_STEER_DAMPING = 4.0f;
+	// カウンターステアによってグリップを回復させる速さ(1/秒)
+	static constexpr float COUNTER_STEER_GRIP_RECOVERY = 8.0f;
 	// 横滑りによって失う速度の割合(1/秒)
 	static constexpr float SLIP_SPEED_LOSS = 0.8f;
 	// スピン回転によって追加で失う速度の割合(1/秒)
