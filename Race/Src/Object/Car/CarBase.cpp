@@ -3,13 +3,30 @@
 #include "../../Manager/Input/InputManager.h"
 
 
-CarBase::CarBase(void) : 
-	ActorBase(), engineFlg(false), rpm(), needlePos(TACHOMETER_POS.x + NEEDLE_LENGTH * cosf(NEEDLE_MIN_RAD), TACHOMETER_POS.y + NEEDLE_LENGTH * -sinf(NEEDLE_MIN_RAD)), nowGear(0)
+CarBase::CarBase(void) :
+	ActorBase(),
+	engineFlg(false),
+	needlePos(TACHOMETER_POS.x + NEEDLE_LENGTH * cosf(NEEDLE_MIN_RAD), TACHOMETER_POS.y + NEEDLE_LENGTH * -sinf(NEEDLE_MIN_RAD)),
+	rpm(0.0f),
+	torque(0.0f),
+	torqueMax(0.0f),
+	torqueMaxRpm(0.0f),
+	hoursepower(0.0f),
+	hoursepowerMax(0.0f),
+	hoursepowerMaxRpm(0.0f),
+	speed(0.0f),
+	idleSpeed(0.0f),
+	fuelCut(false),
+	nowGear(0),
+	nowSteer(0.0f),
+	prevSteer(0.0f),
+	moveVec(Vector3::Zonly(1.0f)),
+	forward(Vector3::Zonly(1.0f)),
+	yawSpeed(0.0f)
 {
 	// この車体のアイドリング時の最低速度
 	idleSpeed = (MIN_RPM * 3.6f * 2.0f * DX_PI_F * TIRE_SIZE) / (GEAR_RATIO[0] * FINAL_GEAR_RATIO * 60.0f);
 
-	moveVec = Vector3::Zonly(1.0f);
 }
 
 CarBase::~CarBase(void)
@@ -190,14 +207,15 @@ void CarBase::SubUpdate(void)
 	float temp = nowSteer - prevSteer;
 	nowSteer = prevSteer + temp * 0.05f;
 
-	Vector3 steerDirection = Vector3(sinf(atan2f(rot.m[0][2], rot.m[2][2]) + nowSteer), 0.0f, cosf(atan2f(rot.m[0][2], rot.m[2][2]) + nowSteer));
+	// 移動方向は車体の向きへ徐々に寄せる。
+	// 高速かつ大きく舵を切りながら加速すると補正が弱まり、車体だけが先に旋回してリアが外へ滑る。
+	const float throttleInput = (std::max)(0.0f, Input::GetIns().GetPriorityAKeyL().z);
+	const float rearGrip = CalculateRearGrip(speed, nowSteer, throttleInput);
+	const Vector3 currentDirection = moveVec.LengthSq() > 0.0f ? moveVec.Normalized() : forward;
+	Vector3 nextDirection = currentDirection + (forward - currentDirection) * rearGrip;
+	if (nextDirection.LengthSq() == 0.0f) { nextDirection = forward; }
 
-	float steerRate = fabsf(nowSteer);
-	float forwardRate = 1 - steerRate;
-
-	moveVec = forward * forwardRate + steerDirection * steerRate;
-
-	moveVec = moveVec.Normalized() * speed;
+	moveVec = nextDirection.Normalized() * speed;
 
 	trans.pos += moveVec;
 
@@ -350,4 +368,19 @@ float CarBase::RollingResistance(void)
 {
 	// 転がり抵抗を出す
 	return RR * 9.81f * CAR_WEIGHT;
+}
+
+float CarBase::CalculateRearGrip(float currentSpeed, float steerInput, float throttleInput) const
+{
+	const float speedRate = (std::clamp)(
+		(currentSpeed - REAR_SLIP_START_SPEED) / REAR_SLIP_START_SPEED,
+		0.0f,
+		1.0f
+	);
+	const float steerRate = (std::clamp)(fabsf(steerInput), 0.0f, 1.0f);
+	const float throttleRate = (std::clamp)(throttleInput, 0.0f, 1.0f);
+	const float cornerLoad = speedRate * steerRate;
+	const float gripLoss = cornerLoad * (STEER_GRIP_LOSS + throttleRate * THROTTLE_GRIP_LOSS);
+
+	return (std::clamp)(REAR_GRIP_MAX - gripLoss, REAR_GRIP_MIN, REAR_GRIP_MAX);
 }

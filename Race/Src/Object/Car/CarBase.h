@@ -35,6 +35,15 @@ private:
 	// 転がり抵抗
 	float RollingResistance(void);
 
+	/// <summary>
+	/// 車速、ステア入力、アクセル入力から後輪グリップを計算する
+	/// </summary>
+	/// <param name="currentSpeed">現在の車速(km/h)</param>
+	/// <param name="steerInput">現在のステア入力(-1～1)</param>
+	/// <param name="throttleInput">現在のアクセル入力(0～1)</param>
+	/// <returns>移動方向を車体前方へ戻す1フレーム分の補間率</returns>
+	float CalculateRearGrip(float currentSpeed, float steerInput, float throttleInput) const;
+
 	// 針の長さ
 	static constexpr int NEEDLE_LENGTH = 140;
 	// 数字のみ書く場所の広さ
@@ -108,6 +117,17 @@ private:
 	static constexpr float RR = 0.011f;
 	// エンジンブレーキ係数
 	static constexpr float ENGINE_BRAKE = 0.0075f;
+
+	// 後輪が滑り始める速度(km/h)
+	static constexpr float REAR_SLIP_START_SPEED = 45.0f;
+	// グリップが最も高いときの移動方向補正率
+	static constexpr float REAR_GRIP_MAX = 0.18f;
+	// 滑っているときにも残す最低グリップ
+	static constexpr float REAR_GRIP_MIN = 0.025f;
+	// ステアによる後輪グリップ低下量
+	static constexpr float STEER_GRIP_LOSS = 0.10f;
+	// アクセルによる後輪グリップ低下量
+	static constexpr float THROTTLE_GRIP_LOSS = 0.045f;
 
 	// エンジン稼働状態
 	bool engineFlg;
