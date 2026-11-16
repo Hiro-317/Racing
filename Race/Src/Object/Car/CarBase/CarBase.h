@@ -53,12 +53,15 @@ private:
 	float Brake(void);
 
 	/// <summary>
-	/// 車速、ステア入力、アクセル入力から後輪の滑り量とグリップを更新する
+	/// 車速と各操作入力から後輪の滑り量とグリップを更新する
 	/// </summary>
 	/// <param name="currentSpeed">現在の車速(km/h)</param>
 	/// <param name="steerInput">現在のステア入力(-1～1)</param>
+	/// <param name="steerChange">1フレームで変化したステア量</param>
 	/// <param name="throttleInput">現在のアクセル入力(0～1)</param>
-	void UpdateRearGrip(float currentSpeed, float steerInput, float throttleInput);
+	/// <param name="brakeInput">現在のブレーキ入力(0～1)</param>
+	/// <param name="handBrake">サイドブレーキが入力されているか</param>
+	void UpdateRearGrip(float currentSpeed, float steerInput, float steerChange, float throttleInput, float brakeInput, bool handBrake);
 
 	/// <summary>
 	/// 車体と移動方向のずれからスピン回転とタイヤ抵抗を反映する
@@ -91,6 +94,16 @@ private:
 	static constexpr float REAR_GRIP_MIN = 1.5f;
 	// 滑り量が目標値へ追従する速さ(1/秒)
 	static constexpr float DRIFT_RESPONSE = 4.0f;
+	// ブレーキによるリアスリップが起き始める速度(km/h)
+	static constexpr float BRAKE_SLIP_START_SPEED = 25.0f;
+	// 通常ブレーキによる荷重移動の強さ
+	static constexpr float BRAKE_DRIFT_POWER = 0.75f;
+	// サイドブレーキによる後輪グリップ低下の強さ
+	static constexpr float HANDBRAKE_DRIFT_POWER = 1.0f;
+	// ブレーキ中に前輪が向きを変えやすくなる割合
+	static constexpr float BRAKE_TURN_IN = 0.35f;
+	// サイドブレーキ中に車体を振り出す割合
+	static constexpr float HANDBRAKE_TURN_IN = 0.65f;
 	// スピンが始まる車体と移動方向の角度差(ラジアン、約25度)
 	static constexpr float SPIN_START_ANGLE = 0.436332f;
 	// スピン判定が最大になる角度差(ラジアン、90度)

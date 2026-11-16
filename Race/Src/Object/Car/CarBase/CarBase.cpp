@@ -202,9 +202,15 @@ void CarBase::SubUpdate(void)
 
 	float temp = nowSteer - prevSteer;
 	nowSteer = prevSteer + temp * 0.25f;
+	const float steerChange = fabsf(nowSteer - prevSteer);
+	const float throttleInput = Accel();
+	const float brakeInput = fabsf(Brake());
+	const bool handBrake = Input::GetIns().GetKey(Input::COMMAND::SIDE, keypadNo).keyNew;
 
 	if (speed != 0.0f) {
-		float targetYawSpeed = nowSteer * 2.0f;
+		// ブレーキ時の前荷重とサイドブレーキによる後輪ロックで、車体の向きを変えやすくする
+		const float turnInRate = 1.0f + brakeInput * BRAKE_TURN_IN + (handBrake ? HANDBRAKE_TURN_IN : 0.0f);
+		float targetYawSpeed = nowSteer * 2.0f * turnInRate;
 
 		// 回転速度を滑らかに変化させる
 		yawSpeed += (targetYawSpeed - yawSpeed) * 5.0f * App::GetPassTime();
@@ -220,7 +226,7 @@ void CarBase::SubUpdate(void)
 
 	// 車体の向きと実際の移動方向を分離する。
 	// 高速旋回中は移動方向の追従を遅らせ、車体だけが先に旋回することでリアを外側へ滑らせる。
-	UpdateRearGrip(speed, nowSteer, Accel());
+	UpdateRearGrip(speed, nowSteer, steerChange, throttleInput, brakeInput, handBrake);
 	const Vector3 currentDirection = moveVec.LengthSq() > 0.0f ? moveVec.Normalized() : forward;
 	ApplySlipDynamics(forward, currentDirection);
 	const float directionBlend = 1.0f - std::exp(-grip * App::GetPassTime());
@@ -350,7 +356,7 @@ float CarBase::Brake(void)
 	return 0.0f;
 }
 
-void CarBase::UpdateRearGrip(float currentSpeed, float steerInput, float throttleInput)
+void CarBase::UpdateRearGrip(float currentSpeed, float steerInput, float steerChange, float throttleInput, float brakeInput, bool handBrake)
 {
 	// 滑り始める速度から最大になる速度までを0～1へ正規化する
 	const float speedRange = REAR_SLIP_FULL_SPEED - REAR_SLIP_START_SPEED;
@@ -362,10 +368,30 @@ void CarBase::UpdateRearGrip(float currentSpeed, float steerInput, float throttl
 
 	// 入力値を安全な範囲へ収め、左右どちらの旋回でも同じ滑り量として扱う
 	const float steerRate = std::clamp(fabsf(steerInput), 0.0f, 1.0f);
+	const float steerChangeRate = std::clamp(steerChange * 4.0f, 0.0f, 1.0f);
 	const float throttleRate = std::clamp(throttleInput, 0.0f, 1.0f);
+	const float brakeRate = std::clamp(brakeInput, 0.0f, 1.0f);
 
 	// 高速かつ大舵角ほどリアを滑らせ、アクセル中はパワースライド分を加える
-	const float targetDriftAmount = speedRate * steerRate * (0.65f + throttleRate * 0.35f);
+	const float powerDriftAmount = speedRate * steerRate * (0.65f + throttleRate * 0.35f);
+
+	// 通常ブレーキでは前荷重でリアが軽くなるため、切り返しが速いほど滑りやすくする
+	const float brakeSpeedRange = REAR_SLIP_FULL_SPEED - BRAKE_SLIP_START_SPEED;
+	const float brakeSpeedRate = std::clamp(
+		(fabsf(currentSpeed) - BRAKE_SLIP_START_SPEED) / brakeSpeedRange,
+		0.0f,
+		1.0f
+	);
+	const float brakeDriftAmount = brakeSpeedRate * brakeRate * steerRate *
+		(BRAKE_DRIFT_POWER + steerChangeRate * (1.0f - BRAKE_DRIFT_POWER));
+
+	// サイドブレーキは低い車速から後輪グリップを失わせ、急な切り返しでは最大まで滑らせる
+	const float handBrakeDriftAmount = handBrake ?
+		brakeSpeedRate * HANDBRAKE_DRIFT_POWER * (0.4f + (std::max)(steerRate, steerChangeRate) * 0.6f) :
+		0.0f;
+
+	// 同時に成立した要因のうち最も強いものを採用し、滑り量が過剰に加算されないようにする
+	const float targetDriftAmount = (std::max)({ powerDriftAmount, brakeDriftAmount, handBrakeDriftAmount });
 
 	// フレーム時間を使って滑り始めとグリップ回復を滑らかにする
 	const float response = std::clamp(DRIFT_RESPONSE * App::GetPassTime(), 0.0f, 1.0f);
