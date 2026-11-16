@@ -350,17 +350,25 @@ float CarBase::Brake(void)
 
 void CarBase::UpdateRearGrip(float currentSpeed, float steerInput, float throttleInput)
 {
+	// 滑り始める速度から最大になる速度までを0～1へ正規化する
 	const float speedRange = REAR_SLIP_FULL_SPEED - REAR_SLIP_START_SPEED;
 	const float speedRate = std::clamp(
 		(fabsf(currentSpeed) - REAR_SLIP_START_SPEED) / speedRange,
 		0.0f,
 		1.0f
 	);
+
+	// 入力値を安全な範囲へ収め、左右どちらの旋回でも同じ滑り量として扱う
 	const float steerRate = std::clamp(fabsf(steerInput), 0.0f, 1.0f);
 	const float throttleRate = std::clamp(throttleInput, 0.0f, 1.0f);
-	const float targetDriftAmount = speedRate * steerRate * (0.65f + throttleRate * 0.35f);
-	const float response = std::clamp(DRIFT_RESPONSE * App::GetPassTime(), 0.0f, 1.0f);
 
+	// 高速かつ大舵角ほどリアを滑らせ、アクセル中はパワースライド分を加える
+	const float targetDriftAmount = speedRate * steerRate * (0.65f + throttleRate * 0.35f);
+
+	// フレーム時間を使って滑り始めとグリップ回復を滑らかにする
+	const float response = std::clamp(DRIFT_RESPONSE * App::GetPassTime(), 0.0f, 1.0f);
 	driftAmount += (targetDriftAmount - driftAmount) * response;
+
+	// 滑り量に応じて、移動方向を車体前方へ戻す力を弱める
 	grip = REAR_GRIP_MAX + (REAR_GRIP_MIN - REAR_GRIP_MAX) * driftAmount;
 }
