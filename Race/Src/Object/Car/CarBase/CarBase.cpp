@@ -7,16 +7,28 @@
 CarBase::CarBase(const Input::KEYPAD_NO& keypadNo, const Vector3& pos, const int pNo, const std::function<int(void)> camNo) :
 	ActorBase(),
 	engineFlg(false),
-	rpm(),
-	nowGear(0),
-	grip(1.0f),
+	torque(0.0f),
+	torqueMax(0.0f),
+	torqueMaxRpm(0.0f),
+	hoursepower(0.0f),
+	hoursepowerMax(0.0f),
+	hoursepowerMaxRpm(0.0f),
+	fuelCut(false),
+	nowSteer(0.0f),
+	prevSteer(0.0f),
+	moveVec(Vector3::Zonly(1.0f)),
+	sideSpeed(0.0f),
+	grip(REAR_GRIP_MAX),
 	driftAmount(0.0f),
+	yawSpeed(0.0f),
+	idleSpeed(0.0f),
+	speed(0.0f),
+	nowGear(0),
+	rpm(0.0f),
 	keypadNo(keypadNo),
 	camNo(camNo),
 	pNo(pNo)
 {
-	moveVec = Vector3::Zonly(1.0f);
-
 	trans.pos = pos;
 }
 
@@ -190,12 +202,6 @@ void CarBase::SubUpdate(void)
 	float temp = nowSteer - prevSteer;
 	nowSteer = prevSteer + temp * 0.25f;
 
-	// 旋回によって生じる横速度の目標値
-	float targetSideSpeed = nowSteer * fabsf(speed) * 0.1f;
-
-	// 横速度を目標値に近づける
-	sideSpeed += (targetSideSpeed - sideSpeed) * App::GetPassTime();
-
 	if (speed != 0.0f) {
 		float targetYawSpeed = nowSteer * 2.0f;
 
@@ -211,13 +217,18 @@ void CarBase::SubUpdate(void)
 	Vector3 forward = Vector3(-sinf(yaw), 0.0f, cosf(yaw));
 	Vector3 right = Vector3(cosf(yaw), 0.0f, sinf(yaw));
 
-	moveVec = forward * speed + right * sideSpeed;
+	// 車体の向きと実際の移動方向を分離する。
+	// 高速旋回中は移動方向の追従を遅らせ、車体だけが先に旋回することでリアを外側へ滑らせる。
+	UpdateRearGrip(speed, nowSteer, Accel());
+	const Vector3 currentDirection = moveVec.LengthSq() > 0.0f ? moveVec.Normalized() : forward;
+	const float directionBlend = 1.0f - std::exp(-grip * App::GetPassTime());
+	Vector3 nextDirection = currentDirection + (forward - currentDirection) * directionBlend;
+	if (nextDirection.LengthSq() == 0.0f) { nextDirection = forward; }
+
+	moveVec = nextDirection.Normalized() * speed;
+	sideSpeed = moveVec.Dot(right);
 
 	trans.pos += moveVec;
-
-	float cameraSideFactor = std::clamp(fabsf(speed) / 20.0f, 0.0f, 1.0f);
-
-	moveVec = forward * speed + right * sideSpeed * cameraSideFactor;
 
 	// ここからデータロガー
 	//
@@ -335,4 +346,21 @@ float CarBase::Brake(void)
 		return -Input::GetIns().GetLTrigger(keypadNo) / 255.0f;
 	}
 	return 0.0f;
+}
+
+void CarBase::UpdateRearGrip(float currentSpeed, float steerInput, float throttleInput)
+{
+	const float speedRange = REAR_SLIP_FULL_SPEED - REAR_SLIP_START_SPEED;
+	const float speedRate = std::clamp(
+		(fabsf(currentSpeed) - REAR_SLIP_START_SPEED) / speedRange,
+		0.0f,
+		1.0f
+	);
+	const float steerRate = std::clamp(fabsf(steerInput), 0.0f, 1.0f);
+	const float throttleRate = std::clamp(throttleInput, 0.0f, 1.0f);
+	const float targetDriftAmount = speedRate * steerRate * (0.65f + throttleRate * 0.35f);
+	const float response = std::clamp(DRIFT_RESPONSE * App::GetPassTime(), 0.0f, 1.0f);
+
+	driftAmount += (targetDriftAmount - driftAmount) * response;
+	grip = REAR_GRIP_MAX + (REAR_GRIP_MIN - REAR_GRIP_MAX) * driftAmount;
 }

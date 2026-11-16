@@ -52,6 +52,14 @@ private:
 	// 0~-1
 	float Brake(void);
 
+	/// <summary>
+	/// 車速、ステア入力、アクセル入力から後輪の滑り量とグリップを更新する
+	/// </summary>
+	/// <param name="currentSpeed">現在の車速(km/h)</param>
+	/// <param name="steerInput">現在のステア入力(-1～1)</param>
+	/// <param name="throttleInput">現在のアクセル入力(0～1)</param>
+	void UpdateRearGrip(float currentSpeed, float steerInput, float throttleInput);
+
 	// 空ぶかしで上がる回転数
 	static constexpr float UP_RPM = 125.0f;
 	// 空ぶかしで下がる回転数
@@ -65,6 +73,17 @@ private:
 
 	// エンジンブレーキ係数
 	static constexpr float ENGINE_BRAKE = 0.0075f;
+
+	// 後輪が滑り始める速度(km/h)
+	static constexpr float REAR_SLIP_START_SPEED = 45.0f;
+	// 後輪の滑り量が最大になる速度(km/h)
+	static constexpr float REAR_SLIP_FULL_SPEED = 100.0f;
+	// 通常時に移動方向を車体前方へ戻す強さ(1/秒)
+	static constexpr float REAR_GRIP_MAX = 12.0f;
+	// 滑走中にも残す最低グリップ(1/秒)
+	static constexpr float REAR_GRIP_MIN = 1.5f;
+	// 滑り量が目標値へ追従する速さ(1/秒)
+	static constexpr float DRIFT_RESPONSE = 4.0f;
 
 	// エンジン稼働状態
 	bool engineFlg;

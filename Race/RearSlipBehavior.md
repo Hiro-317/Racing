@@ -14,12 +14,12 @@
 
 ## 調整値
 
-調整値は `Src/Object/Car/CarBase.h` にあります。
+調整値は `Src/Object/Car/CarBase/CarBase.h` にあります。
 
 - `REAR_SLIP_START_SPEED`: 滑り始める速度。下げると低速から滑ります。
+- `REAR_SLIP_FULL_SPEED`: 滑り量が最大になる速度。下げるほど早く大きな滑りへ移行します。
 - `REAR_GRIP_MAX`: 通常時の収束速度。上げるほど車体が安定します。
 - `REAR_GRIP_MIN`: 滑走中に残る最低グリップ。下げるほど長く大きく滑ります。
-- `STEER_GRIP_LOSS`: ステアによるグリップ低下。上げるほど旋回時にリアが出ます。
-- `THROTTLE_GRIP_LOSS`: アクセルによる追加低下。上げるほどパワースライドが起きやすくなります。
+- `DRIFT_RESPONSE`: 滑り始めとグリップ回復の反応速度です。
 
-最初に調整するなら `REAR_SLIP_START_SPEED` と `STEER_GRIP_LOSS` の2つが分かりやすいです。
+最初に調整するなら `REAR_SLIP_START_SPEED` と `REAR_GRIP_MIN` の2つが分かりやすいです。
