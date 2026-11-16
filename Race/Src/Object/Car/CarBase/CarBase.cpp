@@ -21,6 +21,7 @@ CarBase::CarBase(const Input::KEYPAD_NO& keypadNo, const Vector3& pos, const int
 	grip(REAR_GRIP_MAX),
 	driftAmount(0.0f),
 	yawSpeed(0.0f),
+	spinYawSpeed(0.0f),
 	idleSpeed(0.0f),
 	speed(0.0f),
 	nowGear(0),
@@ -221,6 +222,7 @@ void CarBase::SubUpdate(void)
 	// 高速旋回中は移動方向の追従を遅らせ、車体だけが先に旋回することでリアを外側へ滑らせる。
 	UpdateRearGrip(speed, nowSteer, Accel());
 	const Vector3 currentDirection = moveVec.LengthSq() > 0.0f ? moveVec.Normalized() : forward;
+	ApplySlipDynamics(forward, currentDirection);
 	const float directionBlend = 1.0f - std::exp(-grip * App::GetPassTime());
 	Vector3 nextDirection = currentDirection + (forward - currentDirection) * directionBlend;
 	if (nextDirection.LengthSq() == 0.0f) { nextDirection = forward; }
@@ -371,4 +373,36 @@ void CarBase::UpdateRearGrip(float currentSpeed, float steerInput, float throttl
 
 	// 滑り量に応じて、移動方向を車体前方へ戻す力を弱める
 	grip = REAR_GRIP_MAX + (REAR_GRIP_MIN - REAR_GRIP_MAX) * driftAmount;
+}
+
+void CarBase::ApplySlipDynamics(const Vector3& forward, const Vector3& moveDirection)
+{
+	// 内積と外積から、車体前方に対する移動方向の符号付き角度を求める
+	const float directionDot = std::clamp(forward.Dot(moveDirection), -1.0f, 1.0f);
+	const float directionCross = forward.Cross(moveDirection).y;
+	const float slipAngle = atan2f(directionCross, directionDot);
+	const float absSlipAngle = fabsf(slipAngle);
+
+	// 25度を超えた分だけスピン判定を強め、90度で最大にする
+	const float spinAngleRange = SPIN_FULL_ANGLE - SPIN_START_ANGLE;
+	const float spinRate = std::clamp(
+		(absSlipAngle - SPIN_START_ANGLE) / spinAngleRange,
+		0.0f,
+		1.0f
+	) * driftAmount;
+
+	// 滑っている側へ回転を加え、入力を戻した後はフレーム時間に沿って減衰させる
+	const float spinDirection = slipAngle >= 0.0f ? 1.0f : -1.0f;
+	spinYawSpeed += spinDirection * SPIN_ACCELERATION * spinRate * App::GetPassTime();
+	spinYawSpeed /= 1.0f + SPIN_DAMPING * App::GetPassTime();
+	trans.AddAngle(Vector3::Yonly(spinYawSpeed * App::GetPassTime()));
+
+	// 横滑りとスピン中のタイヤ抵抗で速度を失わせ、アクセル全開でも加速し続ける状態を防ぐ
+	const float slipRate = std::clamp(absSlipAngle / SPIN_FULL_ANGLE, 0.0f, 1.0f);
+	const float spinSpeedRate = std::clamp(fabsf(spinYawSpeed) / SPIN_ACCELERATION, 0.0f, 1.0f);
+	const float speedLossRate = slipRate * slipRate * SLIP_SPEED_LOSS + spinSpeedRate * SPIN_SPEED_LOSS;
+	const float speedLoss = fabsf(speed) * speedLossRate * App::GetPassTime();
+
+	// 現在は前進のみなので、減速によって速度が負にならないようにする
+	speed = (std::max)(0.0f, speed - speedLoss);
 }

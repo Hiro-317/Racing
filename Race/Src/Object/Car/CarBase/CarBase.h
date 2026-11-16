@@ -60,6 +60,13 @@ private:
 	/// <param name="throttleInput">現在のアクセル入力(0～1)</param>
 	void UpdateRearGrip(float currentSpeed, float steerInput, float throttleInput);
 
+	/// <summary>
+	/// 車体と移動方向のずれからスピン回転とタイヤ抵抗を反映する
+	/// </summary>
+	/// <param name="forward">車体の前方向</param>
+	/// <param name="moveDirection">現在の移動方向</param>
+	void ApplySlipDynamics(const Vector3& forward, const Vector3& moveDirection);
+
 	// 空ぶかしで上がる回転数
 	static constexpr float UP_RPM = 125.0f;
 	// 空ぶかしで下がる回転数
@@ -84,6 +91,18 @@ private:
 	static constexpr float REAR_GRIP_MIN = 1.5f;
 	// 滑り量が目標値へ追従する速さ(1/秒)
 	static constexpr float DRIFT_RESPONSE = 4.0f;
+	// スピンが始まる車体と移動方向の角度差(ラジアン、約25度)
+	static constexpr float SPIN_START_ANGLE = 0.436332f;
+	// スピン判定が最大になる角度差(ラジアン、90度)
+	static constexpr float SPIN_FULL_ANGLE = 1.570796f;
+	// 限界を超えたときに加えるスピン加速度(ラジアン/秒^2)
+	static constexpr float SPIN_ACCELERATION = 4.0f;
+	// スピン回転が自然に収まる減衰率(1/秒)
+	static constexpr float SPIN_DAMPING = 1.8f;
+	// 横滑りによって失う速度の割合(1/秒)
+	static constexpr float SLIP_SPEED_LOSS = 0.8f;
+	// スピン回転によって追加で失う速度の割合(1/秒)
+	static constexpr float SPIN_SPEED_LOSS = 0.45f;
 
 	// エンジン稼働状態
 	bool engineFlg;
@@ -122,6 +141,8 @@ private:
 
 	// 回転スピード
 	float yawSpeed;
+	// グリップ限界を超えたときのスピン回転速度
+	float spinYawSpeed;
 
 protected:
 
