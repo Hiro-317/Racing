@@ -23,6 +23,7 @@ CarBase::CarBase(const Input::KEYPAD_NO& keypadNo, const Vector3& pos, const int
 	yawSpeed(0.0f),
 	spinYawSpeed(0.0f),
 	spinTorqueReleased(false),
+	counterRecoveryRequired(false),
 	idleSpeed(0.0f),
 	speed(0.0f),
 	nowGear(0),
@@ -348,7 +349,7 @@ float CarBase::Accel(void)
 float CarBase::Brake(void)
 {
 	if (keypadNo == Input::KEYPAD_NO::KEY) {
-		if (Input::GetIns().GetKey(COMMAND::ACCEL, keypadNo).keyNew) {
+		if (Input::GetIns().GetKey(COMMAND::BRAKE, keypadNo).keyNew) {
 			return -1.0f;
 		}
 	}
@@ -374,8 +375,18 @@ void CarBase::UpdateRearGrip(float currentSpeed, float steerInput, float steerCh
 	const float throttleRate = std::clamp(throttleInput, 0.0f, 1.0f);
 	const float brakeRate = std::clamp(brakeInput, 0.0f, 1.0f);
 
-	// 高速かつ大舵角ほどリアを滑らせ、アクセル中はパワースライド分を加える
-	const float powerDriftAmount = speedRate * steerRate * (0.65f + throttleRate * 0.35f);
+	// 高速旋回ではアクセルに関係なく限界へ近づくが、単独では急激なスピンまで発展させない
+	const float cornerDriftAmount = speedRate * steerRate * CORNER_DRIFT_POWER;
+
+	// パワースライドはアクセル開度を直接反映し、アクセルオフでは発生させない
+	const float powerSpeedRange = POWER_SLIP_FULL_SPEED - POWER_SLIP_START_SPEED;
+	const float powerSpeedRate = std::clamp(
+		(fabsf(currentSpeed) - POWER_SLIP_START_SPEED) / powerSpeedRange,
+		0.0f,
+		1.0f
+	);
+	const float powerDriftAmount =
+		powerSpeedRate * steerRate * throttleRate * POWER_DRIFT_POWER;
 
 	// 通常ブレーキでは前荷重でリアが軽くなるため、切り返しが速いほど滑りやすくする
 	const float brakeSpeedRange = REAR_SLIP_FULL_SPEED - BRAKE_SLIP_START_SPEED;
@@ -393,7 +404,9 @@ void CarBase::UpdateRearGrip(float currentSpeed, float steerInput, float steerCh
 		0.0f;
 
 	// 同時に成立した要因のうち最も強いものを採用し、滑り量が過剰に加算されないようにする
-	const float targetDriftAmount = (std::max)({ powerDriftAmount, brakeDriftAmount, handBrakeDriftAmount });
+	const float targetDriftAmount = (std::max)(
+		{ cornerDriftAmount, powerDriftAmount, brakeDriftAmount, handBrakeDriftAmount }
+	);
 
 	// フレーム時間を使って滑り始めとグリップ回復を滑らかにする
 	const float response = std::clamp(DRIFT_RESPONSE * App::GetPassTime(), 0.0f, 1.0f);
@@ -426,8 +439,13 @@ void CarBase::ApplySlipDynamics(const Vector3& forward, const Vector3& moveDirec
 		0.0f,
 		1.0f
 	);
-	const float spinRate = spinTorqueReleased ? 0.0f :
+	const float curveSpinRate =
 		spinLinearRate * spinLinearRate * (3.0f - 2.0f * spinLinearRate);
+
+	// 限界角を超えた後は最低回転力を保証し、横滑り角が一定になる釣り合いを発生させない
+	const bool isOverSpinStartAngle = absSlipAngle >= SPIN_START_ANGLE;
+	const float spinRate = spinTorqueReleased || !isOverSpinStartAngle ? 0.0f :
+		(std::max)(curveSpinRate, MIN_UNCONTROLLED_SPIN_RATE);
 
 	// スピン開始後は現在の回転方向を維持し、角度が180度を超えた際の符号反転を防ぐ
 	const float spinDirection = fabsf(spinYawSpeed) > 0.001f ?
@@ -446,18 +464,26 @@ void CarBase::ApplySlipDynamics(const Vector3& forward, const Vector3& moveDirec
 	);
 	const float counterSteerRate = counterSteerInput * (1.0f - counterFadeRate);
 
-	// ステアを中央へ戻しただけではグリップを回復させず、実際の滑り角が残る間は低グリップを維持する
-	const float slipGripRate = std::clamp(absSlipAngle / SPIN_START_ANGLE, 0.0f, 1.0f);
-	const float slipGrip = REAR_GRIP_MAX + (REAR_GRIP_MIN - REAR_GRIP_MAX) * slipGripRate;
-	grip = (std::min)(grip, slipGrip);
+	// 限界角を超えたら、ステアを戻しただけでは解除されない滑走状態へ移行する
+	if (absSlipAngle >= SPIN_START_ANGLE) { counterRecoveryRequired = true; }
 
-	// カウンターを当てた分だけグリップを戻し、移動方向と車体の向きを収束させる
-	const float gripRecovery = std::clamp(
-		counterSteerRate * COUNTER_STEER_GRIP_RECOVERY * App::GetPassTime(),
-		0.0f,
-		1.0f
-	);
-	grip += (REAR_GRIP_MAX - grip) * gripRecovery;
+	// 車体と移動方向が揃った場合、または停止した場合に滑走状態を解除する
+	const bool recovered = absSlipAngle <= SPIN_RESET_ANGLE &&
+		fabsf(spinYawSpeed) <= SPIN_RESET_YAW_SPEED;
+	const bool stopped = fabsf(speed) <= 1.0f && fabsf(spinYawSpeed) <= SPIN_RESET_YAW_SPEED;
+	if (recovered || stopped) { counterRecoveryRequired = false; }
+
+	if (counterRecoveryRequired) {
+		// ニュートラルでは低いグリップでゆっくり収束し、カウンター入力に応じて回復を早める
+		grip = NEUTRAL_SLIDE_GRIP +
+			(REAR_GRIP_MAX - NEUTRAL_SLIDE_GRIP) * counterSteerRate;
+	}
+	else {
+		// 限界前は滑り角に応じて通常グリップから最低グリップまで落とす
+		const float slipGripRate = std::clamp(absSlipAngle / SPIN_START_ANGLE, 0.0f, 1.0f);
+		const float slipGrip = REAR_GRIP_MAX + (REAR_GRIP_MIN - REAR_GRIP_MAX) * slipGripRate;
+		grip = (std::min)(grip, slipGrip);
+	}
 
 	// カウンターを当てない場合は滑っている側へ回転を育て、一回転するスピンへ移行させる
 	spinYawSpeed += spinDirection * SPIN_ACCELERATION * spinRate *

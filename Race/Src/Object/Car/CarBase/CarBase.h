@@ -89,11 +89,21 @@ private:
 	static constexpr float REAR_SLIP_START_SPEED = 45.0f;
 	// 後輪の滑り量が最大になる速度(km/h)
 	static constexpr float REAR_SLIP_FULL_SPEED = 100.0f;
+	// アクセルによる後輪スリップが起き始める速度(km/h)
+	static constexpr float POWER_SLIP_START_SPEED = 10.0f;
+	// アクセルによる後輪スリップが最大になる速度(km/h)
+	static constexpr float POWER_SLIP_FULL_SPEED = 45.0f;
+	// 高速旋回だけで発生する滑りの強さ
+	static constexpr float CORNER_DRIFT_POWER = 0.55f;
+	// アクセル全開時に発生するパワースライドの強さ
+	static constexpr float POWER_DRIFT_POWER = 1.0f;
 
 	// 通常時に移動方向を車体前方へ戻す強さ(1/秒)
 	static constexpr float REAR_GRIP_MAX = 12.0f;
 	// 滑走中にも残す最低グリップ(1/秒)
 	static constexpr float REAR_GRIP_MIN = 1.5f;
+	// カウンターを当てていない滑走中に残す自然回復グリップ(1/秒)
+	static constexpr float NEUTRAL_SLIDE_GRIP = 0.4f;
 
 	// 滑り量が目標値へ追従する速さ(1/秒)
 	static constexpr float DRIFT_RESPONSE = 4.0f;
@@ -119,6 +129,8 @@ private:
 
 	// 限界を超えたときに加えるスピン加速度(ラジアン/秒^2)
 	static constexpr float SPIN_ACCELERATION = 6.0f;
+	// 限界角を超えた後に保証する最低スピン加速率
+	static constexpr float MIN_UNCONTROLLED_SPIN_RATE = 0.35f;
 	// スピン回転が自然に収まる減衰率(1/秒)
 	static constexpr float SPIN_DAMPING = 0.9f;
 
@@ -126,9 +138,6 @@ private:
 	static constexpr float COUNTER_STEER_BRAKE = 3.0f;
 	// カウンターステア中に追加する回転減衰率(1/秒)
 	static constexpr float COUNTER_STEER_DAMPING = 1.0f;
-
-	// カウンターステアによってグリップを回復させる速さ(1/秒)
-	static constexpr float COUNTER_STEER_GRIP_RECOVERY = 8.0f;
 
 	// カウンターステアの効果が弱まり始める滑り角(ラジアン、約35度)
 	static constexpr float COUNTER_STEER_FADE_START = 0.610865f;
@@ -190,6 +199,8 @@ private:
 	float spinYawSpeed;
 	// 横向きまで回ってタイヤからの追加回転力が抜けた状態
 	bool spinTorqueReleased;
+	// 滑りからの復帰にカウンターステアが必要な状態
+	bool counterRecoveryRequired;
 
 protected:
 
