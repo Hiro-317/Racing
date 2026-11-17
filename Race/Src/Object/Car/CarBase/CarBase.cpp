@@ -16,7 +16,7 @@ CarBase::CarBase(const Input::KEYPAD_NO& keypadNo, const Vector3& pos, const int
 	fuelCut(false),
 	nowSteer(0.0f),
 	prevSteer(0.0f),
-	moveVec(Vector3::Zonly(1.0f)),
+	moveVec(),
 	sideSpeed(0.0f),
 	grip(REAR_GRIP_MAX),
 	driftAmount(0.0f),
@@ -46,6 +46,9 @@ void CarBase::OnCollision(COLLIDER_TAG ownTag, const ColliderBase& other, const 
 
 void CarBase::SubUpdate(void)
 {
+	// このフレームで駆動系が増減させた前後速度を、後で車体前方の速度へ反映する
+	const float previousDriveSpeed = speed;
+
 	// ステア角度の保持
 	prevSteer = nowSteer;
 	nowSteer = Input::GetIns().GetAKeyLClamp(keypadNo).x;
@@ -225,19 +228,39 @@ void CarBase::SubUpdate(void)
 	float yaw = atan2f(rot.m[0][2], rot.m[2][2]);
 
 	Vector3 forward = Vector3(-sinf(yaw), 0.0f, cosf(yaw));
-	Vector3 right = Vector3(cosf(yaw), 0.0f, sinf(yaw));
 
-	// 車体の向きと実際の移動方向を分離する。
-	// 高速旋回中は移動方向の追従を遅らせ、車体だけが先に旋回することでリアを外側へ滑らせる。
+	// 車体の向きと実際の移動方向の差から、後輪の滑りとスピン回転を更新する
 	UpdateRearGrip(speed, nowSteer, steerChange, throttleInput, brakeInput, handBrake);
 	const Vector3 currentDirection = moveVec.LengthSq() > 0.0f ? moveVec.Normalized() : forward;
 	ApplySlipDynamics(forward, currentDirection, nowSteer);
-	const float directionBlend = 1.0f - std::exp(-grip * App::GetPassTime());
-	Vector3 nextDirection = currentDirection + (forward - currentDirection) * directionBlend;
-	if (nextDirection.LengthSq() == 0.0f) { nextDirection = forward; }
 
-	moveVec = nextDirection.Normalized() * speed;
+	// スピン回転後の車体軸で、現在の移動速度を前後成分と横成分へ分解する
+	rot = trans.rotation.ToMatrix();
+	yaw = atan2f(rot.m[0][2], rot.m[2][2]);
+	forward = Vector3(-sinf(yaw), 0.0f, cosf(yaw));
+	const Vector3 right = Vector3(cosf(yaw), 0.0f, sinf(yaw));
+	float forwardSpeed = moveVec.Dot(forward);
 	sideSpeed = moveVec.Dot(right);
+
+	// 加速は車体正面へ加える。減速時は横滑りだけが残らないよう、移動速度全体を落とす
+	const float driveSpeedDelta = speed - previousDriveSpeed;
+	if (driveSpeedDelta >= 0.0f) {
+		forwardSpeed += driveSpeedDelta;
+	}
+	else {
+		const float moveSpeed = sqrtf(forwardSpeed * forwardSpeed + sideSpeed * sideSpeed);
+		if (moveSpeed > 0.0f) {
+			const float reducedMoveSpeed = (std::max)(0.0f, moveSpeed + driveSpeedDelta);
+			const float decelerationRate = reducedMoveSpeed / moveSpeed;
+			forwardSpeed *= decelerationRate;
+			sideSpeed *= decelerationRate;
+		}
+	}
+
+	// 横速度だけをグリップに応じて減衰させ、滑走中の慣性と復元を両立させる
+	const float sideGripRate = std::exp(-grip * App::GetPassTime());
+	sideSpeed *= sideGripRate;
+	moveVec = forward * forwardSpeed + right * sideSpeed;
 
 	trans.pos += moveVec;
 
