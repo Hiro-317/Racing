@@ -82,10 +82,8 @@ void CarBase::SubUpdate(void)
 		if (nowGear < param.GEAR_NUM - 1) {
 			// ギアを上げた際最低回転数下回らないなら
 			if (rpm * (param.GEAR_RATIO[nowGear + 1] / param.GEAR_RATIO[nowGear]) >= MIN_RPM) {
-				// 下ボタン押すか最高回転数に行ったら
-				const bool autoShift = rpm >= param.MAX_RPM &&
-					!wheelSpinFuelCut && wheelSpinRpmOffset <= 1.0f;
-				if (Input::GetIns().GetKey(Input::COMMAND::DOWN, keypadNo).keyTrgDown || autoShift) {
+				// 下ボタン押す
+				if (Input::GetIns().GetKey(Input::COMMAND::DOWN, keypadNo).keyTrgDown) {
 					// ギアを上げ回転数を落とす
 					rpm = rpm * (param.GEAR_RATIO[nowGear + 1] / param.GEAR_RATIO[nowGear]);
 					nowGear++;
@@ -97,7 +95,7 @@ void CarBase::SubUpdate(void)
 			// ギアを下げた際最高回転数上回らないなら
 			if (rpm * (param.GEAR_RATIO[nowGear - 1] / param.GEAR_RATIO[nowGear]) <= param.MAX_RPM) {
 				// 上を押すか最低回転数に行ったら
-				if (Input::GetIns().GetKey(Input::COMMAND::UP, keypadNo).keyTrgDown || rpm < MIN_RPM) {
+				if (Input::GetIns().GetKey(Input::COMMAND::UP, keypadNo).keyTrgDown || rpm <= MIN_RPM) {
 					// ギアを落とし回転数を上げる
 					rpm = rpm * (param.GEAR_RATIO[nowGear - 1] / param.GEAR_RATIO[nowGear]);
 					nowGear--;
@@ -258,7 +256,7 @@ void CarBase::SubUpdate(void)
 		wheelSpinRpmOffset = (std::max)(0.0f, wheelSpinRpmOffset - DOWN_RPM);
 		rpm = std::clamp(baseRpm + wheelSpinRpmOffset, MIN_RPM, param.MAX_RPM);
 		fuelCut = true;
-		if (rpm <= param.MAX_RPM - WHEEL_SPIN_FUEL_CUT_DROP_RPM) {
+		if (rpm < param.MAX_RPM) {
 			wheelSpinFuelCut = false;
 			fuelCut = false;
 		}
