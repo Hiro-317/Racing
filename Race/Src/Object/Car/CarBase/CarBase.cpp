@@ -23,6 +23,7 @@ CarBase::CarBase(const Input::KEYPAD_NO& keypadNo, const Vector3& pos, const int
 	yawSpeed(0.0f),
 	spinYawSpeed(0.0f),
 	spinTorqueReleased(false),
+	counterRecoveryRequired(false),
 	idleSpeed(0.0f),
 	speed(0.0f),
 	nowGear(0),
@@ -348,7 +349,7 @@ float CarBase::Accel(void)
 float CarBase::Brake(void)
 {
 	if (keypadNo == Input::KEYPAD_NO::KEY) {
-		if (Input::GetIns().GetKey(COMMAND::ACCEL, keypadNo).keyNew) {
+		if (Input::GetIns().GetKey(COMMAND::BRAKE, keypadNo).keyNew) {
 			return -1.0f;
 		}
 	}
@@ -446,18 +447,25 @@ void CarBase::ApplySlipDynamics(const Vector3& forward, const Vector3& moveDirec
 	);
 	const float counterSteerRate = counterSteerInput * (1.0f - counterFadeRate);
 
-	// ステアを中央へ戻しただけではグリップを回復させず、実際の滑り角が残る間は低グリップを維持する
-	const float slipGripRate = std::clamp(absSlipAngle / SPIN_START_ANGLE, 0.0f, 1.0f);
-	const float slipGrip = REAR_GRIP_MAX + (REAR_GRIP_MIN - REAR_GRIP_MAX) * slipGripRate;
-	grip = (std::min)(grip, slipGrip);
+	// 限界角を超えたら、ステアを戻しただけでは解除されない滑走状態へ移行する
+	if (absSlipAngle >= SPIN_START_ANGLE) { counterRecoveryRequired = true; }
 
-	// カウンターを当てた分だけグリップを戻し、移動方向と車体の向きを収束させる
-	const float gripRecovery = std::clamp(
-		counterSteerRate * COUNTER_STEER_GRIP_RECOVERY * App::GetPassTime(),
-		0.0f,
-		1.0f
-	);
-	grip += (REAR_GRIP_MAX - grip) * gripRecovery;
+	// カウンターで車体と移動方向を揃えた場合、または停止した場合に滑走状態を解除する
+	const bool recoveredByCounter = counterSteerInput > 0.1f &&
+		absSlipAngle <= SPIN_RESET_ANGLE && fabsf(spinYawSpeed) <= SPIN_RESET_YAW_SPEED;
+	const bool stopped = fabsf(speed) <= 1.0f && fabsf(spinYawSpeed) <= SPIN_RESET_YAW_SPEED;
+	if (recoveredByCounter || stopped) { counterRecoveryRequired = false; }
+
+	if (counterRecoveryRequired) {
+		// 滑走中はニュートラルで方向を補正せず、カウンター入力に応じた分だけグリップを発生させる
+		grip = REAR_GRIP_MAX * counterSteerRate;
+	}
+	else {
+		// 限界前は滑り角に応じて通常グリップから最低グリップまで落とす
+		const float slipGripRate = std::clamp(absSlipAngle / SPIN_START_ANGLE, 0.0f, 1.0f);
+		const float slipGrip = REAR_GRIP_MAX + (REAR_GRIP_MIN - REAR_GRIP_MAX) * slipGripRate;
+		grip = (std::min)(grip, slipGrip);
+	}
 
 	// カウンターを当てない場合は滑っている側へ回転を育て、一回転するスピンへ移行させる
 	spinYawSpeed += spinDirection * SPIN_ACCELERATION * spinRate *

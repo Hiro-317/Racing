@@ -127,9 +127,6 @@ private:
 	// カウンターステア中に追加する回転減衰率(1/秒)
 	static constexpr float COUNTER_STEER_DAMPING = 1.0f;
 
-	// カウンターステアによってグリップを回復させる速さ(1/秒)
-	static constexpr float COUNTER_STEER_GRIP_RECOVERY = 8.0f;
-
 	// カウンターステアの効果が弱まり始める滑り角(ラジアン、約35度)
 	static constexpr float COUNTER_STEER_FADE_START = 0.610865f;
 	// カウンターステアでは立て直せなくなる滑り角(ラジアン、約70度)
@@ -190,6 +187,8 @@ private:
 	float spinYawSpeed;
 	// 横向きまで回ってタイヤからの追加回転力が抜けた状態
 	bool spinTorqueReleased;
+	// 滑りからの復帰にカウンターステアが必要な状態
+	bool counterRecoveryRequired;
 
 protected:
 
