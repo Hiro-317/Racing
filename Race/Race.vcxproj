@@ -19,6 +19,15 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Src\Object\Effect\EffectBase.h" />
+    <ClInclude Include="Src\Object\Effect\TireSmoke\TireSmokeEffect.h" />
+    <ClCompile Include="Src\Object\Effect\TireSmoke\TireSmokeEffect.cpp" />
+    <FxCompile Include="Src\Shader\TireSmoke\TireSmokePS.hlsl">
+      <ShaderType>Pixel</ShaderType>
+      <ShaderModel>5.0</ShaderModel>
+    </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
     <ClCompile Include="Src\Application\Application.cpp" />
     <ClCompile Include="Src\Common\Quaternion.cpp" />
     <ClCompile Include="Src\Common\Vector2.cpp" />

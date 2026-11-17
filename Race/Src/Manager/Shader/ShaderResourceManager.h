@@ -143,6 +143,8 @@ private:
 	// ピクセルシェーダーの名前テーブル
 	const std::map<PIXEL_SHADER_TYPE, std::string> PIXEL_SHADER_NAME_TABLE = {
 
+        { PIXEL_SHADER_TYPE::TireSmoke, "TireSmokePS" },
+
 		// デフォルト
 		{
 			PIXEL_SHADER_TYPE::Default,

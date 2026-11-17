@@ -40,6 +40,8 @@ enum class PIXEL_SHADER_TYPE
 
     // スカイボックス
     SkyBox,
+
+    TireSmoke,
 #pragma region ポストエフェクト
 
 	// グレースケールポストエフェクト
