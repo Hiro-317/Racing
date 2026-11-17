@@ -21,6 +21,7 @@ CarBase::CarBase(const Input::KEYPAD_NO& keypadNo, const Vector3& pos, const int
 	grip(REAR_GRIP_MAX),
 	driftAmount(0.0f),
 	powerSlipAmount(0.0f),
+	wheelSpinRpmOffset(0.0f),
 	yawSpeed(0.0f),
 	spinYawSpeed(0.0f),
 	spinTorqueReleased(false),
@@ -235,6 +236,44 @@ void CarBase::SubUpdate(void)
 
 	// 車体の向きと実際の移動方向の差から、後輪の滑りとスピン回転を更新する
 	UpdateRearGrip(speed, nowSteer, steerChange, throttleInput, brakeInput, handBrake);
+
+	// 車速とギア比から、後輪がグリップしている場合のエンジン回転数を求める
+	const float connectedRpm =
+		(speed * param.GEAR_RATIO[nowGear] * param.FINAL_GEAR_RATIO * 60.0f) /
+		(3.6f * 2.0f * DX_PI_F * param.TIRE_SIZE);
+	const float baseRpm = std::clamp(connectedRpm, MIN_RPM, param.MAX_RPM);
+
+	// 後輪が空転している間は、空転率とアクセル開度に応じてレブ付近まで回転数を上げる
+	const bool canWheelSpin = engineFlg && brakeInput == 0.0f && !handBrake;
+	if (!canWheelSpin) {
+		wheelSpinRpmOffset = 0.0f;
+	}
+	else {
+		const float targetWheelSpinRpm =
+			baseRpm + (param.MAX_RPM - baseRpm) * powerSlipAmount * throttleInput;
+		const float targetWheelSpinRpmOffset =
+			(std::max)(targetWheelSpinRpm - baseRpm, 0.0f);
+
+		// 空転開始時は素早く上げ、グリップ回復後は接続ショックを避けながら車速相当へ戻す
+		const float wheelSpinRpmResponse = targetWheelSpinRpmOffset > wheelSpinRpmOffset ?
+			WHEEL_SPIN_RPM_RISE_RESPONSE :
+			WHEEL_SPIN_RPM_FALL_RESPONSE;
+		const float wheelSpinRpmBlend = std::clamp(
+			wheelSpinRpmResponse * App::GetPassTime(),
+			0.0f,
+			1.0f
+		);
+		wheelSpinRpmOffset +=
+			(targetWheelSpinRpmOffset - wheelSpinRpmOffset) * wheelSpinRpmBlend;
+
+		if (wheelSpinRpmOffset <= 1.0f && targetWheelSpinRpmOffset == 0.0f) {
+			wheelSpinRpmOffset = 0.0f;
+		}
+		if (wheelSpinRpmOffset > 0.0f) {
+			rpm = std::clamp(baseRpm + wheelSpinRpmOffset, MIN_RPM, param.MAX_RPM);
+		}
+	}
+
 	const Vector3 currentDirection = moveVec.LengthSq() > 0.0f ? moveVec.Normalized() : forward;
 	ApplySlipDynamics(forward, currentDirection, nowSteer);
 
