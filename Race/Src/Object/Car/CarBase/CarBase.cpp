@@ -206,6 +206,9 @@ void CarBase::SubUpdate(void)
 		}
 	}
 
+	// スリップ抵抗を加える前の速度を保存し、エンジンの加速成分を独立して取り出す
+	const float drivetrainSpeed = speed;
+
 	float temp = nowSteer - prevSteer;
 	nowSteer = prevSteer + temp * 0.3f;
 	const float steerChange = fabsf(nowSteer - prevSteer);
@@ -242,9 +245,10 @@ void CarBase::SubUpdate(void)
 	float forwardSpeed = moveVec.Dot(forward);
 	sideSpeed = moveVec.Dot(right);
 
-	// 加速は車体正面へ加える。減速時は横滑りだけが残らないよう、移動速度全体を落とす
-	const float driveSpeedDelta = speed - previousMoveSpeed;
-	if (driveSpeedDelta >= 0.0f) {
+	// エンジンの加速は、スリップ抵抗による減速量に打ち消される前に車体正面へ加える
+	const float drivetrainSpeedDelta = drivetrainSpeed - previousMoveSpeed;
+	const float driveAccelerationDelta = (std::max)(drivetrainSpeedDelta, 0.0f);
+	if (driveAccelerationDelta > 0.0f) {
 		// 車体と移動方向がずれているほど駆動加速を強め、横滑り速度に正面成分が負けないようにする
 		const float moveSpeed = sqrtf(forwardSpeed * forwardSpeed + sideSpeed * sideSpeed);
 		const float forwardAlignment = moveSpeed > 0.0f ?
@@ -253,12 +257,17 @@ void CarBase::SubUpdate(void)
 		const float slideRate = 1.0f - (std::max)(forwardAlignment, 0.0f);
 		const float forwardDriveScale = 1.0f +
 			(SLIDE_FORWARD_DRIVE_SCALE - 1.0f) * slideRate;
-		forwardSpeed += driveSpeedDelta * forwardDriveScale;
+		forwardSpeed += driveAccelerationDelta * forwardDriveScale;
 	}
-	else {
+
+	// ブレーキなどの駆動系減速とスリップ抵抗は、前後速度と横速度の両方へ反映する
+	const float drivetrainDecelerationDelta = (std::min)(drivetrainSpeedDelta, 0.0f);
+	const float slipDecelerationDelta = (std::min)(speed - drivetrainSpeed, 0.0f);
+	const float totalDecelerationDelta = drivetrainDecelerationDelta + slipDecelerationDelta;
+	if (totalDecelerationDelta < 0.0f) {
 		const float moveSpeed = sqrtf(forwardSpeed * forwardSpeed + sideSpeed * sideSpeed);
 		if (moveSpeed > 0.0f) {
-			const float reducedMoveSpeed = (std::max)(0.0f, moveSpeed + driveSpeedDelta);
+			const float reducedMoveSpeed = (std::max)(0.0f, moveSpeed + totalDecelerationDelta);
 			const float decelerationRate = reducedMoveSpeed / moveSpeed;
 			forwardSpeed *= decelerationRate;
 			sideSpeed *= decelerationRate;
