@@ -53,5 +53,6 @@
 - `POST_LIMIT_SPIN_DAMPING`: 横向きになった後の惰性回転を止める強さです。
 - `SLIP_SPEED_LOSS`: 横滑りによる減速の強さです。
 - `SPIN_SPEED_LOSS`: スピン回転による追加減速の強さです。
+- `SLIDE_FORWARD_DRIVE_SCALE`: 横滑り中に車体正面へ加える駆動加速の倍率です。上げるほどアクセルで車体正面へ強く進みます。`1.0`で補正なしです。
 
 最初に調整するなら `REAR_SLIP_START_SPEED` と `REAR_GRIP_MIN` の2つが分かりやすいです。

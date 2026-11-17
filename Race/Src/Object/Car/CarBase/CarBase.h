@@ -158,6 +158,9 @@ private:
 	// スピン回転によって追加で失う速度の割合(1/秒)
 	static constexpr float SPIN_SPEED_LOSS = 0.45f;
 
+	// 横滑り中に車体正面へ加える駆動加速の最大倍率
+	static constexpr float SLIDE_FORWARD_DRIVE_SCALE = 2.5f;
+
 	// エンジン稼働状態
 	bool engineFlg;
 

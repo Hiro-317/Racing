@@ -245,7 +245,15 @@ void CarBase::SubUpdate(void)
 	// 加速は車体正面へ加える。減速時は横滑りだけが残らないよう、移動速度全体を落とす
 	const float driveSpeedDelta = speed - previousMoveSpeed;
 	if (driveSpeedDelta >= 0.0f) {
-		forwardSpeed += driveSpeedDelta;
+		// 車体と移動方向がずれているほど駆動加速を強め、横滑り速度に正面成分が負けないようにする
+		const float moveSpeed = sqrtf(forwardSpeed * forwardSpeed + sideSpeed * sideSpeed);
+		const float forwardAlignment = moveSpeed > 0.0f ?
+			std::clamp(forwardSpeed / moveSpeed, -1.0f, 1.0f) :
+			1.0f;
+		const float slideRate = 1.0f - (std::max)(forwardAlignment, 0.0f);
+		const float forwardDriveScale = 1.0f +
+			(SLIDE_FORWARD_DRIVE_SCALE - 1.0f) * slideRate;
+		forwardSpeed += driveSpeedDelta * forwardDriveScale;
 	}
 	else {
 		const float moveSpeed = sqrtf(forwardSpeed * forwardSpeed + sideSpeed * sideSpeed);
