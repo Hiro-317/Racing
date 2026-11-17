@@ -46,8 +46,8 @@ void CarBase::OnCollision(COLLIDER_TAG ownTag, const ColliderBase& other, const 
 
 void CarBase::SubUpdate(void)
 {
-	// このフレームで駆動系が増減させた前後速度を、後で車体前方の速度へ反映する
-	const float previousDriveSpeed = speed;
+	// このフレームで駆動系が増減させた速度だけを、後で車体前方へ反映する
+	const float previousMoveSpeed = speed;
 
 	// ステア角度の保持
 	prevSteer = nowSteer;
@@ -243,7 +243,7 @@ void CarBase::SubUpdate(void)
 	sideSpeed = moveVec.Dot(right);
 
 	// 加速は車体正面へ加える。減速時は横滑りだけが残らないよう、移動速度全体を落とす
-	const float driveSpeedDelta = speed - previousDriveSpeed;
+	const float driveSpeedDelta = speed - previousMoveSpeed;
 	if (driveSpeedDelta >= 0.0f) {
 		forwardSpeed += driveSpeedDelta;
 	}
@@ -261,6 +261,18 @@ void CarBase::SubUpdate(void)
 	const float sideGripRate = std::exp(-grip * App::GetPassTime());
 	sideSpeed *= sideGripRate;
 	moveVec = forward * forwardSpeed + right * sideSpeed;
+
+	// メーターと駆動計算に使う速度を、実際の前後速度と横速度の合成値へ同期する
+	// 十分に小さい速度は完全停止として扱い、表示だけ速度が残る状態を防ぐ
+	const float actualMoveSpeed = moveVec.Length();
+	if (actualMoveSpeed <= 0.001f) {
+		moveVec = Vector3();
+		sideSpeed = 0.0f;
+		speed = 0.0f;
+	}
+	else {
+		speed = actualMoveSpeed;
+	}
 
 	trans.pos += moveVec;
 
