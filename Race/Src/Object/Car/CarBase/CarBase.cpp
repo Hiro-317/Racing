@@ -441,9 +441,10 @@ void CarBase::UpdateRearGrip(float currentSpeed, float steerInput, float steerCh
 
 void CarBase::ApplySlipDynamics(const Vector3& forward, const Vector3& moveDirection, float steerInput)
 {
-	// 内積と外積から、車体前方に対する移動方向の符号付き角度を求める
+	// 内積と外積から、現在の旋回方向と同じ符号になる滑り角を求める
+	// 外積を移動方向から車体前方の順にすることで、左右旋回を対称に扱う
 	const float directionDot = std::clamp(forward.Dot(moveDirection), -1.0f, 1.0f);
-	const float directionCross = forward.Cross(moveDirection).y;
+	const float directionCross = moveDirection.Cross(forward).y;
 	const float slipAngle = atan2f(directionCross, directionDot);
 	const float absSlipAngle = fabsf(slipAngle);
 
