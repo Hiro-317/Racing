@@ -89,11 +89,21 @@ private:
 	static constexpr float REAR_SLIP_START_SPEED = 45.0f;
 	// 後輪の滑り量が最大になる速度(km/h)
 	static constexpr float REAR_SLIP_FULL_SPEED = 100.0f;
+	// アクセルによる後輪スリップが起き始める速度(km/h)
+	static constexpr float POWER_SLIP_START_SPEED = 10.0f;
+	// アクセルによる後輪スリップが最大になる速度(km/h)
+	static constexpr float POWER_SLIP_FULL_SPEED = 45.0f;
+	// 高速旋回だけで発生する滑りの強さ
+	static constexpr float CORNER_DRIFT_POWER = 0.55f;
+	// アクセル全開時に発生するパワースライドの強さ
+	static constexpr float POWER_DRIFT_POWER = 1.0f;
 
 	// 通常時に移動方向を車体前方へ戻す強さ(1/秒)
 	static constexpr float REAR_GRIP_MAX = 12.0f;
 	// 滑走中にも残す最低グリップ(1/秒)
 	static constexpr float REAR_GRIP_MIN = 1.5f;
+	// カウンターを当てていない滑走中に残す自然回復グリップ(1/秒)
+	static constexpr float NEUTRAL_SLIDE_GRIP = 0.4f;
 
 	// 滑り量が目標値へ追従する速さ(1/秒)
 	static constexpr float DRIFT_RESPONSE = 4.0f;

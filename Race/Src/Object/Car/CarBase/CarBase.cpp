@@ -375,8 +375,18 @@ void CarBase::UpdateRearGrip(float currentSpeed, float steerInput, float steerCh
 	const float throttleRate = std::clamp(throttleInput, 0.0f, 1.0f);
 	const float brakeRate = std::clamp(brakeInput, 0.0f, 1.0f);
 
-	// 高速かつ大舵角ほどリアを滑らせ、アクセル中はパワースライド分を加える
-	const float powerDriftAmount = speedRate * steerRate * (0.65f + throttleRate * 0.35f);
+	// 高速旋回ではアクセルに関係なく限界へ近づくが、単独では急激なスピンまで発展させない
+	const float cornerDriftAmount = speedRate * steerRate * CORNER_DRIFT_POWER;
+
+	// パワースライドはアクセル開度を直接反映し、アクセルオフでは発生させない
+	const float powerSpeedRange = POWER_SLIP_FULL_SPEED - POWER_SLIP_START_SPEED;
+	const float powerSpeedRate = std::clamp(
+		(fabsf(currentSpeed) - POWER_SLIP_START_SPEED) / powerSpeedRange,
+		0.0f,
+		1.0f
+	);
+	const float powerDriftAmount =
+		powerSpeedRate * steerRate * throttleRate * POWER_DRIFT_POWER;
 
 	// 通常ブレーキでは前荷重でリアが軽くなるため、切り返しが速いほど滑りやすくする
 	const float brakeSpeedRange = REAR_SLIP_FULL_SPEED - BRAKE_SLIP_START_SPEED;
@@ -394,7 +404,9 @@ void CarBase::UpdateRearGrip(float currentSpeed, float steerInput, float steerCh
 		0.0f;
 
 	// 同時に成立した要因のうち最も強いものを採用し、滑り量が過剰に加算されないようにする
-	const float targetDriftAmount = (std::max)({ powerDriftAmount, brakeDriftAmount, handBrakeDriftAmount });
+	const float targetDriftAmount = (std::max)(
+		{ cornerDriftAmount, powerDriftAmount, brakeDriftAmount, handBrakeDriftAmount }
+	);
 
 	// フレーム時間を使って滑り始めとグリップ回復を滑らかにする
 	const float response = std::clamp(DRIFT_RESPONSE * App::GetPassTime(), 0.0f, 1.0f);
@@ -450,15 +462,16 @@ void CarBase::ApplySlipDynamics(const Vector3& forward, const Vector3& moveDirec
 	// 限界角を超えたら、ステアを戻しただけでは解除されない滑走状態へ移行する
 	if (absSlipAngle >= SPIN_START_ANGLE) { counterRecoveryRequired = true; }
 
-	// カウンターで車体と移動方向を揃えた場合、または停止した場合に滑走状態を解除する
-	const bool recoveredByCounter = counterSteerInput > 0.1f &&
-		absSlipAngle <= SPIN_RESET_ANGLE && fabsf(spinYawSpeed) <= SPIN_RESET_YAW_SPEED;
+	// 車体と移動方向が揃った場合、または停止した場合に滑走状態を解除する
+	const bool recovered = absSlipAngle <= SPIN_RESET_ANGLE &&
+		fabsf(spinYawSpeed) <= SPIN_RESET_YAW_SPEED;
 	const bool stopped = fabsf(speed) <= 1.0f && fabsf(spinYawSpeed) <= SPIN_RESET_YAW_SPEED;
-	if (recoveredByCounter || stopped) { counterRecoveryRequired = false; }
+	if (recovered || stopped) { counterRecoveryRequired = false; }
 
 	if (counterRecoveryRequired) {
-		// 滑走中はニュートラルで方向を補正せず、カウンター入力に応じた分だけグリップを発生させる
-		grip = REAR_GRIP_MAX * counterSteerRate;
+		// ニュートラルでは低いグリップでゆっくり収束し、カウンター入力に応じて回復を早める
+		grip = NEUTRAL_SLIDE_GRIP +
+			(REAR_GRIP_MAX - NEUTRAL_SLIDE_GRIP) * counterSteerRate;
 	}
 	else {
 		// 限界前は滑り角に応じて通常グリップから最低グリップまで落とす
