@@ -62,7 +62,7 @@ void CarBase::SubUpdate(void)
 			rpm = 0.0f;
 		}
 		// ブレーキ踏みながらキーで
-		if (Input::GetIns().GetKey(Input::COMMAND::ACTION, keypadNo).keyTrgDown && Input::GetIns().GetKey(Input::COMMAND::SIDE, keypadNo).keyNew) {
+		if (Input::GetIns().GetKey(Input::COMMAND::ACTION, keypadNo).keyTrgDown && (Input::GetIns().GetKey(Input::COMMAND::SIDE, keypadNo).keyNew || Brake() == -1.0f)) {
 
 			// アクセルオンで最低回転数にもっていく
 			engineFlg = true;
@@ -153,11 +153,12 @@ void CarBase::SubUpdate(void)
 		// ブレーキ踏んでおらず最低速度を下回っているとき
 		else if (idleSpeed > speed) {
 			// その差分クラッチとし最低半クラを25%として
-			float clatch = (1.0f - ((idleSpeed - speed) / idleSpeed)) + 0.25f;
-			clatch =  std::clamp(clatch, 0.0f, 1.0f);
+			float clatch = (1.0f - ((idleSpeed - speed) / idleSpeed));
+			clatch =  std::clamp(clatch, 0.25f, 1.0f);
+			float driveRate = clatch + ((1.0f - clatch) * Accel());
 
 			// 加速
-			speed += Acceleration(clatch) * App::GetPassTime();
+			speed += Acceleration(driveRate) * App::GetPassTime();
 			// 速度からエンジン回転数を出し
 			float spRpm = (speed * param.GEAR_RATIO[nowGear] * param.FINAL_GEAR_RATIO * 60.0f) / (3.6f * 2.0f * DX_PI_F * param.TIRE_SIZE);
 			// 速度の方は全クラッチつながっているときの回転数になるから
@@ -202,7 +203,7 @@ void CarBase::SubUpdate(void)
 	}
 
 	float temp = nowSteer - prevSteer;
-	nowSteer = prevSteer + temp * 0.25f;
+	nowSteer = prevSteer + temp * 0.3f;
 	const float steerChange = fabsf(nowSteer - prevSteer);
 	const float throttleInput = Accel();
 	const float brakeInput = fabsf(Brake());
@@ -334,7 +335,7 @@ float CarBase::RollingResistance(void)
 float CarBase::Accel(void)
 {
 	if (keypadNo == Input::KEYPAD_NO::KEY) {
-		if (Input::GetIns().GetAKeyLClamp(keypadNo).z > 0.0f) {
+		if (Input::GetIns().GetKey(COMMAND::ACCEL, keypadNo).keyNew) {
 			return 1.0f;
 		}
 	}
@@ -347,7 +348,7 @@ float CarBase::Accel(void)
 float CarBase::Brake(void)
 {
 	if (keypadNo == Input::KEYPAD_NO::KEY) {
-		if (Input::GetIns().GetAKeyLClamp(keypadNo).z < 0.0f) {
+		if (Input::GetIns().GetKey(COMMAND::ACCEL, keypadNo).keyNew) {
 			return -1.0f;
 		}
 	}

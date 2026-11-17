@@ -32,9 +32,16 @@ void InputManager::CommandLoad(void)
 	// 決定
 	SetCommand(COMMAND::DECIDE, KEY_INPUT_SPACE, KEYPAD_NO::KEY);
 	SetCommand(COMMAND::DECIDE, XINPUT_BUTTON_A, KEYPAD_NO::PAD1);
+
 	// イグニッション
 	SetCommand(COMMAND::ACTION, KEY_INPUT_F, KEYPAD_NO::KEY);
 	SetCommand(COMMAND::ACTION, XINPUT_BUTTON_Y, KEYPAD_NO::PAD1);
+
+	// アクセル
+	SetCommand(COMMAND::ACCEL, KEY_INPUT_W, KEYPAD_NO::KEY);
+
+	// ブレーキ
+	SetCommand(COMMAND::BRAKE, KEY_INPUT_S, KEYPAD_NO::KEY);
 
 	// 左キー
 	SetCommand(COMMAND::LEFT, KEY_INPUT_LEFT, KEYPAD_NO::KEY);

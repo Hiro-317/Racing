@@ -24,6 +24,9 @@ public:
 
 		SIDE,
 		ACTION,
+		ACCEL,
+		BRAKE,
+
 		LEFT,
 		RIGHT,
 		UP,
