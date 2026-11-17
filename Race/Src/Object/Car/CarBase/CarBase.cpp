@@ -22,6 +22,7 @@ CarBase::CarBase(const Input::KEYPAD_NO& keypadNo, const Vector3& pos, const int
 	driftAmount(0.0f),
 	yawSpeed(0.0f),
 	spinYawSpeed(0.0f),
+	spinTorqueReleased(false),
 	idleSpeed(0.0f),
 	speed(0.0f),
 	nowGear(0),
@@ -409,14 +410,23 @@ void CarBase::ApplySlipDynamics(const Vector3& forward, const Vector3& moveDirec
 	const float slipAngle = atan2f(directionCross, directionDot);
 	const float absSlipAngle = fabsf(slipAngle);
 
-	// 20度を超えた実際の滑り角だけでスピン判定を強め、90度で最大にする
-	// 車速由来のdriftAmountは使わず、減速中でも角度差が残っていればスピンへ移行させる
+	// 横向きまで回ったらタイヤが生む追加の回転力を止め、以降は回転慣性だけで滑らせる
+	if (absSlipAngle >= SPIN_FULL_ANGLE) { spinTorqueReleased = true; }
+
+	// 車体と移動方向が揃い、回転も十分に収まったときだけ次のスピンに備えて状態を戻す
+	if (spinTorqueReleased && absSlipAngle <= SPIN_RESET_ANGLE && fabsf(spinYawSpeed) <= SPIN_RESET_YAW_SPEED) {
+		spinTorqueReleased = false;
+	}
+
+	// 20度を越えてから急激に回転力を立ち上げ、GT7動画のスナップオーバーステアへ近づける
 	const float spinAngleRange = SPIN_FULL_ANGLE - SPIN_START_ANGLE;
-	const float spinRate = std::clamp(
+	const float spinLinearRate = std::clamp(
 		(absSlipAngle - SPIN_START_ANGLE) / spinAngleRange,
 		0.0f,
 		1.0f
 	);
+	const float spinRate = spinTorqueReleased ? 0.0f :
+		spinLinearRate * spinLinearRate * (3.0f - 2.0f * spinLinearRate);
 
 	// スピン開始後は現在の回転方向を維持し、角度が180度を超えた際の符号反転を防ぐ
 	const float spinDirection = fabsf(spinYawSpeed) > 0.001f ?
@@ -424,7 +434,16 @@ void CarBase::ApplySlipDynamics(const Vector3& forward, const Vector3& moveDirec
 		(slipAngle >= 0.0f ? 1.0f : -1.0f);
 
 	// 滑り方向と逆のステアだけをカウンターとして0～1へ変換する
-	const float counterSteerRate = std::clamp(-steerInput * spinDirection, 0.0f, 1.0f);
+	const float counterSteerInput = std::clamp(-steerInput * spinDirection, 0.0f, 1.0f);
+
+	// 滑り角が大きいほど前輪が進行方向を変えられなくなるため、70度でカウンター効果を失わせる
+	const float counterFadeRange = COUNTER_STEER_FADE_END - COUNTER_STEER_FADE_START;
+	const float counterFadeRate = std::clamp(
+		(absSlipAngle - COUNTER_STEER_FADE_START) / counterFadeRange,
+		0.0f,
+		1.0f
+	);
+	const float counterSteerRate = counterSteerInput * (1.0f - counterFadeRate);
 
 	// ステアを中央へ戻しただけではグリップを回復させず、実際の滑り角が残る間は低グリップを維持する
 	const float slipGripRate = std::clamp(absSlipAngle / SPIN_START_ANGLE, 0.0f, 1.0f);
@@ -449,7 +468,9 @@ void CarBase::ApplySlipDynamics(const Vector3& forward, const Vector3& moveDirec
 		const float brakeAmount = (std::min)(fabsf(spinYawSpeed), counterBrake);
 		spinYawSpeed -= spinDirection * brakeAmount;
 	}
-	const float spinDamping = SPIN_DAMPING + COUNTER_STEER_DAMPING * counterSteerRate;
+	// 横向き以降は追加回転力の代わりに減衰を増やし、惰性で半回転前後してから収束させる
+	const float postLimitDamping = spinTorqueReleased ? POST_LIMIT_SPIN_DAMPING : 0.0f;
+	const float spinDamping = SPIN_DAMPING + postLimitDamping + COUNTER_STEER_DAMPING * counterSteerRate;
 	spinYawSpeed /= 1.0f + spinDamping * App::GetPassTime();
 	trans.AddAngle(Vector3::Yonly(spinYawSpeed * App::GetPassTime()));
 
