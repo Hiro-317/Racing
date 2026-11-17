@@ -16,10 +16,13 @@ CarBase::CarBase(const Input::KEYPAD_NO& keypadNo, const Vector3& pos, const int
 	fuelCut(false),
 	nowSteer(0.0f),
 	prevSteer(0.0f),
-	moveVec(Vector3::Zonly(1.0f)),
+	moveVec(),
 	sideSpeed(0.0f),
 	grip(REAR_GRIP_MAX),
 	driftAmount(0.0f),
+	powerSlipAmount(0.0f),
+	wheelSpinRpmOffset(0.0f),
+	wheelSpinFuelCut(false),
 	yawSpeed(0.0f),
 	spinYawSpeed(0.0f),
 	spinTorqueReleased(false),
@@ -46,6 +49,9 @@ void CarBase::OnCollision(COLLIDER_TAG ownTag, const ColliderBase& other, const 
 
 void CarBase::SubUpdate(void)
 {
+	// このフレームで駆動系が増減させた速度だけを、後で車体前方へ反映する
+	const float previousMoveSpeed = speed;
+
 	// ステア角度の保持
 	prevSteer = nowSteer;
 	nowSteer = Input::GetIns().GetAKeyLClamp(keypadNo).x;
@@ -77,7 +83,9 @@ void CarBase::SubUpdate(void)
 			// ギアを上げた際最低回転数下回らないなら
 			if (rpm * (param.GEAR_RATIO[nowGear + 1] / param.GEAR_RATIO[nowGear]) >= MIN_RPM) {
 				// 下ボタン押すか最高回転数に行ったら
-				if (Input::GetIns().GetKey(Input::COMMAND::DOWN, keypadNo).keyTrgDown || rpm >= param.MAX_RPM) {
+				const bool autoShift = rpm >= param.MAX_RPM &&
+					!wheelSpinFuelCut && wheelSpinRpmOffset <= 1.0f;
+				if (Input::GetIns().GetKey(Input::COMMAND::DOWN, keypadNo).keyTrgDown || autoShift) {
 					// ギアを上げ回転数を落とす
 					rpm = rpm * (param.GEAR_RATIO[nowGear + 1] / param.GEAR_RATIO[nowGear]);
 					nowGear++;
@@ -203,6 +211,9 @@ void CarBase::SubUpdate(void)
 		}
 	}
 
+	// スリップ抵抗を加える前の速度を保存し、エンジンの加速成分を独立して取り出す
+	const float drivetrainSpeed = speed;
+
 	float temp = nowSteer - prevSteer;
 	nowSteer = prevSteer + temp * 0.3f;
 	const float steerChange = fabsf(nowSteer - prevSteer);
@@ -225,19 +236,122 @@ void CarBase::SubUpdate(void)
 	float yaw = atan2f(rot.m[0][2], rot.m[2][2]);
 
 	Vector3 forward = Vector3(-sinf(yaw), 0.0f, cosf(yaw));
-	Vector3 right = Vector3(cosf(yaw), 0.0f, sinf(yaw));
 
-	// 車体の向きと実際の移動方向を分離する。
-	// 高速旋回中は移動方向の追従を遅らせ、車体だけが先に旋回することでリアを外側へ滑らせる。
+	// 車体の向きと実際の移動方向の差から、後輪の滑りとスピン回転を更新する
 	UpdateRearGrip(speed, nowSteer, steerChange, throttleInput, brakeInput, handBrake);
+
+	// 車速とギア比から、後輪がグリップしている場合のエンジン回転数を求める
+	const float connectedRpm =
+		(speed * param.GEAR_RATIO[nowGear] * param.FINAL_GEAR_RATIO * 60.0f) /
+		(3.6f * 2.0f * DX_PI_F * param.TIRE_SIZE);
+	const float baseRpm = std::clamp(connectedRpm, MIN_RPM, param.MAX_RPM);
+
+	// 後輪が空転している間は、空ぶかしと同じ上昇量を空転率に応じて回転数へ足す
+	const bool canWheelSpin = engineFlg && brakeInput == 0.0f && !handBrake;
+	if (!canWheelSpin) {
+		wheelSpinRpmOffset = 0.0f;
+		if (wheelSpinFuelCut) { fuelCut = false; }
+		wheelSpinFuelCut = false;
+	}
+	else if (wheelSpinFuelCut) {
+		// レブ到達後は燃料を切って回転数を落とし、一定量下がったら再点火する
+		wheelSpinRpmOffset = (std::max)(0.0f, wheelSpinRpmOffset - DOWN_RPM);
+		rpm = std::clamp(baseRpm + wheelSpinRpmOffset, MIN_RPM, param.MAX_RPM);
+		fuelCut = true;
+		if (rpm <= param.MAX_RPM - WHEEL_SPIN_FUEL_CUT_DROP_RPM) {
+			wheelSpinFuelCut = false;
+			fuelCut = false;
+		}
+	}
+	else if (powerSlipAmount > 0.0f && throttleInput > 0.0f) {
+		// ローンチで先に上げた回転数を維持し、空転率が大きいほど空ぶかしに近い速さで加算する
+		const float existingRpmOffset = (std::max)(rpm - baseRpm, 0.0f);
+		wheelSpinRpmOffset = (std::max)(wheelSpinRpmOffset, existingRpmOffset);
+		wheelSpinRpmOffset += UP_RPM * throttleInput * powerSlipAmount;
+		const float wheelSpinRpm = baseRpm + wheelSpinRpmOffset;
+		if (wheelSpinRpm >= param.MAX_RPM) {
+			wheelSpinRpmOffset = (std::max)(param.MAX_RPM - baseRpm, 0.0f);
+			rpm = param.MAX_RPM;
+			wheelSpinFuelCut = true;
+			fuelCut = true;
+		}
+		else {
+			rpm = (std::max)(wheelSpinRpm, MIN_RPM);
+		}
+	}
+	else {
+		// グリップ回復後は接続ショックを避けながら車速相当へ戻す
+		const float wheelSpinRpmBlend = std::clamp(
+			WHEEL_SPIN_RPM_FALL_RESPONSE * App::GetPassTime(),
+			0.0f,
+			1.0f
+		);
+		wheelSpinRpmOffset += (0.0f - wheelSpinRpmOffset) * wheelSpinRpmBlend;
+
+		if (wheelSpinRpmOffset <= 1.0f) {
+			wheelSpinRpmOffset = 0.0f;
+		}
+		if (wheelSpinRpmOffset > 0.0f) {
+			rpm = std::clamp(baseRpm + wheelSpinRpmOffset, MIN_RPM, param.MAX_RPM);
+		}
+	}
+
 	const Vector3 currentDirection = moveVec.LengthSq() > 0.0f ? moveVec.Normalized() : forward;
 	ApplySlipDynamics(forward, currentDirection, nowSteer);
-	const float directionBlend = 1.0f - std::exp(-grip * App::GetPassTime());
-	Vector3 nextDirection = currentDirection + (forward - currentDirection) * directionBlend;
-	if (nextDirection.LengthSq() == 0.0f) { nextDirection = forward; }
 
-	moveVec = nextDirection.Normalized() * speed;
+	// スピン回転後の車体軸で、現在の移動速度を前後成分と横成分へ分解する
+	rot = trans.rotation.ToMatrix();
+	yaw = atan2f(rot.m[0][2], rot.m[2][2]);
+	forward = Vector3(-sinf(yaw), 0.0f, cosf(yaw));
+	const Vector3 right = Vector3(cosf(yaw), 0.0f, sinf(yaw));
+	float forwardSpeed = moveVec.Dot(forward);
 	sideSpeed = moveVec.Dot(right);
+
+	// エンジンの加速は、スリップ抵抗による減速量に打ち消される前に車体正面へ加える
+	const float drivetrainSpeedDelta = drivetrainSpeed - previousMoveSpeed;
+	const float driveAccelerationDelta = (std::max)(drivetrainSpeedDelta, 0.0f);
+	if (driveAccelerationDelta > 0.0f) {
+		// 車体と移動方向がずれているほど駆動加速を強め、横滑り速度に正面成分が負けないようにする
+		const float moveSpeed = sqrtf(forwardSpeed * forwardSpeed + sideSpeed * sideSpeed);
+		const float forwardAlignment = moveSpeed > 0.0f ?
+			std::clamp(forwardSpeed / moveSpeed, -1.0f, 1.0f) :
+			1.0f;
+		const float slideRate = 1.0f - (std::max)(forwardAlignment, 0.0f);
+		const float forwardDriveScale = 1.0f +
+			(SLIDE_FORWARD_DRIVE_SCALE - 1.0f) * slideRate;
+		forwardSpeed += driveAccelerationDelta * forwardDriveScale;
+	}
+
+	// ブレーキなどの駆動系減速とスリップ抵抗は、前後速度と横速度の両方へ反映する
+	const float drivetrainDecelerationDelta = (std::min)(drivetrainSpeedDelta, 0.0f);
+	const float slipDecelerationDelta = (std::min)(speed - drivetrainSpeed, 0.0f);
+	const float totalDecelerationDelta = drivetrainDecelerationDelta + slipDecelerationDelta;
+	if (totalDecelerationDelta < 0.0f) {
+		const float moveSpeed = sqrtf(forwardSpeed * forwardSpeed + sideSpeed * sideSpeed);
+		if (moveSpeed > 0.0f) {
+			const float reducedMoveSpeed = (std::max)(0.0f, moveSpeed + totalDecelerationDelta);
+			const float decelerationRate = reducedMoveSpeed / moveSpeed;
+			forwardSpeed *= decelerationRate;
+			sideSpeed *= decelerationRate;
+		}
+	}
+
+	// 横速度だけをグリップに応じて減衰させ、滑走中の慣性と復元を両立させる
+	const float sideGripRate = std::exp(-grip * App::GetPassTime());
+	sideSpeed *= sideGripRate;
+	moveVec = forward * forwardSpeed + right * sideSpeed;
+
+	// メーターと駆動計算に使う速度を、実際の前後速度と横速度の合成値へ同期する
+	// 十分に小さい速度は完全停止として扱い、表示だけ速度が残る状態を防ぐ
+	const float actualMoveSpeed = moveVec.Length();
+	if (actualMoveSpeed <= 0.001f) {
+		moveVec = Vector3();
+		sideSpeed = 0.0f;
+		speed = 0.0f;
+	}
+	else {
+		speed = actualMoveSpeed;
+	}
 
 	trans.pos += moveVec;
 
@@ -378,15 +492,28 @@ void CarBase::UpdateRearGrip(float currentSpeed, float steerInput, float steerCh
 	// 高速旋回ではアクセルに関係なく限界へ近づくが、単独では急激なスピンまで発展させない
 	const float cornerDriftAmount = speedRate * steerRate * CORNER_DRIFT_POWER;
 
-	// パワースライドはアクセル開度を直接反映し、アクセルオフでは発生させない
-	const float powerSpeedRange = POWER_SLIP_FULL_SPEED - POWER_SLIP_START_SPEED;
-	const float powerSpeedRate = std::clamp(
-		(fabsf(currentSpeed) - POWER_SLIP_START_SPEED) / powerSpeedRange,
+	// 現在のエンジントルクをギア比とタイヤ半径から後輪の駆動力へ変換する
+	const float driveForce = engineFlg && !wheelSpinFuelCut && param.TIRE_SIZE > 0.0f ?
+		fabsf(
+			torque * param.GEAR_RATIO[nowGear] * param.FINAL_GEAR_RATIO * LOST_RATIO * throttleRate /
+			param.TIRE_SIZE
+		) :
+		0.0f;
+
+	// 後輪荷重とタイヤ係数から、後輪が路面へ伝えられる駆動力の限界を求める
+	const float rearLoad = param.CAR_WEIGHT * 9.81f * REAR_WEIGHT_RATE;
+	const float rearGripLimit = rearLoad * TIRE_GRIP_COEFFICIENT;
+	const float tractionOverload = rearGripLimit > 0.0f ?
+		(driveForce - rearGripLimit) / rearGripLimit :
+		0.0f;
+
+	// グリップ限界を超えた割合を0～1へ変換し、低速でも高トルクなら後輪を滑らせる
+	powerSlipAmount = std::clamp(
+		tractionOverload / POWER_SLIP_FULL_OVERLOAD,
 		0.0f,
 		1.0f
 	);
-	const float powerDriftAmount =
-		powerSpeedRate * steerRate * throttleRate * POWER_DRIFT_POWER;
+	const float powerDriftAmount = powerSlipAmount * POWER_DRIFT_POWER;
 
 	// 通常ブレーキでは前荷重でリアが軽くなるため、切り返しが速いほど滑りやすくする
 	const float brakeSpeedRange = REAR_SLIP_FULL_SPEED - BRAKE_SLIP_START_SPEED;
@@ -418,12 +545,21 @@ void CarBase::UpdateRearGrip(float currentSpeed, float steerInput, float steerCh
 
 void CarBase::ApplySlipDynamics(const Vector3& forward, const Vector3& moveDirection, float steerInput)
 {
-	// 内積と外積から、車体前方に対する移動方向の符号付き角度を求める
+	// 内積と外積から、現在の旋回方向と同じ符号になる滑り角を求める
+	// 外積を移動方向から車体前方の順にすることで、左右旋回を対称に扱う
 	const float directionDot = std::clamp(forward.Dot(moveDirection), -1.0f, 1.0f);
-	const float directionCross = forward.Cross(moveDirection).y;
+	const float directionCross = moveDirection.Cross(forward).y;
 	const float slipAngle = atan2f(directionCross, directionDot);
 	const float absSlipAngle = fabsf(slipAngle);
 
+	// 通常は車速に応じてスピン力を立ち上げ、低速ではトルク由来の後輪スリップを優先する
+	const float spinSpeedRange = SPIN_FULL_SPEED - SPIN_START_SPEED;
+	const float speedSpinRate = std::clamp(
+		(fabsf(speed) - SPIN_START_SPEED) / spinSpeedRange,
+		0.0f,
+		1.0f
+	);
+	const float spinActivationRate = (std::max)(speedSpinRate, powerSlipAmount);
 	// 横向きまで回ったらタイヤが生む追加の回転力を止め、以降は回転慣性だけで滑らせる
 	if (absSlipAngle >= SPIN_FULL_ANGLE) { spinTorqueReleased = true; }
 
@@ -445,7 +581,7 @@ void CarBase::ApplySlipDynamics(const Vector3& forward, const Vector3& moveDirec
 	// 限界角を超えた後は最低回転力を保証し、横滑り角が一定になる釣り合いを発生させない
 	const bool isOverSpinStartAngle = absSlipAngle >= SPIN_START_ANGLE;
 	const float spinRate = spinTorqueReleased || !isOverSpinStartAngle ? 0.0f :
-		(std::max)(curveSpinRate, MIN_UNCONTROLLED_SPIN_RATE);
+		(std::max)(curveSpinRate, MIN_UNCONTROLLED_SPIN_RATE) * spinActivationRate;
 
 	// スピン開始後は現在の回転方向を維持し、角度が180度を超えた際の符号反転を防ぐ
 	const float spinDirection = fabsf(spinYawSpeed) > 0.001f ?
@@ -465,7 +601,9 @@ void CarBase::ApplySlipDynamics(const Vector3& forward, const Vector3& moveDirec
 	const float counterSteerRate = counterSteerInput * (1.0f - counterFadeRate);
 
 	// 限界角を超えたら、ステアを戻しただけでは解除されない滑走状態へ移行する
-	if (absSlipAngle >= SPIN_START_ANGLE) { counterRecoveryRequired = true; }
+	if (absSlipAngle >= SPIN_START_ANGLE && spinActivationRate > 0.0f) {
+		counterRecoveryRequired = true;
+	}
 
 	// 車体と移動方向が揃った場合、または停止した場合に滑走状態を解除する
 	const bool recovered = absSlipAngle <= SPIN_RESET_ANGLE &&
@@ -480,7 +618,8 @@ void CarBase::ApplySlipDynamics(const Vector3& forward, const Vector3& moveDirec
 	}
 	else {
 		// 限界前は滑り角に応じて通常グリップから最低グリップまで落とす
-		const float slipGripRate = std::clamp(absSlipAngle / SPIN_START_ANGLE, 0.0f, 1.0f);
+		const float slipGripRate =
+			std::clamp(absSlipAngle / SPIN_START_ANGLE, 0.0f, 1.0f) * spinActivationRate;
 		const float slipGrip = REAR_GRIP_MAX + (REAR_GRIP_MIN - REAR_GRIP_MAX) * slipGripRate;
 		grip = (std::min)(grip, slipGrip);
 	}

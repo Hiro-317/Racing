@@ -89,14 +89,20 @@ private:
 	static constexpr float REAR_SLIP_START_SPEED = 45.0f;
 	// 後輪の滑り量が最大になる速度(km/h)
 	static constexpr float REAR_SLIP_FULL_SPEED = 100.0f;
-	// アクセルによる後輪スリップが起き始める速度(km/h)
-	static constexpr float POWER_SLIP_START_SPEED = 10.0f;
-	// アクセルによる後輪スリップが最大になる速度(km/h)
-	static constexpr float POWER_SLIP_FULL_SPEED = 45.0f;
 	// 高速旋回だけで発生する滑りの強さ
 	static constexpr float CORNER_DRIFT_POWER = 0.55f;
-	// アクセル全開時に発生するパワースライドの強さ
+	// 駆動力が後輪グリップを超えたときに発生するパワースライドの強さ
 	static constexpr float POWER_DRIFT_POWER = 1.0f;
+	// 静止時に後輪へ掛かる車重の割合
+	static constexpr float REAR_WEIGHT_RATE = 0.55f;
+	// 後輪タイヤが路面へ伝えられる縦方向の摩擦係数
+	static constexpr float TIRE_GRIP_COEFFICIENT = 1.15f;
+	// 駆動力がグリップ限界をこの割合だけ超えたとき、パワースライドを最大にする
+	static constexpr float POWER_SLIP_FULL_OVERLOAD = 0.75f;
+	// グリップ回復時にエンジン回転数が車速相当へ戻る反応速度(1/秒)
+	static constexpr float WHEEL_SPIN_RPM_FALL_RESPONSE = 6.0f;
+	// 空転中のフューエルカットを解除するレブリミットからの回転数差
+	static constexpr float WHEEL_SPIN_FUEL_CUT_DROP_RPM = 600.0f;
 
 	// 通常時に移動方向を車体前方へ戻す強さ(1/秒)
 	static constexpr float REAR_GRIP_MAX = 12.0f;
@@ -126,6 +132,10 @@ private:
 	static constexpr float SPIN_START_ANGLE = 0.349066f;
 	// スピン判定が最大になる角度差(ラジアン、90度)
 	static constexpr float SPIN_FULL_ANGLE = 1.570796f;
+	// トルク由来の滑りがない場合にスピン力が発生し始める速度(km/h)
+	static constexpr float SPIN_START_SPEED = 10.0f;
+	// トルク由来の滑りがない場合にスピン力が最大になる速度(km/h)
+	static constexpr float SPIN_FULL_SPEED = 40.0f;
 
 	// 限界を超えたときに加えるスピン加速度(ラジアン/秒^2)
 	static constexpr float SPIN_ACCELERATION = 6.0f;
@@ -157,6 +167,9 @@ private:
 
 	// スピン回転によって追加で失う速度の割合(1/秒)
 	static constexpr float SPIN_SPEED_LOSS = 0.45f;
+
+	// 横滑り中に車体正面へ加える駆動加速の最大倍率
+	static constexpr float SLIDE_FORWARD_DRIVE_SCALE = 2.5f;
 
 	// エンジン稼働状態
 	bool engineFlg;
@@ -191,7 +204,13 @@ private:
 	// 横方向のグリップ
 	float grip;
 	// ドリフト状態
-	float driftAmount; 
+	float driftAmount;
+	// 後輪駆動力が縦方向のグリップ限界を超えている割合
+	float powerSlipAmount;
+	// タイヤ空転によって車速相当より上乗せされるエンジン回転数
+	float wheelSpinRpmOffset;
+	// タイヤ空転中にレブリミットへ当たって燃料を切っている状態
+	bool wheelSpinFuelCut;
 
 	// 回転スピード
 	float yawSpeed;
