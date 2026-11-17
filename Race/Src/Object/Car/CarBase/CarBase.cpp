@@ -20,6 +20,7 @@ CarBase::CarBase(const Input::KEYPAD_NO& keypadNo, const Vector3& pos, const int
 	sideSpeed(0.0f),
 	grip(REAR_GRIP_MAX),
 	driftAmount(0.0f),
+	powerSlipAmount(0.0f),
 	yawSpeed(0.0f),
 	spinYawSpeed(0.0f),
 	spinTorqueReleased(false),
@@ -430,15 +431,28 @@ void CarBase::UpdateRearGrip(float currentSpeed, float steerInput, float steerCh
 	// 高速旋回ではアクセルに関係なく限界へ近づくが、単独では急激なスピンまで発展させない
 	const float cornerDriftAmount = speedRate * steerRate * CORNER_DRIFT_POWER;
 
-	// パワースライドはアクセル開度を直接反映し、アクセルオフでは発生させない
-	const float powerSpeedRange = POWER_SLIP_FULL_SPEED - POWER_SLIP_START_SPEED;
-	const float powerSpeedRate = std::clamp(
-		(fabsf(currentSpeed) - POWER_SLIP_START_SPEED) / powerSpeedRange,
+	// 現在のエンジントルクをギア比とタイヤ半径から後輪の駆動力へ変換する
+	const float driveForce = engineFlg && param.TIRE_SIZE > 0.0f ?
+		fabsf(
+			torque * param.GEAR_RATIO[nowGear] * param.FINAL_GEAR_RATIO * LOST_RATIO * throttleRate /
+			param.TIRE_SIZE
+		) :
+		0.0f;
+
+	// 後輪荷重とタイヤ係数から、後輪が路面へ伝えられる駆動力の限界を求める
+	const float rearLoad = param.CAR_WEIGHT * 9.81f * REAR_WEIGHT_RATE;
+	const float rearGripLimit = rearLoad * TIRE_GRIP_COEFFICIENT;
+	const float tractionOverload = rearGripLimit > 0.0f ?
+		(driveForce - rearGripLimit) / rearGripLimit :
+		0.0f;
+
+	// グリップ限界を超えた割合を0～1へ変換し、低速でも高トルクなら後輪を滑らせる
+	powerSlipAmount = std::clamp(
+		tractionOverload / POWER_SLIP_FULL_OVERLOAD,
 		0.0f,
 		1.0f
 	);
-	const float powerDriftAmount =
-		powerSpeedRate * steerRate * throttleRate * POWER_DRIFT_POWER;
+	const float powerDriftAmount = powerSlipAmount * POWER_DRIFT_POWER;
 
 	// 通常ブレーキでは前荷重でリアが軽くなるため、切り返しが速いほど滑りやすくする
 	const float brakeSpeedRange = REAR_SLIP_FULL_SPEED - BRAKE_SLIP_START_SPEED;
@@ -477,6 +491,14 @@ void CarBase::ApplySlipDynamics(const Vector3& forward, const Vector3& moveDirec
 	const float slipAngle = atan2f(directionCross, directionDot);
 	const float absSlipAngle = fabsf(slipAngle);
 
+	// 通常は車速に応じてスピン力を立ち上げ、低速ではトルク由来の後輪スリップを優先する
+	const float spinSpeedRange = SPIN_FULL_SPEED - SPIN_START_SPEED;
+	const float speedSpinRate = std::clamp(
+		(fabsf(speed) - SPIN_START_SPEED) / spinSpeedRange,
+		0.0f,
+		1.0f
+	);
+	const float spinActivationRate = (std::max)(speedSpinRate, powerSlipAmount);
 	// 横向きまで回ったらタイヤが生む追加の回転力を止め、以降は回転慣性だけで滑らせる
 	if (absSlipAngle >= SPIN_FULL_ANGLE) { spinTorqueReleased = true; }
 
@@ -498,7 +520,7 @@ void CarBase::ApplySlipDynamics(const Vector3& forward, const Vector3& moveDirec
 	// 限界角を超えた後は最低回転力を保証し、横滑り角が一定になる釣り合いを発生させない
 	const bool isOverSpinStartAngle = absSlipAngle >= SPIN_START_ANGLE;
 	const float spinRate = spinTorqueReleased || !isOverSpinStartAngle ? 0.0f :
-		(std::max)(curveSpinRate, MIN_UNCONTROLLED_SPIN_RATE);
+		(std::max)(curveSpinRate, MIN_UNCONTROLLED_SPIN_RATE) * spinActivationRate;
 
 	// スピン開始後は現在の回転方向を維持し、角度が180度を超えた際の符号反転を防ぐ
 	const float spinDirection = fabsf(spinYawSpeed) > 0.001f ?
@@ -518,7 +540,9 @@ void CarBase::ApplySlipDynamics(const Vector3& forward, const Vector3& moveDirec
 	const float counterSteerRate = counterSteerInput * (1.0f - counterFadeRate);
 
 	// 限界角を超えたら、ステアを戻しただけでは解除されない滑走状態へ移行する
-	if (absSlipAngle >= SPIN_START_ANGLE) { counterRecoveryRequired = true; }
+	if (absSlipAngle >= SPIN_START_ANGLE && spinActivationRate > 0.0f) {
+		counterRecoveryRequired = true;
+	}
 
 	// 車体と移動方向が揃った場合、または停止した場合に滑走状態を解除する
 	const bool recovered = absSlipAngle <= SPIN_RESET_ANGLE &&
@@ -533,7 +557,8 @@ void CarBase::ApplySlipDynamics(const Vector3& forward, const Vector3& moveDirec
 	}
 	else {
 		// 限界前は滑り角に応じて通常グリップから最低グリップまで落とす
-		const float slipGripRate = std::clamp(absSlipAngle / SPIN_START_ANGLE, 0.0f, 1.0f);
+		const float slipGripRate =
+			std::clamp(absSlipAngle / SPIN_START_ANGLE, 0.0f, 1.0f) * spinActivationRate;
 		const float slipGrip = REAR_GRIP_MAX + (REAR_GRIP_MIN - REAR_GRIP_MAX) * slipGripRate;
 		grip = (std::min)(grip, slipGrip);
 	}
