@@ -129,6 +129,8 @@ private:
 
 	// 限界を超えたときに加えるスピン加速度(ラジアン/秒^2)
 	static constexpr float SPIN_ACCELERATION = 6.0f;
+	// 限界角を超えた後に保証する最低スピン加速率
+	static constexpr float MIN_UNCONTROLLED_SPIN_RATE = 0.35f;
 	// スピン回転が自然に収まる減衰率(1/秒)
 	static constexpr float SPIN_DAMPING = 0.9f;
 

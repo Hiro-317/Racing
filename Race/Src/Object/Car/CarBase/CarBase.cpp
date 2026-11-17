@@ -439,8 +439,13 @@ void CarBase::ApplySlipDynamics(const Vector3& forward, const Vector3& moveDirec
 		0.0f,
 		1.0f
 	);
-	const float spinRate = spinTorqueReleased ? 0.0f :
+	const float curveSpinRate =
 		spinLinearRate * spinLinearRate * (3.0f - 2.0f * spinLinearRate);
+
+	// 限界角を超えた後は最低回転力を保証し、横滑り角が一定になる釣り合いを発生させない
+	const bool isOverSpinStartAngle = absSlipAngle >= SPIN_START_ANGLE;
+	const float spinRate = spinTorqueReleased || !isOverSpinStartAngle ? 0.0f :
+		(std::max)(curveSpinRate, MIN_UNCONTROLLED_SPIN_RATE);
 
 	// スピン開始後は現在の回転方向を維持し、角度が180度を超えた際の符号反転を防ぐ
 	const float spinDirection = fabsf(spinYawSpeed) > 0.001f ?
