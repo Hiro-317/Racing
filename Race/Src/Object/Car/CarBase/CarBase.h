@@ -99,10 +99,10 @@ private:
 	static constexpr float TIRE_GRIP_COEFFICIENT = 1.15f;
 	// 駆動力がグリップ限界をこの割合だけ超えたとき、パワースライドを最大にする
 	static constexpr float POWER_SLIP_FULL_OVERLOAD = 0.75f;
-	// タイヤ空転時にエンジン回転数が上昇する反応速度(1/秒)
-	static constexpr float WHEEL_SPIN_RPM_RISE_RESPONSE = 12.0f;
 	// グリップ回復時にエンジン回転数が車速相当へ戻る反応速度(1/秒)
 	static constexpr float WHEEL_SPIN_RPM_FALL_RESPONSE = 6.0f;
+	// 空転中のフューエルカットを解除するレブリミットからの回転数差
+	static constexpr float WHEEL_SPIN_FUEL_CUT_DROP_RPM = 600.0f;
 
 	// 通常時に移動方向を車体前方へ戻す強さ(1/秒)
 	static constexpr float REAR_GRIP_MAX = 12.0f;
@@ -209,6 +209,8 @@ private:
 	float powerSlipAmount;
 	// タイヤ空転によって車速相当より上乗せされるエンジン回転数
 	float wheelSpinRpmOffset;
+	// タイヤ空転中にレブリミットへ当たって燃料を切っている状態
+	bool wheelSpinFuelCut;
 
 	// 回転スピード
 	float yawSpeed;

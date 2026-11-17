@@ -22,6 +22,7 @@ CarBase::CarBase(const Input::KEYPAD_NO& keypadNo, const Vector3& pos, const int
 	driftAmount(0.0f),
 	powerSlipAmount(0.0f),
 	wheelSpinRpmOffset(0.0f),
+	wheelSpinFuelCut(false),
 	yawSpeed(0.0f),
 	spinYawSpeed(0.0f),
 	spinTorqueReleased(false),
@@ -82,7 +83,9 @@ void CarBase::SubUpdate(void)
 			// ギアを上げた際最低回転数下回らないなら
 			if (rpm * (param.GEAR_RATIO[nowGear + 1] / param.GEAR_RATIO[nowGear]) >= MIN_RPM) {
 				// 下ボタン押すか最高回転数に行ったら
-				if (Input::GetIns().GetKey(Input::COMMAND::DOWN, keypadNo).keyTrgDown || rpm >= param.MAX_RPM) {
+				const bool autoShift = rpm >= param.MAX_RPM &&
+					!wheelSpinFuelCut && wheelSpinRpmOffset <= 1.0f;
+				if (Input::GetIns().GetKey(Input::COMMAND::DOWN, keypadNo).keyTrgDown || autoShift) {
 					// ギアを上げ回転数を落とす
 					rpm = rpm * (param.GEAR_RATIO[nowGear + 1] / param.GEAR_RATIO[nowGear]);
 					nowGear++;
@@ -243,30 +246,49 @@ void CarBase::SubUpdate(void)
 		(3.6f * 2.0f * DX_PI_F * param.TIRE_SIZE);
 	const float baseRpm = std::clamp(connectedRpm, MIN_RPM, param.MAX_RPM);
 
-	// 後輪が空転している間は、空転率とアクセル開度に応じてレブ付近まで回転数を上げる
+	// 後輪が空転している間は、空ぶかしと同じ上昇量を空転率に応じて回転数へ足す
 	const bool canWheelSpin = engineFlg && brakeInput == 0.0f && !handBrake;
 	if (!canWheelSpin) {
 		wheelSpinRpmOffset = 0.0f;
+		if (wheelSpinFuelCut) { fuelCut = false; }
+		wheelSpinFuelCut = false;
+	}
+	else if (wheelSpinFuelCut) {
+		// レブ到達後は燃料を切って回転数を落とし、一定量下がったら再点火する
+		wheelSpinRpmOffset = (std::max)(0.0f, wheelSpinRpmOffset - DOWN_RPM);
+		rpm = std::clamp(baseRpm + wheelSpinRpmOffset, MIN_RPM, param.MAX_RPM);
+		fuelCut = true;
+		if (rpm <= param.MAX_RPM - WHEEL_SPIN_FUEL_CUT_DROP_RPM) {
+			wheelSpinFuelCut = false;
+			fuelCut = false;
+		}
+	}
+	else if (powerSlipAmount > 0.0f && throttleInput > 0.0f) {
+		// ローンチで先に上げた回転数を維持し、空転率が大きいほど空ぶかしに近い速さで加算する
+		const float existingRpmOffset = (std::max)(rpm - baseRpm, 0.0f);
+		wheelSpinRpmOffset = (std::max)(wheelSpinRpmOffset, existingRpmOffset);
+		wheelSpinRpmOffset += UP_RPM * throttleInput * powerSlipAmount;
+		const float wheelSpinRpm = baseRpm + wheelSpinRpmOffset;
+		if (wheelSpinRpm >= param.MAX_RPM) {
+			wheelSpinRpmOffset = (std::max)(param.MAX_RPM - baseRpm, 0.0f);
+			rpm = param.MAX_RPM;
+			wheelSpinFuelCut = true;
+			fuelCut = true;
+		}
+		else {
+			rpm = (std::max)(wheelSpinRpm, MIN_RPM);
+		}
 	}
 	else {
-		const float targetWheelSpinRpm =
-			baseRpm + (param.MAX_RPM - baseRpm) * powerSlipAmount * throttleInput;
-		const float targetWheelSpinRpmOffset =
-			(std::max)(targetWheelSpinRpm - baseRpm, 0.0f);
-
-		// 空転開始時は素早く上げ、グリップ回復後は接続ショックを避けながら車速相当へ戻す
-		const float wheelSpinRpmResponse = targetWheelSpinRpmOffset > wheelSpinRpmOffset ?
-			WHEEL_SPIN_RPM_RISE_RESPONSE :
-			WHEEL_SPIN_RPM_FALL_RESPONSE;
+		// グリップ回復後は接続ショックを避けながら車速相当へ戻す
 		const float wheelSpinRpmBlend = std::clamp(
-			wheelSpinRpmResponse * App::GetPassTime(),
+			WHEEL_SPIN_RPM_FALL_RESPONSE * App::GetPassTime(),
 			0.0f,
 			1.0f
 		);
-		wheelSpinRpmOffset +=
-			(targetWheelSpinRpmOffset - wheelSpinRpmOffset) * wheelSpinRpmBlend;
+		wheelSpinRpmOffset += (0.0f - wheelSpinRpmOffset) * wheelSpinRpmBlend;
 
-		if (wheelSpinRpmOffset <= 1.0f && targetWheelSpinRpmOffset == 0.0f) {
+		if (wheelSpinRpmOffset <= 1.0f) {
 			wheelSpinRpmOffset = 0.0f;
 		}
 		if (wheelSpinRpmOffset > 0.0f) {
@@ -471,7 +493,7 @@ void CarBase::UpdateRearGrip(float currentSpeed, float steerInput, float steerCh
 	const float cornerDriftAmount = speedRate * steerRate * CORNER_DRIFT_POWER;
 
 	// 現在のエンジントルクをギア比とタイヤ半径から後輪の駆動力へ変換する
-	const float driveForce = engineFlg && param.TIRE_SIZE > 0.0f ?
+	const float driveForce = engineFlg && !wheelSpinFuelCut && param.TIRE_SIZE > 0.0f ?
 		fabsf(
 			torque * param.GEAR_RATIO[nowGear] * param.FINAL_GEAR_RATIO * LOST_RATIO * throttleRate /
 			param.TIRE_SIZE
