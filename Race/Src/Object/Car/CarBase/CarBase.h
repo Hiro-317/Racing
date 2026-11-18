@@ -1,5 +1,6 @@
 #pragma once
 #include <algorithm>
+#include <array>
 #include <functional>
 
 #include "../../ActorBase/ActorBase.h"
@@ -34,6 +35,15 @@ protected:
 	void VelocityUpdate(bool deceleration) override {}
 
 private:
+
+	// 車種ごとの回転数に合わせて走行音のピッチと音量を更新する
+	void UpdateEngineSound(void);
+
+	std::array<int, 5> engineLoopHandles{ -1, -1, -1, -1, -1 };
+	int starterSoundHandle = -1;
+	bool engineSoundPlaying = false;
+	float engineSoundRpm = 0.0f;
+	float engineSoundFade = 0.0f;
 
 	// トルク計算
 	void GetTorque(void);

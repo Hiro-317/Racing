@@ -1,7 +1,31 @@
 ﻿#include "CarBase.h"
 #include <algorithm>
+#include <cmath>
+#include <tchar.h>
 
 #include "../../Common/Collider/CapsuleCollider.h"
+
+namespace {
+	struct EngineSoundLayer {
+		const TCHAR* path;
+		float rpmRatio;
+		int volume;
+	};
+
+	// 実測回転数がないため、車種ごとのアイドルから上限までの割合で割り当てる
+	constexpr EngineSoundLayer ENGINE_SOUND_LAYERS[] = {
+		{ _T("Data/Sound/IDLE_loop.wav"), 0.00f, 176 },
+		{ _T("Data/Sound/LOW_loop.wav"),  0.23f, 137 },
+		{ _T("Data/Sound/MID_loop.wav"),  0.48f, 117 },
+		{ _T("Data/Sound/HIGH_loop.wav"), 0.75f, 101 },
+		{ _T("Data/Sound/REV_loop.wav"),  1.00f,  94 },
+	};
+
+	// ループ用 WAV はすべて 44.1 kHz にそろえている
+	constexpr float ENGINE_SOUND_SAMPLE_RATE = 44100.0f;
+	constexpr float ENGINE_SOUND_RESPONSE = 0.045f;
+	constexpr float ENGINE_SOUND_FADE_TIME = 0.20f;
+}
 
 
 CarBase::CarBase(const Input::KEYPAD_NO& keypadNo, const Vector3& pos, const int pNo, const std::function<int(void)> camNo) :
@@ -41,6 +65,12 @@ CarBase::CarBase(const Input::KEYPAD_NO& keypadNo, const Vector3& pos, const int
 void CarBase::Load(void)
 {
 	AddCollider(new CapsuleCollider(COLLIDER_TAG::Player, Vector3(0.0f, 80.0f, 150.0f), Vector3(0.0f, 80.0f, -150.0f), 80.0f));
+
+	static_assert(std::size(ENGINE_SOUND_LAYERS) == std::tuple_size_v<decltype(engineLoopHandles)>);
+	for (size_t i = 0; i < engineLoopHandles.size(); ++i) {
+		engineLoopHandles[i] = LoadSoundMem(ENGINE_SOUND_LAYERS[i].path);
+	}
+	starterSoundHandle = LoadSoundMem(_T("Data/Sound/sell_3.wav"));
 }
 
 void CarBase::OnCollision(COLLIDER_TAG ownTag, const ColliderBase& other, const CollisionResult& result)
@@ -353,6 +383,8 @@ void CarBase::SubUpdate(void)
 
 	trans.pos += moveVec;
 
+	UpdateEngineSound();
+
 	// ここからデータロガー
 	//
 	// 最高トルク
@@ -397,8 +429,79 @@ void CarBase::SubDraw(void)
 	}
 }
 
+void CarBase::UpdateEngineSound(void)
+{
+	if (!engineFlg) {
+		if (engineSoundPlaying) {
+			for (int handle : engineLoopHandles) {
+				if (handle != -1) { StopSoundMem(handle); }
+			}
+			if (starterSoundHandle != -1) { StopSoundMem(starterSoundHandle); }
+			engineSoundPlaying = false;
+		}
+		return;
+	}
+
+	if (!engineSoundPlaying) {
+		if (starterSoundHandle != -1) {
+			ChangeVolumeSoundMem(210, starterSoundHandle);
+			PlaySoundMem(starterSoundHandle, DX_PLAYTYPE_BACK, true);
+		}
+
+		// ループを無音で回し始め、回転域をまたいでも再生位置を維持する
+		for (int handle : engineLoopHandles) {
+			if (handle == -1) { continue; }
+			ChangeVolumeSoundMem(0, handle);
+			PlaySoundMem(handle, DX_PLAYTYPE_LOOP, true);
+		}
+		engineSoundPlaying = true;
+		engineSoundRpm = rpm;
+		engineSoundFade = 0.0f;
+	}
+
+	const float dt = App::GetPassTime();
+	engineSoundRpm += (rpm - engineSoundRpm) * (1.0f - std::exp(-dt / ENGINE_SOUND_RESPONSE));
+	engineSoundFade = (std::min)(1.0f, engineSoundFade + dt / ENGINE_SOUND_FADE_TIME);
+
+	const float rpmRatio = std::clamp((engineSoundRpm - MIN_RPM) / (param.MAX_RPM - MIN_RPM), 0.0f, 1.0f);
+	size_t upper = 1;
+	while (upper + 1 < engineLoopHandles.size() && rpmRatio > ENGINE_SOUND_LAYERS[upper].rpmRatio) {
+		++upper;
+	}
+	const size_t lower = upper - 1;
+	const float lowerRatio = ENGINE_SOUND_LAYERS[lower].rpmRatio;
+	const float upperRatio = ENGINE_SOUND_LAYERS[upper].rpmRatio;
+	const float blend = std::clamp((rpmRatio - lowerRatio) / (upperRatio - lowerRatio), 0.0f, 1.0f);
+
+	for (size_t i = 0; i < engineLoopHandles.size(); ++i) {
+		const int handle = engineLoopHandles[i];
+		if (handle == -1) { continue; }
+
+		float gain = 0.0f;
+		if (i == lower) { gain = std::sqrt(1.0f - blend); }
+		if (i == upper) { gain = std::sqrt(blend); }
+
+		const auto& layer = ENGINE_SOUND_LAYERS[i];
+		if (gain > 0.0f) {
+			const float pitch = 1.0f + 0.7f * (rpmRatio - layer.rpmRatio);
+			SetFrequencySoundMem(static_cast<int>(ENGINE_SOUND_SAMPLE_RATE * pitch), handle);
+		}
+		ChangeVolumeSoundMem(static_cast<int>(layer.volume * gain * engineSoundFade), handle);
+	}
+}
+
 void CarBase::SubRelease(void)
 {
+	for (int& handle : engineLoopHandles) {
+		if (handle == -1) { continue; }
+		DeleteSoundMem(handle);
+		handle = -1;
+	}
+	if (starterSoundHandle != -1) {
+		DeleteSoundMem(starterSoundHandle);
+		starterSoundHandle = -1;
+	}
+	engineSoundPlaying = false;
 }
 
 void CarBase::GetTorque(void)
