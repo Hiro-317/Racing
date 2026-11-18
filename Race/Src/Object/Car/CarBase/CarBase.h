@@ -95,8 +95,10 @@ private:
 	static constexpr float POWER_DRIFT_POWER = 1.0f;
 	// 静止時に後輪へ掛かる車重の割合
 	static constexpr float REAR_WEIGHT_RATE = 0.55f;
-	// 後輪タイヤが路面へ伝えられる縦方向の摩擦係数
-	static constexpr float TIRE_GRIP_COEFFICIENT = 1.15f;
+	// 後輪タイヤが直線加速へ使える縦方向の摩擦係数
+	static constexpr float TIRE_LONGITUDINAL_GRIP_COEFFICIENT = 1.60f;
+	// 後輪タイヤが旋回へ使える横方向のグリップ係数
+	static constexpr float TIRE_LATERAL_GRIP_COEFFICIENT = 1.00f;
 	// 駆動力がグリップ限界をこの割合だけ超えたとき、パワースライドを最大にする
 	static constexpr float POWER_SLIP_FULL_OVERLOAD = 0.75f;
 	// グリップ回復時にエンジン回転数が車速相当へ戻る反応速度(1/秒)

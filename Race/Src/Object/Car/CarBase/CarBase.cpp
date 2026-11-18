@@ -489,8 +489,14 @@ void CarBase::UpdateRearGrip(float currentSpeed, float steerInput, float steerCh
 	const float throttleRate = std::clamp(throttleInput, 0.0f, 1.0f);
 	const float brakeRate = std::clamp(brakeInput, 0.0f, 1.0f);
 
-	// 高速旋回ではアクセルに関係なく限界へ近づくが、単独では急激なスピンまで発展させない
-	const float cornerDriftAmount = speedRate * steerRate * CORNER_DRIFT_POWER;
+	// 車速とステアから横グリップの使用率を求め、横方向の限界へ近いほどリアを流れやすくする
+	const float lateralGripDemand = speedRate * steerRate;
+	const float lateralGripUsage = std::clamp(
+		lateralGripDemand / TIRE_LATERAL_GRIP_COEFFICIENT,
+		0.0f,
+		1.0f
+	);
+	const float cornerDriftAmount = lateralGripUsage * CORNER_DRIFT_POWER;
 
 	// 現在のエンジントルクをギア比とタイヤ半径から後輪の駆動力へ変換する
 	const float driveForce = engineFlg && !wheelSpinFuelCut && param.TIRE_SIZE > 0.0f ?
@@ -500,12 +506,19 @@ void CarBase::UpdateRearGrip(float currentSpeed, float steerInput, float steerCh
 		) :
 		0.0f;
 
-	// 後輪荷重とタイヤ係数から、後輪が路面へ伝えられる駆動力の限界を求める
+	// 横グリップを使うほど縦方向へ使える余力を減らし、タイヤの摩擦楕円を再現する
 	const float rearLoad = param.CAR_WEIGHT * 9.81f * REAR_WEIGHT_RATE;
-	const float rearGripLimit = rearLoad * TIRE_GRIP_COEFFICIENT;
-	const float tractionOverload = rearGripLimit > 0.0f ?
-		(driveForce - rearGripLimit) / rearGripLimit :
-		0.0f;
+	const float longitudinalGripRate = sqrtf(
+		(std::max)(1.0f - lateralGripUsage * lateralGripUsage, 0.0f)
+	);
+	const float fullLongitudinalGripLimit =
+		rearLoad * TIRE_LONGITUDINAL_GRIP_COEFFICIENT;
+	const float availableLongitudinalGripLimit =
+		fullLongitudinalGripLimit * longitudinalGripRate;
+	const float safeLongitudinalGripLimit =
+		(std::max)(availableLongitudinalGripLimit, 1.0f);
+	const float tractionOverload =
+		(driveForce - availableLongitudinalGripLimit) / safeLongitudinalGripLimit;
 
 	// グリップ限界を超えた割合を0～1へ変換し、低速でも高トルクなら後輪を滑らせる
 	powerSlipAmount = std::clamp(
