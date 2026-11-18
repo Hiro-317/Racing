@@ -89,22 +89,24 @@ private:
 	static constexpr float REAR_SLIP_START_SPEED = 45.0f;
 	// 後輪の滑り量が最大になる速度(km/h)
 	static constexpr float REAR_SLIP_FULL_SPEED = 100.0f;
+
 	// 高速旋回だけで発生する滑りの強さ
 	static constexpr float CORNER_DRIFT_POWER = 0.55f;
 	// 駆動力が後輪グリップを超えたときに発生するパワースライドの強さ
 	static constexpr float POWER_DRIFT_POWER = 1.0f;
+
 	// 静止時に後輪へ掛かる車重の割合
 	static constexpr float REAR_WEIGHT_RATE = 0.55f;
+
 	// 後輪タイヤが直線加速へ使える縦方向の摩擦係数
-	static constexpr float TIRE_LONGITUDINAL_GRIP_COEFFICIENT = 1.60f;
+	static constexpr float TIRE_LONGITUDINAL_GRIP_COEFFICIENT = 1.8f;
 	// 後輪タイヤが旋回へ使える横方向のグリップ係数
 	static constexpr float TIRE_LATERAL_GRIP_COEFFICIENT = 1.00f;
+
 	// 駆動力がグリップ限界をこの割合だけ超えたとき、パワースライドを最大にする
 	static constexpr float POWER_SLIP_FULL_OVERLOAD = 0.75f;
 	// グリップ回復時にエンジン回転数が車速相当へ戻る反応速度(1/秒)
 	static constexpr float WHEEL_SPIN_RPM_FALL_RESPONSE = 6.0f;
-	// 空転中のフューエルカットを解除するレブリミットからの回転数差
-	static constexpr float WHEEL_SPIN_FUEL_CUT_DROP_RPM = 600.0f;
 
 	// 通常時に移動方向を車体前方へ戻す強さ(1/秒)
 	static constexpr float REAR_GRIP_MAX = 12.0f;
