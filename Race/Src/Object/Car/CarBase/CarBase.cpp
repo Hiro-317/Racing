@@ -9,22 +9,25 @@ namespace {
 	struct EngineSoundLayer {
 		const TCHAR* path;
 		float rpmRatio;
-		int volume;
 	};
 
 	// 実測回転数がないため、車種ごとのアイドルから上限までの割合で割り当てる
 	constexpr EngineSoundLayer ENGINE_SOUND_LAYERS[] = {
-		{ _T("Data/Sound/IDLE_loop.wav"), 0.00f, 176 },
-		{ _T("Data/Sound/LOW_loop.wav"),  0.23f, 137 },
-		{ _T("Data/Sound/MID_loop.wav"),  0.48f, 117 },
-		{ _T("Data/Sound/HIGH_loop.wav"), 0.75f, 101 },
-		{ _T("Data/Sound/REV_loop.wav"),  1.00f,  94 },
+		{ _T("Data/Sound/IDLE_loop.wav"), 0.00f },
+		{ _T("Data/Sound/LOW_loop.wav"),  0.23f },
+		{ _T("Data/Sound/MID_loop.wav"),  0.48f },
+		{ _T("Data/Sound/HIGH_loop.wav"), 0.75f },
+		{ _T("Data/Sound/REV_loop.wav"),  1.00f },
 	};
 
 	// ループ用 WAV はすべて 44.1 kHz にそろえている
 	constexpr float ENGINE_SOUND_SAMPLE_RATE = 44100.0f;
 	constexpr float ENGINE_SOUND_RESPONSE = 0.045f;
 	constexpr float ENGINE_SOUND_FADE_TIME = 0.20f;
+
+	// ループ素材は約 -14 LUFS にそろっているため、回転数に応じて全体の音量を上げる
+	constexpr float ENGINE_SOUND_IDLE_DB = -8.0f;
+	constexpr float ENGINE_SOUND_MAX_RPM_DB = -3.0f;
 }
 
 
@@ -473,7 +476,7 @@ void CarBase::UpdateEngineSound(void)
 		// ループを無音で回し始め、回転域をまたいでも再生位置を維持する
 		for (int handle : engineLoopHandles) {
 			if (handle == -1) { continue; }
-			ChangeVolumeSoundMem(0, handle);
+			SetVolumeSoundMem(0, handle);
 			PlaySoundMem(handle, DX_PLAYTYPE_LOOP, true);
 		}
 		engineSoundPlaying = true;
@@ -495,20 +498,28 @@ void CarBase::UpdateEngineSound(void)
 	const float upperRatio = ENGINE_SOUND_LAYERS[upper].rpmRatio;
 	const float blend = std::clamp((rpmRatio - lowerRatio) / (upperRatio - lowerRatio), 0.0f, 1.0f);
 
+	const float engineVolumeDb = std::lerp(ENGINE_SOUND_IDLE_DB, ENGINE_SOUND_MAX_RPM_DB, rpmRatio);
 	for (size_t i = 0; i < engineLoopHandles.size(); ++i) {
 		const int handle = engineLoopHandles[i];
 		if (handle == -1) { continue; }
 
-		float gain = 0.0f;
-		if (i == lower) { gain = std::sqrt(1.0f - blend); }
-		if (i == upper) { gain = std::sqrt(blend); }
+		float blendGain = 0.0f;
+		if (i == lower) { blendGain = std::sqrt(1.0f - blend); }
+		if (i == upper) { blendGain = std::sqrt(blend); }
 
 		const auto& layer = ENGINE_SOUND_LAYERS[i];
-		if (gain > 0.0f) {
+		if (blendGain > 0.0f) {
 			const float pitch = 1.0f + 0.7f * (rpmRatio - layer.rpmRatio);
 			SetFrequencySoundMem(static_cast<int>(ENGINE_SOUND_SAMPLE_RATE * pitch), handle);
 		}
-		ChangeVolumeSoundMem(static_cast<int>(layer.volume * gain * engineSoundFade), handle);
+		// 振幅として計算したフェードとクロスフェードを DxLib のデシベル指定に変換する
+		const float gain = blendGain * engineSoundFade;
+		int volume = 0;
+		if (gain > 0.0f) {
+			const float layerVolumeDb = engineVolumeDb + 20.0f * std::log10(gain);
+			volume = std::clamp(10000 + static_cast<int>(std::lround(100.0f * layerVolumeDb)), 0, 10000);
+		}
+		SetVolumeSoundMem(volume, handle);
 	}
 }
 
