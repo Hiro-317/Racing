@@ -120,7 +120,7 @@ private:
 	// 後輪タイヤが直線加速へ使える縦方向の摩擦係数
 	static constexpr float TIRE_LONGITUDINAL_GRIP_COEFFICIENT = 1.8f;
 	// 後輪タイヤが旋回へ使える横方向のグリップ係数
-	static constexpr float TIRE_LATERAL_GRIP_COEFFICIENT = 1.65f;
+	static constexpr float TIRE_LATERAL_GRIP_COEFFICIENT = 1.8f;
 
 	// 駆動力がグリップ限界をこの割合だけ超えたとき、パワースライドを最大にする
 	static constexpr float POWER_SLIP_FULL_OVERLOAD = 0.9f;
