@@ -1,0 +1,6 @@
+EngineHigh,Data/Sound/Engine/HIGH_loop.wav,Engine,SE,1,TRUE,4
+EngineIdle,Data/Sound/Engine/IDLE_loop.wav,Engine,SE,1,TRUE,4
+EngineLow,Data/Sound/Engine/LOW_loop.wav,Engine,SE,1,TRUE,4
+EngineMid,Data/Sound/Engine/MID_loop.wav,Engine,SE,1,TRUE,4
+EngineRev,Data/Sound/Engine/REV_loop.wav,Engine,SE,1,TRUE,4
+EngineStarter,Data/Sound/Engine/sell_3.wav,Engine,SE,0.615,FALSE,4

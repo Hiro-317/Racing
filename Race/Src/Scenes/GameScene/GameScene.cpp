@@ -37,7 +37,6 @@ GameScene::GameScene(const int& num, const Input::KEYPAD_NO* no, const CAR_TYPE*
 
 	void GameScene::SubPostLoad(void)
 {
-	//Snd::GetIns().ChangeScene("Game");
 	AddActor(new Stage());
 
 	cars = CarFactory(type, num, no, [&]() { return SceneBase::GetCamNo(); });
@@ -65,7 +64,7 @@ void GameScene::SubPreUpdate(void)
 		const auto& rotation = listener.GetRotation();
 		const Vector3 frontPosition = position + rotation.Rotate(Vector3::Zonly(1.0f));
 		const Vector3 up = rotation.Rotate(Vector3::Yonly(1.0f));
-		Set3DSoundListenerPosAndFrontPosAndUpVec(position.ToVECTOR(), frontPosition.ToVECTOR(), up.ToVECTOR());
+		Snd::GetIns().SetSpatialListener(position, frontPosition, up);
 	}
 
 	if (Input::GetIns().GetPriorityKey(COMMAND::PAUSE).keyTrgDown) {

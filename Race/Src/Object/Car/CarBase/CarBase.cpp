@@ -1,23 +1,23 @@
 ﻿#include "CarBase.h"
 #include <algorithm>
 #include <cmath>
-#include <tchar.h>
 
 #include "../../Common/Collider/CapsuleCollider.h"
+#include "../../../Manager/Sound/SoundManager.h"
 
 namespace {
 	struct EngineSoundLayer {
-		const TCHAR* path;
+		const char* id;
 		float rpmRatio;
 	};
 
 	// 実測回転数がないため、車種ごとのアイドルから上限までの割合で割り当てる
 	constexpr EngineSoundLayer ENGINE_SOUND_LAYERS[] = {
-		{ _T("Data/Sound/IDLE_loop.wav"), 0.00f },
-		{ _T("Data/Sound/LOW_loop.wav"),  0.23f },
-		{ _T("Data/Sound/MID_loop.wav"),  0.48f },
-		{ _T("Data/Sound/HIGH_loop.wav"), 0.75f },
-		{ _T("Data/Sound/REV_loop.wav"),  1.00f },
+		{ "EngineIdle", 0.00f },
+		{ "EngineLow",  0.23f },
+		{ "EngineMid",  0.48f },
+		{ "EngineHigh", 0.75f },
+		{ "EngineRev",  1.00f },
 	};
 
 	// ループ用 WAV はすべて 44.1 kHz にそろえている
@@ -73,13 +73,11 @@ void CarBase::Load(void)
 	AddCollider(new CapsuleCollider(COLLIDER_TAG::Player, Vector3(0.0f, 80.0f, 150.0f), Vector3(0.0f, 80.0f, -150.0f), 80.0f));
 
 	static_assert(std::size(ENGINE_SOUND_LAYERS) == std::tuple_size_v<decltype(engineLoopHandles)>);
-	// 車両の音声だけを３Ｄサウンドとして読み込む
-	SetCreate3DSoundFlag(true);
+	auto& sound = Snd::GetIns();
 	for (size_t i = 0; i < engineLoopHandles.size(); ++i) {
-		engineLoopHandles[i] = LoadSoundMem(ENGINE_SOUND_LAYERS[i].path, 1);
+		engineLoopHandles[i] = sound.LoadSpatial(ENGINE_SOUND_LAYERS[i].id);
 	}
-	starterSoundHandle = LoadSoundMem(_T("Data/Sound/sell_3.wav"), 1);
-	SetCreate3DSoundFlag(false);
+	starterSoundHandle = sound.LoadSpatial("EngineStarter");
 }
 
 void CarBase::OnCollision(COLLIDER_TAG ownTag, const ColliderBase& other, const CollisionResult& result)
@@ -432,9 +430,10 @@ void CarBase::SubDraw(void)
 
 void CarBase::UpdateEngineState(void)
 {
+	auto& sound = Snd::GetIns();
 	if (engineState == EngineState::Starting) {
-		if (CheckSoundMem(starterSoundHandle) == 1) {
-			Set3DPositionSoundMem((trans.pos + Vector3::Yonly(ENGINE_SOUND_HEIGHT)).ToVECTOR(), starterSoundHandle);
+		if (sound.IsSpatialPlaying(starterSoundHandle)) {
+			sound.UpdateSpatial(starterSoundHandle, trans.pos + Vector3::Yonly(ENGINE_SOUND_HEIGHT));
 			return;
 		}
 
@@ -457,14 +456,10 @@ void CarBase::UpdateEngineState(void)
 		return;
 	}
 
-	if (starterSoundHandle != -1) {
-		Set3DPositionSoundMem((trans.pos + Vector3::Yonly(ENGINE_SOUND_HEIGHT)).ToVECTOR(), starterSoundHandle);
-		Set3DRadiusSoundMem(ENGINE_SOUND_RADIUS, starterSoundHandle);
-		ChangeVolumeSoundMem(210, starterSoundHandle);
-		if (PlaySoundMem(starterSoundHandle, DX_PLAYTYPE_BACK, true) == 0) {
-			engineState = EngineState::Starting;
-			return;
-		}
+	const Vector3 position = trans.pos + Vector3::Yonly(ENGINE_SOUND_HEIGHT);
+	if (sound.PlaySpatial(starterSoundHandle, position, ENGINE_SOUND_RADIUS)) {
+		engineState = EngineState::Starting;
+		return;
 	}
 
 	// セル音を読み込めない場合や再生に失敗した場合も始動できるようにする
@@ -474,28 +469,23 @@ void CarBase::UpdateEngineState(void)
 
 void CarBase::UpdateEngineSound(void)
 {
+	auto& sound = Snd::GetIns();
 	if (engineState != EngineState::Running) {
 		if (engineSoundPlaying) {
 			for (int handle : engineLoopHandles) {
-				if (handle != -1) { StopSoundMem(handle); }
+				sound.StopSpatial(handle);
 			}
 			engineSoundPlaying = false;
 		}
 		return;
 	}
 
-	const VECTOR position = (trans.pos + Vector3::Yonly(ENGINE_SOUND_HEIGHT)).ToVECTOR();
-	for (int handle : engineLoopHandles) {
-		if (handle != -1) { Set3DPositionSoundMem(position, handle); }
-	}
+	const Vector3 position = trans.pos + Vector3::Yonly(ENGINE_SOUND_HEIGHT);
 
 	if (!engineSoundPlaying) {
 		// ループを無音で回し始め、回転域をまたいでも再生位置を維持する
 		for (int handle : engineLoopHandles) {
-			if (handle == -1) { continue; }
-			Set3DRadiusSoundMem(ENGINE_SOUND_RADIUS, handle);
-			SetVolumeSoundMem(0, handle);
-			PlaySoundMem(handle, DX_PLAYTYPE_LOOP, true);
+			sound.PlaySpatial(handle, position, ENGINE_SOUND_RADIUS, 0.0f);
 		}
 		engineSoundPlaying = true;
 		engineSoundRpm = rpm;
@@ -517,6 +507,7 @@ void CarBase::UpdateEngineSound(void)
 	const float blend = std::clamp((rpmRatio - lowerRatio) / (upperRatio - lowerRatio), 0.0f, 1.0f);
 
 	const float engineVolumeDb = std::lerp(ENGINE_SOUND_IDLE_DB, ENGINE_SOUND_MAX_RPM_DB, rpmRatio);
+	const float engineGain = std::pow(10.0f, engineVolumeDb / 20.0f) * engineSoundFade;
 	for (size_t i = 0; i < engineLoopHandles.size(); ++i) {
 		const int handle = engineLoopHandles[i];
 		if (handle == -1) { continue; }
@@ -525,33 +516,21 @@ void CarBase::UpdateEngineSound(void)
 		if (i == lower) { blendGain = std::sqrt(1.0f - blend); }
 		if (i == upper) { blendGain = std::sqrt(blend); }
 
-		const auto& layer = ENGINE_SOUND_LAYERS[i];
-		if (blendGain > 0.0f) {
-			const float pitch = 1.0f + 0.7f * (rpmRatio - layer.rpmRatio);
-			SetFrequencySoundMem(static_cast<int>(ENGINE_SOUND_SAMPLE_RATE * pitch), handle);
-		}
-		// 振幅として計算したフェードとクロスフェードを DxLib のデシベル指定に変換する
-		const float gain = blendGain * engineSoundFade;
-		int volume = 0;
-		if (gain > 0.0f) {
-			const float layerVolumeDb = engineVolumeDb + 20.0f * std::log10(gain);
-			volume = std::clamp(10000 + static_cast<int>(std::lround(100.0f * layerVolumeDb)), 0, 10000);
-		}
-		SetVolumeSoundMem(volume, handle);
+		const float pitch = 1.0f + 0.7f * (rpmRatio - ENGINE_SOUND_LAYERS[i].rpmRatio);
+		const int frequency = blendGain > 0.0f ? static_cast<int>(ENGINE_SOUND_SAMPLE_RATE * pitch) : 0;
+		sound.UpdateSpatial(handle, position, engineGain * blendGain, frequency);
 	}
 }
 
 void CarBase::SubRelease(void)
 {
+	auto& sound = Snd::GetIns();
 	for (int& handle : engineLoopHandles) {
-		if (handle == -1) { continue; }
-		DeleteSoundMem(handle);
+		sound.ReleaseSpatial(handle);
 		handle = -1;
 	}
-	if (starterSoundHandle != -1) {
-		DeleteSoundMem(starterSoundHandle);
-		starterSoundHandle = -1;
-	}
+	sound.ReleaseSpatial(starterSoundHandle);
+	starterSoundHandle = -1;
 	engineSoundPlaying = false;
 	engineState = EngineState::Off;
 }

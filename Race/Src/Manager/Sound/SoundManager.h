@@ -5,6 +5,8 @@
 #include<string>
 #include<algorithm>
 
+struct Vector3;
+
 class SoundManager
 {
 private:
@@ -30,7 +32,7 @@ public:
 	// 取得
 	static SoundManager& GetIns(void) { return *ins; }
 	// 終了処理/削除
-	static void DeleteIns(void) { if (ins != nullptr) { ins->Release(); delete ins; } }
+	static void DeleteIns(void) { if (ins != nullptr) { ins->Release(); delete ins; ins = nullptr; } }
 #pragma endregion
 
 	// 更新
@@ -75,6 +77,40 @@ public:
 	/// </summary>
 	void PausePlay(void);
 
+	/// <summary>テーブルの音声IDから、車両ごとに独立した３Ｄ音源を読み込む。</summary>
+	/// <param name="id">音声ID</param>
+	/// <returns>音源ハンドル。読み込めなかった場合は -1。</returns>
+	int LoadSpatial(const std::string& id);
+
+	/// <summary>指定した位置と可聴範囲で３Ｄ音源を先頭から再生する。</summary>
+	/// <param name="handle">音源ハンドル</param>
+	/// <param name="position">ワールド座標</param>
+	/// <param name="radius">音が届く距離</param>
+	/// <param name="gain">テーブル音量に掛ける振幅の倍率</param>
+	bool PlaySpatial(int handle, const Vector3& position, float radius, float gain = 1.0f);
+
+	/// <summary>３Ｄ音源の位置、音量、再生周波数を更新する。</summary>
+	/// <param name="handle">音源ハンドル</param>
+	/// <param name="position">ワールド座標</param>
+	/// <param name="gain">テーブル音量に掛ける振幅の倍率</param>
+	/// <param name="frequency">再生周波数。0 の場合は設定しない。</param>
+	void UpdateSpatial(int handle, const Vector3& position, float gain = 1.0f, int frequency = 0);
+
+	/// <summary>指定した３Ｄ音源が再生中または一時停止中かを返す。</summary>
+	bool IsSpatialPlaying(int handle) const;
+
+	/// <summary>指定した３Ｄ音源を停止する。</summary>
+	void StopSpatial(int handle);
+
+	/// <summary>指定した３Ｄ音源を解放する。</summary>
+	void ReleaseSpatial(int handle);
+
+	/// <summary>３Ｄ音源を聞く位置と向きを設定する。</summary>
+	/// <param name="position">リスナーの座標</param>
+	/// <param name="frontPosition">リスナーの前方にある座標</param>
+	/// <param name="up">リスナーの上方向ベクトル</param>
+	void SetSpatialListener(const Vector3& position, const Vector3& frontPosition, const Vector3& up);
+
 #pragma region ボリューム取得
 	// マスターボリューム（0～255）
 	unsigned char MasterVolume(void)const { return masterVolume; }
@@ -118,6 +154,7 @@ private:
 		TABLE_VOLUME,	// ボリューム
 		TABLE_LOOP,		// ループ
 		TABLE_DUPLI,	// 最大同時再生数
+		TABLE_COLUMN_COUNT,
 	};
 
 	// 1度その音声を再生してから次に再生するまで最低でも必要なインターバル
@@ -151,25 +188,6 @@ private:
 		// 最大同時再生数
 		unsigned char maxDupli = 1;
 
-		// 生成
-		SoundTable(void) {}
-
-		SoundTable(
-			const std::string& path,
-			const std::string& scene,
-			const std::string& type,
-			const std::string& volume,
-			const std::string& loop,
-			const std::string& maxDupli
-		) :
-			path(path),
-			scene(scene),
-			type(type),
-			volume(std::stof(volume)),
-			loop((loop == "TRUE") ? true : false),
-			maxDupli((unsigned char)std::stoi(maxDupli))
-		{
-		}
 	};
 
 	// 音声データの種類ごとに１つ抱える情報の構造体
@@ -193,6 +211,13 @@ private:
 		// 一時停止中か
 		bool paused = false;
 	};
+	// ３Ｄ音源は生成した車両ごとに保持する
+	struct SpatialSound
+	{
+		const SoundTable* table;
+		bool paused = false;
+	};
+
 #pragma endregion
 
 	// 外部ファイルからサウンドテーブルをそのまま読み込む際の格納先
@@ -203,6 +228,7 @@ private:
 
 	// 実際に今読み込んで使う音声データ
 	std::map<std::string, std::vector<SoundData>>sounds;
+	std::map<int, SpatialSound> spatialSounds;
 
 #pragma region 音量
 
