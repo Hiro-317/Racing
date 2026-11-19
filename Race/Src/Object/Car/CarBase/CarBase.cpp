@@ -25,6 +25,10 @@ namespace {
 	constexpr float ENGINE_SOUND_RESPONSE = 0.045f;
 	constexpr float ENGINE_SOUND_FADE_TIME = 0.20f;
 
+	// 車体内に音源を置き、40 メートルで聞こえなくなるよう距離減衰を設定する
+	constexpr float ENGINE_SOUND_HEIGHT = 60.0f;
+	constexpr float ENGINE_SOUND_RADIUS = 4000.0f;
+
 	// ループ素材は約 -14 LUFS にそろっているため、回転数に応じて全体の音量を上げる
 	constexpr float ENGINE_SOUND_IDLE_DB = -8.0f;
 	constexpr float ENGINE_SOUND_MAX_RPM_DB = -3.0f;
@@ -69,10 +73,13 @@ void CarBase::Load(void)
 	AddCollider(new CapsuleCollider(COLLIDER_TAG::Player, Vector3(0.0f, 80.0f, 150.0f), Vector3(0.0f, 80.0f, -150.0f), 80.0f));
 
 	static_assert(std::size(ENGINE_SOUND_LAYERS) == std::tuple_size_v<decltype(engineLoopHandles)>);
+	// 車両の音声だけを３Ｄサウンドとして読み込む
+	SetCreate3DSoundFlag(true);
 	for (size_t i = 0; i < engineLoopHandles.size(); ++i) {
-		engineLoopHandles[i] = LoadSoundMem(ENGINE_SOUND_LAYERS[i].path);
+		engineLoopHandles[i] = LoadSoundMem(ENGINE_SOUND_LAYERS[i].path, 1);
 	}
-	starterSoundHandle = LoadSoundMem(_T("Data/Sound/sell_3.wav"));
+	starterSoundHandle = LoadSoundMem(_T("Data/Sound/sell_3.wav"), 1);
+	SetCreate3DSoundFlag(false);
 }
 
 void CarBase::OnCollision(COLLIDER_TAG ownTag, const ColliderBase& other, const CollisionResult& result)
@@ -426,7 +433,10 @@ void CarBase::SubDraw(void)
 void CarBase::UpdateEngineState(void)
 {
 	if (engineState == EngineState::Starting) {
-		if (CheckSoundMem(starterSoundHandle) == 1) { return; }
+		if (CheckSoundMem(starterSoundHandle) == 1) {
+			Set3DPositionSoundMem((trans.pos + Vector3::Yonly(ENGINE_SOUND_HEIGHT)).ToVECTOR(), starterSoundHandle);
+			return;
+		}
 
 		engineState = EngineState::Running;
 		rpm = MIN_RPM;
@@ -448,6 +458,8 @@ void CarBase::UpdateEngineState(void)
 	}
 
 	if (starterSoundHandle != -1) {
+		Set3DPositionSoundMem((trans.pos + Vector3::Yonly(ENGINE_SOUND_HEIGHT)).ToVECTOR(), starterSoundHandle);
+		Set3DRadiusSoundMem(ENGINE_SOUND_RADIUS, starterSoundHandle);
 		ChangeVolumeSoundMem(210, starterSoundHandle);
 		if (PlaySoundMem(starterSoundHandle, DX_PLAYTYPE_BACK, true) == 0) {
 			engineState = EngineState::Starting;
@@ -472,10 +484,16 @@ void CarBase::UpdateEngineSound(void)
 		return;
 	}
 
+	const VECTOR position = (trans.pos + Vector3::Yonly(ENGINE_SOUND_HEIGHT)).ToVECTOR();
+	for (int handle : engineLoopHandles) {
+		if (handle != -1) { Set3DPositionSoundMem(position, handle); }
+	}
+
 	if (!engineSoundPlaying) {
 		// ループを無音で回し始め、回転域をまたいでも再生位置を維持する
 		for (int handle : engineLoopHandles) {
 			if (handle == -1) { continue; }
+			Set3DRadiusSoundMem(ENGINE_SOUND_RADIUS, handle);
 			SetVolumeSoundMem(0, handle);
 			PlaySoundMem(handle, DX_PLAYTYPE_LOOP, true);
 		}

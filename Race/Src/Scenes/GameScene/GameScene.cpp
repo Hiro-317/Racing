@@ -58,6 +58,16 @@ void GameScene::SubPostInit(void)
 
 void GameScene::SubPreUpdate(void)
 {
+	// 分割画面でも、スピーカーで共有するリスナーはプレイヤー1のカメラに置く
+	if (!camera.empty() && camera.front() != nullptr) {
+		const auto& listener = *camera.front();
+		const auto& position = listener.GetPos();
+		const auto& rotation = listener.GetRotation();
+		const Vector3 frontPosition = position + rotation.Rotate(Vector3::Zonly(1.0f));
+		const Vector3 up = rotation.Rotate(Vector3::Yonly(1.0f));
+		Set3DSoundListenerPosAndFrontPosAndUpVec(position.ToVECTOR(), frontPosition.ToVECTOR(), up.ToVECTOR());
+	}
+
 	if (Input::GetIns().GetPriorityKey(COMMAND::PAUSE).keyTrgDown) {
 		SceneManager::GetIns().ChangeSceneFade(SCENE_ID::Title);
 	}

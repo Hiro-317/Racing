@@ -62,6 +62,8 @@ void Application::Init(void)
 	// DxLibの初期化
 	isInitFail = false;
 	SetUseDirect3DVersion(DX_DIRECT3D_11);
+	// 車両やカメラの座標は 100 単位を 1 メートルとして扱う
+	Set3DSoundOneMetre(100.0f);
 	if (DxLib_Init() == -1) { isInitFail = true; return; }
 
 	if (Effekseer_Init(EFFECT_MAX_NUM) == -1) { isInitFail = true; return; }
