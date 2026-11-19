@@ -30,7 +30,6 @@ namespace {
 
 CarBase::CarBase(const Input::KEYPAD_NO& keypadNo, const Vector3& pos, const int pNo, const std::function<int(void)> camNo) :
 	ActorBase(),
-	engineFlg(false),
 	torque(0.0f),
 	torqueMax(0.0f),
 	torqueMaxRpm(0.0f),
@@ -82,31 +81,26 @@ void CarBase::SubUpdate(void)
 	// このフレームで駆動系が増減させた速度だけを、後で車体前方へ反映する
 	const float previousMoveSpeed = speed;
 
-	// ステア角度の保持
+	UpdateEngineState();
+	const bool engineRunning = engineState == EngineState::Running;
+	const bool controlsEnabled = engineState != EngineState::Starting;
+	const float throttleInput = engineRunning ? Accel() : 0.0f;
+	const float brakeInput = controlsEnabled ? -Brake() : 0.0f;
+	const bool handBrake = controlsEnabled && Input::GetIns().GetKey(COMMAND::SIDE, keypadNo).keyNew;
+
+	// セル音が鳴っている間は運転入力を反映しない
 	prevSteer = nowSteer;
-	nowSteer = Input::GetIns().GetAKeyLClamp(keypadNo).x;
+	nowSteer = controlsEnabled ? Input::GetIns().GetAKeyLClamp(keypadNo).x : 0.0f;
 
-	// エンジンオフなら
-	if (!engineFlg) {
-		// 回転数があるなら
-		if (rpm > 0.0f) {
-			//徐々に下げる
-			rpm -= DOWN_RPM;
-		}
-		// ゼロ下回っちゃったら
-		else if (rpm < 0.0f) {
-			// ゼロにしてあげる
-			rpm = 0.0f;
-		}
-		// ブレーキ踏みながらキーで
-		if (Input::GetIns().GetKey(Input::COMMAND::ACTION, keypadNo).keyTrgDown && (Input::GetIns().GetKey(Input::COMMAND::SIDE, keypadNo).keyNew || Brake() == -1.0f)) {
+	if (!engineRunning) {
+		rpm = (std::max)(0.0f, rpm - DOWN_RPM);
 
-			// アクセルオンで最低回転数にもっていく
-			engineFlg = true;
-			rpm = MIN_RPM;
-		}
+		// 駆動が切れていても、抵抗とブレーキで惰性走行中の車を減速させる
+		const float coastDeceleration = (AirResistance() + RollingResistance()) / param.CAR_WEIGHT * 3.6f;
+		speed = (std::max)(0.0f, speed - coastDeceleration * App::GetPassTime() -
+			0.35f * brakeInput - (handBrake ? 0.5f : 0.0f));
+		if (speed == 0.0f) { nowGear = 0; }
 	}
-	// エンジンオンなら
 	else {
 		// 今オーバートップ未満なら
 		if (nowGear < param.GEAR_NUM - 1) {
@@ -136,15 +130,15 @@ void CarBase::SubUpdate(void)
 		GetTorque();
 
 		// ブレーキ踏んでいて
-		if (Brake() != 0.0f || Input::GetIns().GetKey(Input::COMMAND::SIDE, keypadNo).keyNew) {
+		if (brakeInput > 0.0f || handBrake) {
 			// 速度がゼロで
 			if (speed == 0.0f) {
 				// アクセルを踏んでいるとき
-				if (Accel() != 0) {
+				if (throttleInput != 0) {
 					// フューエルカットが働いてないなら
 					if (!fuelCut) {
 						// 回転数を上げ
-						rpm += UP_RPM * Accel();
+						rpm += UP_RPM * throttleInput;
 						// ローンチの回転数に行ったら
 						if (rpm > param.MAX_TORQUE_RPM) {
 							// フューエルカットをかける
@@ -174,8 +168,8 @@ void CarBase::SubUpdate(void)
 			// 速度が出ているとき
 			else {
 				// エンジンブレーキとブレーキで速度を落としそこから回転数を出す
-				if (Input::GetIns().GetKey(COMMAND::SIDE, keypadNo).keyNew) speed -= 0.5f;
-				speed += 0.35f * Brake();
+				if (handBrake) speed -= 0.5f;
+				speed -= 0.35f * brakeInput;
 				speed += EngineBrake() * App::GetPassTime();
 				rpm = (speed * param.GEAR_RATIO[nowGear] * param.FINAL_GEAR_RATIO * 60.0f) / (3.6f * 2.0f * DX_PI_F * param.TIRE_SIZE);
 				// 速度がゼロ以下になったら
@@ -192,7 +186,7 @@ void CarBase::SubUpdate(void)
 			// その差分クラッチとし最低半クラを25%として
 			float clatch = (1.0f - ((idleSpeed - speed) / idleSpeed));
 			clatch =  std::clamp(clatch, 0.25f, 1.0f);
-			float driveRate = clatch + ((1.0f - clatch) * Accel());
+			float driveRate = clatch + ((1.0f - clatch) * throttleInput);
 
 			// 加速
 			speed += Acceleration(driveRate) * App::GetPassTime();
@@ -205,9 +199,9 @@ void CarBase::SubUpdate(void)
 		// 最低速度以上なら(クラッチ全つながりしてる)
 		else {
 			// アクセルオンかつフューエルカットが働いてないなら
-			if (Accel() != 0.0f && !fuelCut) {
+			if (throttleInput != 0.0f && !fuelCut) {
 				// 加速
-				speed += Acceleration(Accel()) * App::GetPassTime();
+				speed += Acceleration(throttleInput) * App::GetPassTime();
 				// 回転数を速度から出す
 				rpm = (speed * param.GEAR_RATIO[nowGear] * param.FINAL_GEAR_RATIO * 60.0f) / (3.6f * 2.0f * DX_PI_F * param.TIRE_SIZE);
 				// レブリミットにかかったら
@@ -245,9 +239,6 @@ void CarBase::SubUpdate(void)
 	float temp = nowSteer - prevSteer;
 	nowSteer = prevSteer + temp * 0.3f;
 	const float steerChange = fabsf(nowSteer - prevSteer);
-	const float throttleInput = Accel();
-	const float brakeInput = fabsf(Brake());
-	const bool handBrake = Input::GetIns().GetKey(Input::COMMAND::SIDE, keypadNo).keyNew;
 
 	if (speed != 0.0f) {
 		// ブレーキ時の前荷重とサイドブレーキによる後輪ロックで、車体の向きを変えやすくする
@@ -275,7 +266,7 @@ void CarBase::SubUpdate(void)
 	const float baseRpm = std::clamp(connectedRpm, MIN_RPM, param.MAX_RPM);
 
 	// 後輪が空転している間は、空ぶかしと同じ上昇量を空転率に応じて回転数へ足す
-	const bool canWheelSpin = engineFlg && brakeInput == 0.0f && !handBrake;
+	const bool canWheelSpin = engineRunning && brakeInput == 0.0f && !handBrake;
 	if (!canWheelSpin) {
 		wheelSpinRpmOffset = 0.0f;
 		if (wheelSpinFuelCut) { fuelCut = false; }
@@ -429,25 +420,56 @@ void CarBase::SubDraw(void)
 	}
 }
 
+void CarBase::UpdateEngineState(void)
+{
+	if (engineState == EngineState::Starting) {
+		if (CheckSoundMem(starterSoundHandle) == 1) { return; }
+
+		engineState = EngineState::Running;
+		rpm = MIN_RPM;
+		return;
+	}
+
+	// ブレーキをかけながらアクションを押すと始動・停止を切り替える
+	if (!Input::GetIns().GetKey(COMMAND::ACTION, keypadNo).keyTrgDown ||
+		(!Input::GetIns().GetKey(COMMAND::SIDE, keypadNo).keyNew && Brake() != -1.0f)) {
+		return;
+	}
+
+	if (engineState == EngineState::Running) {
+		engineState = EngineState::Off;
+		torque = 0.0f;
+		hoursepower = 0.0f;
+		fuelCut = false;
+		return;
+	}
+
+	if (starterSoundHandle != -1) {
+		ChangeVolumeSoundMem(210, starterSoundHandle);
+		if (PlaySoundMem(starterSoundHandle, DX_PLAYTYPE_BACK, true) == 0) {
+			engineState = EngineState::Starting;
+			return;
+		}
+	}
+
+	// セル音を読み込めない場合や再生に失敗した場合も始動できるようにする
+	engineState = EngineState::Running;
+	rpm = MIN_RPM;
+}
+
 void CarBase::UpdateEngineSound(void)
 {
-	if (!engineFlg) {
+	if (engineState != EngineState::Running) {
 		if (engineSoundPlaying) {
 			for (int handle : engineLoopHandles) {
 				if (handle != -1) { StopSoundMem(handle); }
 			}
-			if (starterSoundHandle != -1) { StopSoundMem(starterSoundHandle); }
 			engineSoundPlaying = false;
 		}
 		return;
 	}
 
 	if (!engineSoundPlaying) {
-		if (starterSoundHandle != -1) {
-			ChangeVolumeSoundMem(210, starterSoundHandle);
-			PlaySoundMem(starterSoundHandle, DX_PLAYTYPE_BACK, true);
-		}
-
 		// ループを無音で回し始め、回転域をまたいでも再生位置を維持する
 		for (int handle : engineLoopHandles) {
 			if (handle == -1) { continue; }
@@ -502,6 +524,7 @@ void CarBase::SubRelease(void)
 		starterSoundHandle = -1;
 	}
 	engineSoundPlaying = false;
+	engineState = EngineState::Off;
 }
 
 void CarBase::GetTorque(void)
@@ -600,7 +623,7 @@ void CarBase::UpdateRearGrip(float currentSpeed, float steerInput, float steerCh
 	const float cornerDriftAmount = lateralGripUsage * CORNER_DRIFT_POWER;
 
 	// 現在のエンジントルクをギア比とタイヤ半径から後輪の駆動力へ変換する
-	const float driveForce = engineFlg && !wheelSpinFuelCut && param.TIRE_SIZE > 0.0f ?
+	const float driveForce = engineState == EngineState::Running && !wheelSpinFuelCut && param.TIRE_SIZE > 0.0f ?
 		fabsf(
 			torque * param.GEAR_RATIO[nowGear] * param.FINAL_GEAR_RATIO * LOST_RATIO * throttleRate /
 			param.TIRE_SIZE

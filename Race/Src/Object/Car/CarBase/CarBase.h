@@ -36,6 +36,15 @@ protected:
 
 private:
 
+	enum class EngineState {
+		Off,
+		Starting,
+		Running,
+	};
+
+	// 始動・停止入力とセル音の再生状態を反映する
+	void UpdateEngineState(void);
+
 	// 車種ごとの回転数に合わせて走行音のピッチと音量を更新する
 	void UpdateEngineSound(void);
 
@@ -186,7 +195,7 @@ private:
 	static constexpr float SLIDE_FORWARD_DRIVE_SCALE = 2.5f;
 
 	// エンジン稼働状態
-	bool engineFlg;
+	EngineState engineState = EngineState::Off;
 
 	// トルク
 	float torque;
