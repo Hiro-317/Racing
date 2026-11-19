@@ -120,10 +120,10 @@ private:
 	// 後輪タイヤが直線加速へ使える縦方向の摩擦係数
 	static constexpr float TIRE_LONGITUDINAL_GRIP_COEFFICIENT = 1.8f;
 	// 後輪タイヤが旋回へ使える横方向のグリップ係数
-	static constexpr float TIRE_LATERAL_GRIP_COEFFICIENT = 1.00f;
+	static constexpr float TIRE_LATERAL_GRIP_COEFFICIENT = 1.65f;
 
 	// 駆動力がグリップ限界をこの割合だけ超えたとき、パワースライドを最大にする
-	static constexpr float POWER_SLIP_FULL_OVERLOAD = 0.75f;
+	static constexpr float POWER_SLIP_FULL_OVERLOAD = 0.9f;
 	// グリップ回復時にエンジン回転数が車速相当へ戻る反応速度(1/秒)
 	static constexpr float WHEEL_SPIN_RPM_FALL_RESPONSE = 6.0f;
 
@@ -132,7 +132,7 @@ private:
 	// 滑走中にも残す最低グリップ(1/秒)
 	static constexpr float REAR_GRIP_MIN = 1.5f;
 	// カウンターを当てていない滑走中に残す自然回復グリップ(1/秒)
-	static constexpr float NEUTRAL_SLIDE_GRIP = 0.4f;
+	static constexpr float NEUTRAL_SLIDE_GRIP = 0.2f;
 
 	// 滑り量が目標値へ追従する速さ(1/秒)
 	static constexpr float DRIFT_RESPONSE = 4.0f;
@@ -165,7 +165,7 @@ private:
 	// 限界角を超えた後に保証する最低スピン加速率
 	static constexpr float MIN_UNCONTROLLED_SPIN_RATE = 0.35f;
 	// スピン回転が自然に収まる減衰率(1/秒)
-	static constexpr float SPIN_DAMPING = 0.9f;
+	static constexpr float SPIN_DAMPING = 0.75f;
 
 	// カウンターステアでスピン回転を止める強さ(ラジアン/秒^2)
 	static constexpr float COUNTER_STEER_BRAKE = 3.0f;
@@ -186,7 +186,7 @@ private:
 	static constexpr float SPIN_RESET_YAW_SPEED = 0.15f;
 
 	// 横滑りによって失う速度の割合(1/秒)
-	static constexpr float SLIP_SPEED_LOSS = 0.8f;
+	static constexpr float SLIP_SPEED_LOSS = 0.6f;
 
 	// スピン回転によって追加で失う速度の割合(1/秒)
 	static constexpr float SPIN_SPEED_LOSS = 0.45f;
