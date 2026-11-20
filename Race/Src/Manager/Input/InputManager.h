@@ -142,7 +142,7 @@ public:
 			// XV—pƒL[‚ª“o˜^‚³‚ê‚Ä‚¢‚é‚©(ˆê‰ñ‚Å‚¢‚¢‚½‚ß)
 			if (!pads.at((int)type)->Added(key)) {
 				// ‚³‚ê‚Ä‚¢‚È‚¢‚È‚ç“o˜^
-				for (int i = 0; i < (int)KEYPAD_NO::PAD4; i++) {
+				for (int i = 0; i <= (int)KEYPAD_NO::PAD4; i++) {
 					pads[i]->Add(key);
 				}
 			}
@@ -214,7 +214,7 @@ public:
 		mouseCommand.clear();
 
 		// XV—p“o˜^‚ÌÁ‹
-		for (int i = 0; i < (int)KEYPAD_NO::PAD4; i++) {
+		for (int i = 0; i <= (int)KEYPAD_NO::PAD4; i++) {
 			pads[i]->Clear();
 		}
 		keyboard->Clear();
