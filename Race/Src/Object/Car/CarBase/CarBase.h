@@ -68,7 +68,7 @@ private:
 
 	// 0~1
 	float Accel(void);
-	// 0~-1
+	// 0~1
 	float Brake(void);
 
 	/// <summary>

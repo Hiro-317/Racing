@@ -93,7 +93,7 @@ void CarBase::SubUpdate(void)
 	const bool engineRunning = engineState == EngineState::Running;
 	const bool controlsEnabled = engineState != EngineState::Starting;
 	const float throttleInput = engineRunning ? Accel() : 0.0f;
-	const float brakeInput = controlsEnabled ? -Brake() : 0.0f;
+	const float brakeInput = controlsEnabled ? Brake() : 0.0f;
 	const bool handBrake = controlsEnabled && Input::GetIns().GetKey(COMMAND::SIDE, keypadNo).keyNew;
 
 	// セル音が鳴っている間は運転入力を反映しない
@@ -105,8 +105,7 @@ void CarBase::SubUpdate(void)
 
 		// 駆動が切れていても、抵抗とブレーキで惰性走行中の車を減速させる
 		const float coastDeceleration = (AirResistance() + RollingResistance()) / param.CAR_WEIGHT * 3.6f;
-		speed = (std::max)(0.0f, speed - coastDeceleration * App::GetPassTime() -
-			0.35f * brakeInput - (handBrake ? 0.5f : 0.0f));
+		speed = (std::max)(0.0f, speed - coastDeceleration * App::GetPassTime() - ((0.35f * brakeInput) + (handBrake ? 0.5f : 0.0f)));
 		if (speed == 0.0f) { nowGear = 0; }
 	}
 	else {
@@ -442,29 +441,29 @@ void CarBase::UpdateEngineState(void)
 		return;
 	}
 
-	// ブレーキをかけながらアクションを押すと始動・停止を切り替える
-	if (!Input::GetIns().GetKey(COMMAND::ACTION, keypadNo).keyTrgDown ||
-		(!Input::GetIns().GetKey(COMMAND::SIDE, keypadNo).keyNew && Brake() != -1.0f)) {
-		return;
-	}
-
 	if (engineState == EngineState::Running) {
-		engineState = EngineState::Off;
-		torque = 0.0f;
-		hoursepower = 0.0f;
-		fuelCut = false;
-		return;
+		if ((Input::GetIns().GetKey(COMMAND::SIDE, keypadNo).keyNew || Brake() == 1.0f) &&
+			Input::GetIns().GetKey(COMMAND::ACTION, keypadNo).keyTrgDown) {
+			engineState = EngineState::Off;
+			torque = 0.0f;
+			hoursepower = 0.0f;
+			fuelCut = false;
+		}
 	}
 
-	const Vector3 position = trans.pos + Vector3::Yonly(ENGINE_SOUND_HEIGHT);
-	if (sound.PlaySpatial(starterSoundHandle, position, ENGINE_SOUND_RADIUS)) {
-		engineState = EngineState::Starting;
-		return;
+	if (engineState == EngineState::Off) {
+		if (Input::GetIns().GetKey(COMMAND::ACTION, keypadNo).keyTrgDown) {
+			const Vector3 position = trans.pos + Vector3::Yonly(ENGINE_SOUND_HEIGHT);
+			if (sound.PlaySpatial(starterSoundHandle, position, ENGINE_SOUND_RADIUS)) {
+				engineState = EngineState::Starting;
+			}
+			else {
+				// セル音を読み込めない場合や再生に失敗した場合も始動できるようにする
+				engineState = EngineState::Running;
+				rpm = MIN_RPM;
+			}
+		}
 	}
-
-	// セル音を読み込めない場合や再生に失敗した場合も始動できるようにする
-	engineState = EngineState::Running;
-	rpm = MIN_RPM;
 }
 
 void CarBase::UpdateEngineSound(void)
@@ -596,11 +595,11 @@ float CarBase::Brake(void)
 {
 	if (keypadNo == Input::KEYPAD_NO::KEY) {
 		if (Input::GetIns().GetKey(COMMAND::BRAKE, keypadNo).keyNew) {
-			return -1.0f;
+			return 1.0f;
 		}
 	}
 	else {
-		return -Input::GetIns().GetLTrigger(keypadNo) / 255.0f;
+		return Input::GetIns().GetLTrigger(keypadNo) / 255.0f;
 	}
 	return 0.0f;
 }
