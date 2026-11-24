@@ -448,6 +448,9 @@ void CarBase::UpdateEngineState(void)
 			torque = 0.0f;
 			hoursepower = 0.0f;
 			fuelCut = false;
+
+			// 同じフレームの始動判定へ進むとセル始動中になり、ブレーキ入力も無効になるためここで終了する
+			return;
 		}
 	}
 
